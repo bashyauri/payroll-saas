@@ -12,6 +12,7 @@
 /public/hot
 /public/storage
 /bootstrap/ssr
+/bootstrap/cache/*.php
 
 # Environment and config
 .env

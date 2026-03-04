@@ -45,6 +45,9 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-in
 # Copy application code (without build artifacts, they're in .dockerignore)
 COPY . /var/www/html
 
+# Remove any locally generated Laravel cache files to avoid stale config in production
+RUN rm -f /var/www/html/bootstrap/cache/*.php
+
 # Copy built assets from node stage (must be AFTER copying app code)
 COPY --from=assets /app/public/build /var/www/html/public/build
 
