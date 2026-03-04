@@ -7,7 +7,7 @@ COPY . .
 RUN npm run build
 
 # PHP production
-FROM richarvey/nginx-php-fpm:3.1
+FROM richarvey/nginx-php-fpm:latest
 
 COPY --from=assets /app/public/build /var/www/html/public/build
 COPY . /var/www/html
