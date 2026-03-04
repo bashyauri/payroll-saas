@@ -55,12 +55,6 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
-# Laravel optimization for production
-RUN php artisan config:clear \
-    && php artisan cache:clear \
-    && php artisan view:clear \
-    && php artisan route:clear
-
 # Configure nginx
 COPY docker/nginx.conf /etc/nginx/sites-available/default
 
