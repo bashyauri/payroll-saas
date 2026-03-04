@@ -56,6 +56,7 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache \
     && mkdir -p /var/log/php \
+    && mkdir -p /var/log/supervisor \
     && mkdir -p /var/log/nginx \
     && touch storage/logs/laravel.log \
     && touch /var/log/php/error.log \
