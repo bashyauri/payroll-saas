@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 echo "Starting Laravel application..."
 
@@ -18,10 +17,9 @@ if [ ! -z "$DB_HOST" ]; then
     if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
         echo "ERROR: Could not connect to database after $MAX_RETRIES attempts"
         echo "Please check your database credentials and network connectivity"
-        exit 1
+    else
+        echo "Database is ready!"
     fi
-
-    echo "Database is ready!"
 fi
 
 # Ensure storage and cache directories exist with correct permissions
@@ -29,20 +27,25 @@ echo "Setting up directories and permissions..."
 mkdir -p /var/www/html/storage/framework/{sessions,views,cache}
 mkdir -p /var/www/html/storage/logs
 mkdir -p /var/www/html/bootstrap/cache
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+mkdir -p /var/log/php
+mkdir -p /var/log/nginx
+touch /var/www/html/storage/logs/laravel.log
+touch /var/log/php/error.log
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap /var/log/php
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/log/php
 
 # Cache configuration for better performance
 echo "Caching configuration..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan config:cache 2>&1 || echo "WARNING: config:cache failed"
+php artisan route:cache 2>&1 || echo "WARNING: route:cache failed"
+php artisan view:cache 2>&1 || echo "WARNING: view:cache failed"
 
-# Run migrations
-echo "Running migrations..."
-php artisan migrate --force --no-interaction
+# Run migrations (non-fatal)
+echo "Running database migrations..."
+php artisan migrate --force --no-interaction 2>&1 || echo "WARNING: Migration had issues, continuing anyway"
 
-echo "Laravel application ready!"
+echo "Laravel application initialization complete!"
+echo "Starting PHP-FPM and Nginx..."
 
 # Start supervisor
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

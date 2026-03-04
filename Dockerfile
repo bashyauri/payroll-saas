@@ -52,9 +52,16 @@ RUN composer dump-autoload --optimize --no-dev
 RUN mkdir -p storage/framework/{sessions,views,cache} \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache \
+    && mkdir -p /var/log/php \
+    && mkdir -p /var/log/nginx \
     && touch storage/logs/laravel.log \
+    && touch /var/log/php/error.log \
     && chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 storage bootstrap/cache
+    && chown -R www-data:www-data /var/log/php \
+    && chmod -R 775 storage bootstrap/cache /var/log/php
+
+# Configure PHP
+COPY docker/php.ini /usr/local/etc/php/conf.d/laravel.ini
 
 # Configure nginx
 COPY docker/nginx.conf /etc/nginx/sites-available/default
