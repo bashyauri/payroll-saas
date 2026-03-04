@@ -42,9 +42,11 @@ COPY composer.json composer.lock ./
 # Install composer dependencies
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction
 
-# Copy application code
-COPY --from=assets /app/public/build /var/www/html/public/build
+# Copy application code (without build artifacts, they're in .dockerignore)
 COPY . /var/www/html
+
+# Copy built assets from node stage (must be AFTER copying app code)
+COPY --from=assets /app/public/build /var/www/html/public/build
 
 # Complete composer installation with scripts and autoloader
 RUN composer dump-autoload --optimize --no-dev
