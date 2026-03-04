@@ -20,5 +20,14 @@ chmod 755 /var/www/html/public
 
 echo "Initialization complete, starting PHP-FPM and Nginx..."
 
-# Start supervisor immediately, don't wait for anything
-exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+# Validate nginx config before boot
+if ! /usr/sbin/nginx -t; then
+	echo "ERROR: Nginx configuration test failed"
+	exit 1
+fi
+
+# Start PHP-FPM in background
+/usr/local/sbin/php-fpm -D
+
+# Run nginx in foreground (main process)
+exec /usr/sbin/nginx -g 'daemon off;'
