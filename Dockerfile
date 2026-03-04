@@ -51,8 +51,15 @@ RUN composer dump-autoload --optimize --no-dev
 RUN mkdir -p storage/framework/{sessions,views,cache} \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache \
+    && touch storage/logs/laravel.log \
+    && chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
+
+# Laravel optimization for production
+RUN php artisan config:clear \
+    && php artisan cache:clear \
+    && php artisan view:clear \
+    && php artisan route:clear
 
 # Configure nginx
 COPY docker/nginx.conf /etc/nginx/sites-available/default
@@ -60,6 +67,10 @@ COPY docker/nginx.conf /etc/nginx/sites-available/default
 # Configure supervisor
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Copy entrypoint script
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 EXPOSE 80
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
