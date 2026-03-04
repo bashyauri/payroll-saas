@@ -1,0 +1,55 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Dependencies
+/vendor
+/node_modules
+
+# Build artifacts
+/public/build
+/public/hot
+/public/storage
+/bootstrap/ssr
+
+# Environment and config
+.env
+.env.*
+!.env.example
+
+# IDE and editor files
+.vscode
+.idea
+.fleet
+.nova
+.zed
+*.swp
+*.swo
+*~
+
+# Testing
+.phpunit.cache
+.phpunit.result.cache
+/coverage
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp files
+/storage/*.key
+/storage/pail
+/storage/logs/*
+!/storage/logs/.gitkeep
+
+# Documentation
+README.md
+CONTRIBUTING.md
+LICENSE

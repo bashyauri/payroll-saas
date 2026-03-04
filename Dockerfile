@@ -10,10 +10,12 @@ RUN npm run build
 # PHP production
 FROM richarvey/nginx-php-fpm:latest
 
+WORKDIR /var/www/html
+
 COPY --from=assets /app/public/build /var/www/html/public/build
 COPY . /var/www/html
 
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
