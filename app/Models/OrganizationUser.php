@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class OrganizationUser extends Model
 {
+    use HasUlids;
+
     protected $table = 'organization_user';
 
     protected $fillable = ['user_id', 'organization_id', 'role'];
