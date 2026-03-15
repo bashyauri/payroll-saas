@@ -1,6 +1,4 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { dashboard, login, register } from '@/routes';
-import { Button } from '@/components/ui/button';
 import {
     Users,
     Calculator,
@@ -9,6 +7,8 @@ import {
     CheckCircle2,
     ArrowRight,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { dashboard, login, register } from '@/routes';
 
 export default function Welcome({
     canRegister = true,
@@ -197,7 +197,10 @@ export default function Welcome({
                 </section>
 
                 {/* Pricing Section */}
-                <section id="pricing" className="bg-card py-20 lg:py-28">
+                <section
+                    id="pricing"
+                    className="bg-card pt-16 pb-10 lg:pt-20 lg:pb-12"
+                >
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <div className="mb-12 text-center lg:mb-14">
                             <h2 className="mb-4 text-4xl font-bold">
@@ -289,7 +292,7 @@ export default function Welcome({
                 </section>
 
                 {/* Features Section */}
-                <section className="bg-card py-20 lg:py-32">
+                <section className="bg-card pt-10 pb-20 lg:pt-12 lg:pb-24">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <div className="mb-16 text-center">
                             <h2 className="mb-4 text-4xl font-bold">
