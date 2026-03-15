@@ -6,7 +6,6 @@ import {
     Calculator,
     FileText,
     Lock,
-    TrendingUp,
     CheckCircle2,
     ArrowRight,
 } from 'lucide-react';
@@ -70,44 +69,27 @@ export default function Welcome({
 
     const plans = [
         {
-            name: 'Starter',
-            price: '₦5,000',
-            period: '/month',
-            description: 'Perfect for small teams',
-            features: [
-                'Up to 10 employees',
-                'Basic payroll processing',
-                'Monthly reportings',
-                'Email support',
-            ],
+            organizationType: 'Small (SME / Small NGO)',
+            staffSizeBand: 'Up to 30 staff',
+            monthlyRetainer: '₦450,000',
             highlighted: false,
         },
         {
-            name: 'Professional',
-            price: '₦15,000',
-            period: '/month',
-            description: 'For growing businesses',
-            features: [
-                'Up to 100 employees',
-                'Advanced tax calculations',
-                'Real-time analytics',
-                'Priority support',
-                'API access',
-            ],
+            organizationType: 'Medium (Mid-size org)',
+            staffSizeBand: '31-100 staff',
+            monthlyRetainer: '₦850,000',
             highlighted: true,
         },
         {
-            name: 'Enterprise',
-            price: 'Custom',
-            period: 'pricing',
-            description: 'For large organizations',
-            features: [
-                'Unlimited employees',
-                'Full customization',
-                'Dedicated manager',
-                '24/7 support',
-                'SLA guarantee',
-            ],
+            organizationType: 'Large (Corporate / NGO)',
+            staffSizeBand: '101-300 staff',
+            monthlyRetainer: '₦1,500,000',
+            highlighted: false,
+        },
+        {
+            organizationType: 'Very Large / Complex',
+            staffSizeBand: '300+ staff or multi-location',
+            monthlyRetainer: '₦3,500,000',
             highlighted: false,
         },
     ];
@@ -196,18 +178,112 @@ export default function Welcome({
                                         </Button>
                                     </Link>
                                 )}
-                                <Button
-                                    variant="outline"
-                                    size="lg"
-                                    className="text-base"
-                                >
-                                    Watch Demo
-                                </Button>
+                                <a href="#pricing">
+                                    <Button
+                                        variant="outline"
+                                        size="lg"
+                                        className="text-base"
+                                    >
+                                        View Pricing
+                                    </Button>
+                                </a>
                             </div>
                             <p className="text-sm text-muted-foreground">
                                 No credit card required. 14-day free trial.
                                 Cancel anytime.
                             </p>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Pricing Section */}
+                <section id="pricing" className="bg-card py-20 lg:py-28">
+                    <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                        <div className="mb-12 text-center lg:mb-14">
+                            <h2 className="mb-4 text-4xl font-bold">
+                                Monthly Retainer Structure
+                            </h2>
+                            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+                                Clear pricing by organization size and staff
+                                count.
+                            </p>
+                        </div>
+
+                        <div className="mb-6 grid gap-4 md:hidden">
+                            {plans.map((plan, index) => (
+                                <div
+                                    key={index}
+                                    className={`rounded-xl border p-5 ${plan.highlighted ? 'border-primary bg-primary/5 shadow-md' : 'border-border bg-background'}`}
+                                >
+                                    {plan.highlighted && (
+                                        <div className="mb-3 inline-block rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
+                                            MOST COMMON BAND
+                                        </div>
+                                    )}
+                                    <h3 className="mb-3 text-xl font-semibold">
+                                        {plan.organizationType}
+                                    </h3>
+                                    <p className="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                        Staff Size Band
+                                    </p>
+                                    <p className="mb-4 text-sm">
+                                        {plan.staffSizeBand}
+                                    </p>
+                                    <p className="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                        Monthly Retainer
+                                    </p>
+                                    <p className="text-3xl font-bold text-primary">
+                                        {plan.monthlyRetainer}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="hidden overflow-hidden rounded-2xl border border-border bg-background md:block">
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full text-left">
+                                    <thead className="bg-muted/40">
+                                        <tr>
+                                            <th className="px-6 py-4 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                                Organization Type
+                                            </th>
+                                            <th className="px-6 py-4 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                                Staff Size Band
+                                            </th>
+                                            <th className="px-6 py-4 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                                Monthly Retainer (Naira)
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {plans.map((plan, index) => (
+                                            <tr
+                                                key={index}
+                                                className={`border-t border-border ${plan.highlighted ? 'bg-primary/5' : ''}`}
+                                            >
+                                                <td className="px-6 py-5 font-medium">
+                                                    {plan.organizationType}
+                                                </td>
+                                                <td className="px-6 py-5 text-muted-foreground">
+                                                    {plan.staffSizeBand}
+                                                </td>
+                                                <td className="px-6 py-5 text-xl font-bold text-primary">
+                                                    {plan.monthlyRetainer}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 flex justify-center">
+                            <Link href={canRegister ? register() : '#'}>
+                                <Button size="lg" className="gap-2">
+                                    Start Free Trial
+                                    <ArrowRight className="h-4 w-4" />
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                 </section>
@@ -281,75 +357,6 @@ export default function Welcome({
                                     {step.number < 4 && (
                                         <div className="absolute top-7 -right-4 hidden h-0.5 w-8 bg-border lg:block" />
                                     )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Pricing Section */}
-                <section className="bg-card py-20 lg:py-32">
-                    <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                        <div className="mb-16 text-center">
-                            <h2 className="mb-4 text-4xl font-bold">
-                                Simple, Transparent Pricing
-                            </h2>
-                            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                                Choose the perfect plan for your business
-                            </p>
-                        </div>
-                        <div className="grid gap-8 md:grid-cols-3">
-                            {plans.map((plan, index) => (
-                                <div
-                                    key={index}
-                                    className={`rounded-lg border transition-all duration-300 ${plan.highlighted ? 'scale-105 border-primary bg-primary/5 shadow-lg' : 'border-border bg-background'} p-8`}
-                                >
-                                    {plan.highlighted && (
-                                        <div className="mb-4 inline-block rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
-                                            MOST POPULAR
-                                        </div>
-                                    )}
-                                    <h3 className="mb-2 text-2xl font-bold">
-                                        {plan.name}
-                                    </h3>
-                                    <p className="mb-4 text-sm text-muted-foreground">
-                                        {plan.description}
-                                    </p>
-                                    <div className="mb-6">
-                                        <span className="text-4xl font-bold">
-                                            {plan.price}
-                                        </span>
-                                        <span className="ml-2 text-muted-foreground">
-                                            {plan.period}
-                                        </span>
-                                    </div>
-                                    <Link href={canRegister ? register() : '#'}>
-                                        <Button
-                                            className="mb-8 w-full"
-                                            variant={
-                                                plan.highlighted
-                                                    ? 'default'
-                                                    : 'outline'
-                                            }
-                                        >
-                                            Get Started
-                                        </Button>
-                                    </Link>
-                                    <div className="space-y-4">
-                                        {plan.features.map(
-                                            (feature, fIndex) => (
-                                                <div
-                                                    key={fIndex}
-                                                    className="flex items-start gap-3"
-                                                >
-                                                    <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
-                                                    <span className="text-sm">
-                                                        {feature}
-                                                    </span>
-                                                </div>
-                                            ),
-                                        )}
-                                    </div>
                                 </div>
                             ))}
                         </div>
