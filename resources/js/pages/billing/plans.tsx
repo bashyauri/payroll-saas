@@ -8,6 +8,7 @@ import {
     Smartphone,
     ShieldCheck,
 } from 'lucide-react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +19,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
@@ -66,9 +68,20 @@ export default function BillingPlans({
     guaranteeDays: number;
     currency: string;
 }) {
+    const [employeeCounts, setEmployeeCounts] = useState<
+        Record<string, string>
+    >({});
+
     const { errors, flash } = usePage().props as {
         errors: Partial<Record<string, string>>;
         flash?: Partial<Record<string, string>>;
+    };
+
+    const resolveEmployeeCount = (plan: Plan): number => {
+        const raw = employeeCounts[plan.slug];
+        const parsed = Number.parseInt(raw ?? '', 10);
+
+        return Number.isNaN(parsed) ? plan.min_employees : parsed;
     };
 
     const steps = [
@@ -153,6 +166,23 @@ export default function BillingPlans({
                             {plans.map((plan) => {
                                 const isProfessional =
                                     plan.slug === 'professional';
+                                const selectedEmployeeCount =
+                                    resolveEmployeeCount(plan);
+                                const billingCycleMonths =
+                                    plan.billing_period === 'annual' ? 12 : 1;
+                                const estimatedMonthlyAmount =
+                                    selectedEmployeeCount *
+                                    plan.price_per_employee;
+                                const estimatedCheckoutAmount =
+                                    estimatedMonthlyAmount * billingCycleMonths;
+                                const employeeRangeError =
+                                    selectedEmployeeCount < plan.min_employees
+                                        ? `${plan.name} requires at least ${plan.min_employees} employees.`
+                                        : plan.max_employees !== null &&
+                                            selectedEmployeeCount >
+                                                plan.max_employees
+                                          ? `${plan.name} supports a maximum of ${plan.max_employees} employees. Choose Professional for larger teams.`
+                                          : null;
 
                                 return (
                                     <Card
@@ -204,6 +234,71 @@ export default function BillingPlans({
                                                 </p>
                                             </div>
 
+                                            <div className="space-y-2">
+                                                <label
+                                                    htmlFor={`employee-count-${plan.slug}`}
+                                                    className="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                                                >
+                                                    Number of employees
+                                                </label>
+                                                <Input
+                                                    id={`employee-count-${plan.slug}`}
+                                                    type="number"
+                                                    min={plan.min_employees}
+                                                    max={
+                                                        plan.max_employees ??
+                                                        undefined
+                                                    }
+                                                    value={
+                                                        employeeCounts[
+                                                            plan.slug
+                                                        ] ??
+                                                        String(
+                                                            plan.min_employees,
+                                                        )
+                                                    }
+                                                    onChange={(event) => {
+                                                        setEmployeeCounts(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                [plan.slug]:
+                                                                    event.target
+                                                                        .value,
+                                                            }),
+                                                        );
+                                                    }}
+                                                />
+                                                <p className="text-xs text-muted-foreground">
+                                                    Allowed range:{' '}
+                                                    {staffBand(
+                                                        plan.min_employees,
+                                                        plan.max_employees,
+                                                    )}
+                                                </p>
+                                                <p className="text-sm font-medium text-foreground">
+                                                    Estimated monthly amount:{' '}
+                                                    {formatNaira(
+                                                        estimatedMonthlyAmount,
+                                                    )}
+                                                </p>
+                                                <p className="text-sm font-semibold text-primary">
+                                                    Amount charged at checkout:{' '}
+                                                    {formatNaira(
+                                                        estimatedCheckoutAmount,
+                                                    )}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    This reflects{' '}
+                                                    {plan.billing_period}{' '}
+                                                    billing.
+                                                </p>
+                                                {employeeRangeError && (
+                                                    <p className="text-xs font-medium text-red-600 dark:text-red-400">
+                                                        {employeeRangeError}
+                                                    </p>
+                                                )}
+                                            </div>
+
                                             {/* Features */}
                                             <div>
                                                 <p className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
@@ -231,23 +326,33 @@ export default function BillingPlans({
                                         </CardContent>
 
                                         <CardFooter className="flex-col items-start gap-3 border-t border-border pt-4">
-                                            <Button
-                                                className="w-full gap-2 text-sm"
-                                                asChild
-                                            >
-                                                <Link
-                                                    href="/billing/checkout"
-                                                    method="post"
-                                                    data={{
-                                                        plan: plan.slug,
-                                                        employee_count:
-                                                            plan.min_employees,
-                                                    }}
+                                            {employeeRangeError ? (
+                                                <Button
+                                                    className="w-full gap-2 text-sm"
+                                                    disabled
                                                 >
                                                     Start Free Trial
                                                     <ArrowRight className="h-4 w-4" />
-                                                </Link>
-                                            </Button>
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    className="w-full gap-2 text-sm"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href="/billing/checkout"
+                                                        method="post"
+                                                        data={{
+                                                            plan: plan.slug,
+                                                            employee_count:
+                                                                selectedEmployeeCount,
+                                                        }}
+                                                    >
+                                                        Start Free Trial
+                                                        <ArrowRight className="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                            )}
                                             <p className="text-xs text-muted-foreground">
                                                 Payment method selected on
                                                 Paystack. 7-day guarantee starts

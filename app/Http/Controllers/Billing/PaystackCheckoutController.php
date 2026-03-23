@@ -25,13 +25,34 @@ class PaystackCheckoutController extends Controller
             ->where('slug', $data['plan'])
             ->firstOrFail();
 
-        $employeeCount = max((int) ($data['employee_count'] ?? $plan->min_employees), (int) $plan->min_employees);
+        $employeeCount = (int) ($data['employee_count'] ?? $plan->min_employees);
 
-        if ($plan->max_employees !== null) {
-            $employeeCount = min($employeeCount, (int) $plan->max_employees);
+        if ($employeeCount < (int) $plan->min_employees) {
+            return redirect()
+                ->route('billing.plans')
+                ->withErrors([
+                    'checkout' => sprintf(
+                        '%s plan requires at least %d employees.',
+                        $plan->name,
+                        (int) $plan->min_employees,
+                    ),
+                ]);
         }
 
-        $amountKobo = (int) round(((float) $plan->price_per_employee * $employeeCount) * 100);
+        if ($plan->max_employees !== null && $employeeCount > (int) $plan->max_employees) {
+            return redirect()
+                ->route('billing.plans')
+                ->withErrors([
+                    'checkout' => sprintf(
+                        '%s plan supports a maximum of %d employees. Choose Professional for larger teams.',
+                        $plan->name,
+                        (int) $plan->max_employees,
+                    ),
+                ]);
+        }
+
+        $billingCycleMonths = $plan->billing_period === 'annual' ? 12 : 1;
+        $amountKobo = (int) round(((float) $plan->price_per_employee * $employeeCount * $billingCycleMonths) * 100);
         $reference = 'ps_' . Str::lower((string) Str::ulid());
 
         $response = Http::asJson()
@@ -46,6 +67,8 @@ class PaystackCheckoutController extends Controller
                 'metadata' => [
                     'plan_slug' => $plan->slug,
                     'employee_count' => $employeeCount,
+                    'billing_period' => (string) $plan->billing_period,
+                    'billing_cycle_months' => $billingCycleMonths,
                     'user_id' => (string) $request->user()->id,
                 ],
                 'channels' => ['card', 'bank', 'ussd', 'mobile_money'],
