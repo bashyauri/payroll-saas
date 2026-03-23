@@ -1,0 +1,72 @@
+<?php
+
+namespace App\Services\Onboarding;
+
+use App\Models\Organization;
+use App\Models\Subscription;
+use App\Models\SubscriptionPlan;
+use App\Models\User;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use Stancl\Tenancy\Facades\Tenancy;
+
+/**
+ * Handles organization creation and subscription setup for new users during onboarding.
+ */
+class OnboardingService
+{
+    /**
+     * Create an organization and subscription after successful payment.
+     *
+     * @param  User  $user
+     * @param  array  $paystackData  Full Paystack transaction data
+     * @return Organization
+     */
+    public function setupOrganizationAfterPayment(User $user, array $paystackData): Organization
+    {
+        $metadata = Arr::get($paystackData, 'metadata', []);
+        $planSlug = (string) Arr::get($metadata, 'plan_slug');
+        $employeeCount = (int) Arr::get($metadata, 'employee_count', 1);
+        $reference = (string) Arr::get($paystackData, 'reference', '');
+        $amount = (int) Arr::get($paystackData, 'amount');
+
+        // Find the plan
+        $plan = SubscriptionPlan::where('slug', $planSlug)->firstOrFail();
+
+        // Generate organization name from user name
+        $organizationName = $user->name . "'s Payroll";
+        $organizationSlug = Str::slug($organizationName) . '-' . Str::random(6);
+
+        // Create organization (tenant)
+        $organization = Organization::create([
+            'name' => $organizationName,
+            'slug' => $organizationSlug,
+            'type' => 'organization',
+            'billing_status' => Organization::BILLING_ACTIVE,
+        ]);
+
+        // Create subscription
+        Subscription::create([
+            'organization_id' => $organization->id,
+            'plan_id' => $plan->id,
+            'status' => Subscription::STATUS_ACTIVE,
+            'trial_end_date' => now()->addDays(7),
+            'refund_eligible_until' => now()->addDays(7),
+            'next_billing_date' => now()->addYear(),
+            'paystack_reference' => $reference,
+            'amount_paid' => $amount,
+            'currency' => 'NGN',
+        ]);
+
+        // Attach user to organization as owner
+        $organization->users()->attach($user->id, [
+            'role' => 'owner',
+        ]);
+
+        // Set current tenant in session so the user is immediately in tenant context
+        session(['tenant_id' => $organization->id]);
+        Tenancy::initialize($organization);
+
+        return $organization;
+    }
+}

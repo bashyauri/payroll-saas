@@ -3,6 +3,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
@@ -46,5 +47,18 @@ class Organization extends BaseTenant implements TenantWithDatabase
     public function paymentAttempts(): HasMany
     {
         return $this->hasMany(\App\Models\PaymentAttempt::class, 'organization_id');
+    }
+
+    /**
+     * Get the users that belong to this organization.
+     */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'organization_users',
+            'organization_id',
+            'user_id'
+        )->withPivot('role')->withTimestamps();
     }
 }

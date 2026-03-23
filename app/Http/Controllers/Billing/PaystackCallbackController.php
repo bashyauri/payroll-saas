@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Billing;
 
 use App\Http\Controllers\Controller;
+use App\Services\Onboarding\OnboardingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class PaystackCallbackController extends Controller
 {
-    public function __invoke(Request $request): RedirectResponse
+    public function __invoke(Request $request, OnboardingService $onboarding): RedirectResponse
     {
         $reference = (string) $request->query('reference', '');
 
@@ -44,7 +46,8 @@ class PaystackCallbackController extends Controller
                 ->withErrors(['checkout' => 'Unable to verify payment with Paystack.']);
         }
 
-        $transactionStatus = (string) $response->json('data.status', '');
+        $transactionData = $response->json('data', []);
+        $transactionStatus = (string) $transactionData['status'] ?? '';
 
         if ($transactionStatus !== 'success') {
             Log::warning('Paystack callback not successful status.', [
@@ -61,8 +64,30 @@ class PaystackCallbackController extends Controller
             'reference' => $reference,
         ]);
 
+        try {
+            // Create organization and subscription for the authenticated user
+            $user = Auth::user();
+            if ($user) {
+                $organization = $onboarding->setupOrganizationAfterPayment($user, $transactionData);
+                Log::info('Organization created after payment.', [
+                    'organization_id' => $organization->id,
+                    'user_id' => $user->id,
+                    'reference' => $reference,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to setup organization after payment.', [
+                'reference' => $reference,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('billing.plans')
+                ->withErrors(['checkout' => 'Payment verified but failed to setup your organization. Please contact support.']);
+        }
+
         return redirect()
             ->route('dashboard')
-            ->with('checkout_notice', 'Payment verified successfully. Reference: ' . $reference);
+            ->with('success', 'Welcome! Your 7-day free trial has started.');
     }
 }
