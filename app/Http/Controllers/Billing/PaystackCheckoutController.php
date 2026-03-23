@@ -8,10 +8,12 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 class PaystackCheckoutController extends Controller
 {
-    public function __invoke(Request $request): RedirectResponse
+    public function __invoke(Request $request): Response|RedirectResponse
     {
         $data = $request->validate([
             'plan' => ['required', 'string'],
@@ -65,6 +67,10 @@ class PaystackCheckoutController extends Controller
                 ->withErrors([
                     'checkout' => 'Paystack did not return an authorization URL.',
                 ]);
+        }
+
+        if ($request->header('X-Inertia')) {
+            return Inertia::location($authorizationUrl);
         }
 
         return redirect()->away($authorizationUrl);

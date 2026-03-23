@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import {
     ArrowRight,
     BadgeCheck,
@@ -66,6 +66,11 @@ export default function BillingPlans({
     guaranteeDays: number;
     currency: string;
 }) {
+    const { errors, flash } = usePage().props as {
+        errors: Partial<Record<string, string>>;
+        flash?: Partial<Record<string, string>>;
+    };
+
     const steps = [
         { number: 1, title: 'Sign Up', completed: true },
         { number: 2, title: 'Verify Email', completed: true },
@@ -78,6 +83,14 @@ export default function BillingPlans({
             <Head title="Billing Plans" />
 
             <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 p-4 md:p-6">
+                {(errors.checkout || flash?.onboarding_notice) && (
+                    <Card className="border-red-200 bg-red-50/70 dark:border-red-900 dark:bg-red-950/20">
+                        <CardContent className="pt-6 text-sm text-red-700 dark:text-red-300">
+                            {errors.checkout ?? flash?.onboarding_notice}
+                        </CardContent>
+                    </Card>
+                )}
+
                 {/* Step Indicator */}
                 <div className="flex justify-between gap-2 rounded-lg border border-border bg-muted/30 p-4 sm:gap-3 md:border-0 md:bg-transparent md:p-0">
                     {steps.map((step) => (
