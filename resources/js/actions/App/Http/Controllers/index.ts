@@ -1,6 +1,8 @@
+import Billing from './Billing'
 import Settings from './Settings'
 const Controllers = {
-    Settings: Object.assign(Settings, Settings),
+    Billing: Object.assign(Billing, Billing),
+Settings: Object.assign(Settings, Settings),
 }
 
 export default Controllers

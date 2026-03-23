@@ -48,48 +48,38 @@ export default function Welcome({
         {
             number: 1,
             title: 'Create Account',
-            description: 'Sign up and set up your organization in minutes',
+            description: 'Sign up and choose Essential or Professional plan',
         },
         {
             number: 2,
-            title: 'Add Employees',
-            description: 'Input employee details, salaries, and deductions',
+            title: 'Secure Payment',
+            description:
+                'Proceed to Paystack and choose card, transfer, USSD, or mobile money',
         },
         {
             number: 3,
             title: 'Run Payroll',
-            description: 'Generate payroll with tax calculations automatically',
+            description:
+                'Generate payroll with tax and statutory deductions automatically',
         },
         {
             number: 4,
-            title: 'Distribute & Report',
-            description: 'Send payslips and generate compliance reports',
+            title: 'Finalize & Report',
+            description: 'Finalize payroll and export compliance-ready reports',
         },
     ];
 
     const plans = [
         {
-            organizationType: 'Small (SME / Small NGO)',
-            staffSizeBand: 'Up to 30 staff',
-            monthlyRetainer: '₦450,000',
-            highlighted: false,
-        },
-        {
-            organizationType: 'Medium (Mid-size org)',
-            staffSizeBand: '31-100 staff',
-            monthlyRetainer: '₦850,000',
+            organizationType: 'Essential',
+            staffSizeBand: '1-50 employees',
+            monthlyRetainer: '₦800 / employee / month',
             highlighted: true,
         },
         {
-            organizationType: 'Large (Corporate / NGO)',
-            staffSizeBand: '101-300 staff',
-            monthlyRetainer: '₦1,500,000',
-            highlighted: false,
-        },
-        {
-            organizationType: 'Very Large / Complex',
-            staffSizeBand: '300+ staff or multi-location',
-            monthlyRetainer: '₦3,500,000',
+            organizationType: 'Professional',
+            staffSizeBand: '51+ employees',
+            monthlyRetainer: '₦850 / employee / month',
             highlighted: false,
         },
     ];
@@ -173,7 +163,7 @@ export default function Welcome({
                                             size="lg"
                                             className="gap-2 text-base"
                                         >
-                                            Start Free Trial{' '}
+                                            Start 7-Day Guarantee{' '}
                                             <ArrowRight className="h-4 w-4" />
                                         </Button>
                                     </Link>
@@ -189,8 +179,8 @@ export default function Welcome({
                                 </a>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                No credit card required. 14-day free trial.
-                                Cancel anytime.
+                                Payment secured via Paystack. 7-day money-back
+                                guarantee.
                             </p>
                         </div>
                     </div>
@@ -204,11 +194,11 @@ export default function Welcome({
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <div className="mb-12 text-center lg:mb-14">
                             <h2 className="mb-4 text-4xl font-bold">
-                                Monthly Retainer Structure
+                                Transparent NGN Pricing
                             </h2>
                             <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                                Clear pricing by organization size and staff
-                                count.
+                                Payroll-first plans priced per employee for
+                                Nigerian businesses.
                             </p>
                         </div>
 
@@ -220,7 +210,7 @@ export default function Welcome({
                                 >
                                     {plan.highlighted && (
                                         <div className="mb-3 inline-block rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
-                                            MOST COMMON BAND
+                                            MOST POPULAR
                                         </div>
                                     )}
                                     <h3 className="mb-3 text-xl font-semibold">
@@ -233,10 +223,13 @@ export default function Welcome({
                                         {plan.staffSizeBand}
                                     </p>
                                     <p className="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                                        Monthly Retainer
+                                        Price
                                     </p>
                                     <p className="text-3xl font-bold text-primary">
                                         {plan.monthlyRetainer}
+                                    </p>
+                                    <p className="mt-2 text-sm text-muted-foreground">
+                                        Billed annually
                                     </p>
                                 </div>
                             ))}
@@ -254,7 +247,7 @@ export default function Welcome({
                                                 Staff Size Band
                                             </th>
                                             <th className="px-6 py-4 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                                                Monthly Retainer (Naira)
+                                                Price (NGN)
                                             </th>
                                         </tr>
                                     </thead>
@@ -283,7 +276,7 @@ export default function Welcome({
                         <div className="mt-8 flex justify-center">
                             <Link href={canRegister ? register() : '#'}>
                                 <Button size="lg" className="gap-2">
-                                    Start Free Trial
+                                    Start 7-Day Guarantee
                                     <ArrowRight className="h-4 w-4" />
                                 </Button>
                             </Link>
@@ -383,7 +376,7 @@ export default function Welcome({
                                     variant="secondary"
                                     className="gap-2 text-lg"
                                 >
-                                    Start Your Free Trial{' '}
+                                    Start Your 7-Day Guarantee{' '}
                                     <ArrowRight className="h-5 w-5" />
                                 </Button>
                             </Link>
