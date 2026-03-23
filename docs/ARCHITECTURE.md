@@ -188,6 +188,24 @@ Behavior when blocked:
 - prevent finalization/disbursement actions
 - show clear remediation CTA in UI
 
+### 6.3 Billing State Transition Matrix
+
+| Current State | Trigger | Next State | Finalization | Notes |
+| --- | --- | --- | --- | --- |
+| `pending` | `charge.success` | `active` | allow | Initial successful payment on signup |
+| `active` | recurring charge fails | `grace` | allow with warning | Start grace window and notify org owner |
+| `grace` | charge recovered before grace end | `active` | allow | Clear grace markers and continue billing |
+| `grace` | grace period expires without payment | `suspended` | block | Tenant becomes read-only for write/finalize actions |
+| `active` | user cancels within guarantee window and refund approved | `canceled` | block | Refund issued and tenant remains read-only |
+| `active` | user cancels after guarantee window | `canceled` | block | No refund; access remains read-only |
+| `suspended` | payment recovered (manual or automatic) | `active` | allow | Restore write/finalize actions |
+| `canceled` | new paid subscription started | `active` | allow | New subscription record linked to same tenant |
+
+Transition rules:
+- All transitions must be idempotent and event-driven.
+- Out-of-order webhooks must not regress a newer billing state.
+- `canceled` is terminal for a subscription record but not for the tenant.
+
 ---
 
 ## 7. Event-Driven Payment Lifecycle
