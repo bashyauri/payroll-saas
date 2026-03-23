@@ -54,4 +54,8 @@ PaystackWebhookController.post = (options?: RouteQueryOptions): RouteDefinition<
         })
     
     PaystackWebhookController.form = PaystackWebhookControllerForm
+export default PaystackWebhookControllerost',
+        })
+    
+    PaystackWebhookController.form = PaystackWebhookControllerForm
 export default PaystackWebhookController

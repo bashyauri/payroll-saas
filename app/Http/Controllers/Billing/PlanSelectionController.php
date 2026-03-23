@@ -12,7 +12,7 @@ class PlanSelectionController extends Controller
     public function __invoke(): Response
     {
         $plans = SubscriptionPlan::query()
-            ->where('is_active', true)
+            ->active()
             ->orderBy('min_employees')
             ->get([
                 'name',

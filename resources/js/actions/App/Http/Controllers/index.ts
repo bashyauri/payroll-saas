@@ -1,7 +1,9 @@
+import Onboarding from './Onboarding'
 import Billing from './Billing'
 import Settings from './Settings'
 const Controllers = {
-    Billing: Object.assign(Billing, Billing),
+    Onboarding: Object.assign(Onboarding, Onboarding),
+Billing: Object.assign(Billing, Billing),
 Settings: Object.assign(Settings, Settings),
 }
 

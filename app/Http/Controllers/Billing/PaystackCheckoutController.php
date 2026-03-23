@@ -19,8 +19,8 @@ class PaystackCheckoutController extends Controller
         ]);
 
         $plan = SubscriptionPlan::query()
+            ->active()
             ->where('slug', $data['plan'])
-            ->where('is_active', true)
             ->firstOrFail();
 
         $employeeCount = max((int) ($data['employee_count'] ?? $plan->min_employees), (int) $plan->min_employees);

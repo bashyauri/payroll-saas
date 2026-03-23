@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class SubscriptionPlan extends Model
@@ -34,4 +35,9 @@ class SubscriptionPlan extends Model
 
     public const PLAN_ESSENTIAL = 'essential';
     public const PLAN_PROFESSIONAL = 'professional';
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->whereRaw('is_active IS TRUE');
+    }
 }
