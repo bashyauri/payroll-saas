@@ -9,6 +9,7 @@ Product direction:
 - Multi-tenant architecture with centralized billing and isolated tenant payroll data.
 - Subscription onboarding uses Trial-First with Immediate Payment (Option 2 in latest decision).
 - Full access starts immediately after payment, with a 7-day money-back guarantee.
+- Trial users are restricted to view-only reports with trial watermarking.
 
 Business direction:
 - Launch with core payroll and statutory compliance only.
@@ -79,6 +80,12 @@ Why:
    - notifications and grace period are triggered
    - billing_status becomes suspended after grace period
 
+### 3.3 Access Gate Enforcement
+
+- Verified users are routed through onboarding continuation before dashboard access.
+- Dashboard access is allowed only after successful payment and active subscription state.
+- Users without successful payment are redirected to plan selection and checkout.
+
 ---
 
 ## 4. Pricing Model
@@ -89,6 +96,11 @@ Use one naming set consistently across product, sales, and code:
 
 - Essential: NGN 800 per employee per month, billed annually, staff range 1-50.
 - Professional: NGN 850 per employee per month, billed annually, staff range 51+.
+
+Plan band rules:
+- Essential checkout blocks employee_count above 50.
+- Professional checkout blocks employee_count below 51.
+- Validation messages must clearly instruct users to choose the correct plan.
 
 Included in both:
 - Employee records
@@ -151,6 +163,13 @@ If personal accounts are enabled, treat them as lightweight tenants with strict 
 - Single-workspace scope with capped usage limits
 - Same billing guard rules for finalization/disbursement actions
 
+### 5.3 Organization Access Model (MVP)
+
+- Each organization uses distinct login credentials at launch.
+- No cross-organization switcher is included in MVP.
+- Organization-level isolation is enforced by tenant_id and scoped authorization checks.
+- Multi-organization user switching is deferred to a later enterprise phase.
+
 ---
 
 ## 6. Billing and Access Control Architecture
@@ -187,6 +206,21 @@ Behavior when blocked:
 - allow read-only access to historical payroll
 - prevent finalization/disbursement actions
 - show clear remediation CTA in UI
+
+### 6.4 Trial Entitlement Controls
+
+- Trial users can process payroll core workflows.
+- Trial users cannot export reports.
+- Trial report screens are view-only and display visible trial watermarking.
+- Export and distribution reporting controls are unlocked on paid active subscriptions.
+
+### 6.5 Post-Failure Retention and Notifications
+
+- Renewal failure triggers a 7-day grace period.
+- At grace expiry, account moves to suspended read-only mode.
+- A deletion-risk notification is issued after suspension, with a 30-day warning milestone.
+- Non-renewed subscribers may retain read-only access up to 90 days, after which data lifecycle policy applies.
+- Data export or migration support after grace can be offered as a paid operational service.
 
 ### 6.3 Billing State Transition Matrix
 
@@ -227,7 +261,8 @@ Transition rules:
 
 - Validate refund_eligible_until before approval.
 - Record refund request and refund transaction IDs.
-- Apply partial/fee deduction rules only if pre-disclosed in policy.
+- Apply pre-disclosed non-recoverable deductions before final refund payout.
+- Deductions may include Paystack fees, bank charges, stamp duties, COT, and related transaction costs.
 - Move organization to read-only if canceled.
 
 ---
@@ -309,6 +344,12 @@ Per-tenant configurable dimensions:
 - Payslips tied to snapshot ID.
 - No retroactive mutation of closed payroll runs.
 
+## 9.3 Payroll Distribution Controls
+
+- Platform supports bulk payslip emailing directly to individual employees after payroll finalization.
+- Delivery status, retries, and failure logs are recorded for operations visibility.
+- Manual download-and-send remains optional fallback, not primary workflow.
+
 ---
 
 ## 10. Phased Technical Roadmap
@@ -325,6 +366,9 @@ Scope:
 ## 10.2 Phase 2
 
 Scope:
+- state-aligned annual returns reporting packs
+- filing-readiness checks and reconciliation reports
+- state filing calendar reminders and compliance alerts
 - leave management
 - employee self-service portal
 - stronger dunning automation and billing analytics
@@ -410,4 +454,4 @@ Status:
 - Architecture approved for implementation.
 
 Last updated: March 23, 2026
-Version: 2.0
+Version: 2.1

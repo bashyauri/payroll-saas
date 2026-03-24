@@ -1,6 +1,6 @@
 # User Flows & Journeys
-Last updated: March 23, 2026  
-Version: 1.0  
+Last updated: March 24, 2026  
+Version: 1.1  
 Reference: architecture.md (sections 3.1, 3.2, 6.2)
 
 This file documents the end-to-end user journeys for the Payroll SaaS platform.  
@@ -17,9 +17,12 @@ All flows follow the **Trial-First with Immediate Payment** model (Option 2): pa
 3. User verifies email → redirected to Plan Selection page
 4. User chooses plan (Essential or Professional)
    - Sees clear comparison table + "7-day full refund guarantee if not satisfied"
+   - Enters employee count and must satisfy plan band rules:
+     - Essential: max 50 employees
+     - Professional: min 51 employees
 5. Clicks "Start Trial" or "Subscribe"
    - Redirected to Paystack checkout (card, bank transfer, USSD, mobile money)
-   - Payment is processed **immediately** (charge or authorization hold)
+   - Payment is processed **immediately** (annualized charge based on employee count)
 6. Payment success
    - Paystack redirects to success URL (/subscription/callback)
    - Backend:
@@ -54,7 +57,7 @@ All flows follow the **Trial-First with Immediate Payment** model (Option 2): pa
      - Subscription active or within trial window?
 2. If checks pass → full dashboard loads
    - Shows:
-     - Current organization switcher (if user has multiple orgs)
+   - Organization profile in current tenant context
      - Subscription status + trial countdown (if applicable)
      - Employee count vs plan limit
      - Quick actions: Add Employee, Run Payroll, View Payslips
@@ -67,7 +70,9 @@ All flows follow the **Trial-First with Immediate Payment** model (Option 2): pa
    - Billing guard checks subscription → allows finalization if active/trial
    - Generates payslips, updates payroll_run status
 5. User views payslips / reports
-   - Download PDF, email to employees, export CSV
+   - Can bulk-email payslips to employees directly from platform
+   - Trial users: report views are watermarked and export is blocked
+   - Paid users: export/report distribution is enabled
 6. If free/trial limit hit
    - Block write actions (e.g., add employee > limit, finalize payroll after expiry)
    - Show upgrade CTA
@@ -88,6 +93,7 @@ All flows follow the **Trial-First with Immediate Payment** model (Option 2): pa
      - Sets organization billing_status = canceled
      - Keeps tenant DB accessible (read-only mode)
 3. Refund processed (minus Paystack fees if disclosed)
+   - Refund payout = amount paid - Paystack fees - bank/stamp/COT-related non-recoverable costs
    - User receives confirmation email
    - Read-only access remains (view historical payrolls/payslips)
 
@@ -102,19 +108,29 @@ All flows follow the **Trial-First with Immediate Payment** model (Option 2): pa
    - Show prominent "Upgrade to continue" banner
 2. Future billing fails
    - billing_status → grace (short grace period)
-   - After grace → suspended
-   - Notifications sent
-   - Read-only mode enforced
+   - After 7-day grace → suspended read-only mode
+   - Notification sent that data enters deletion-risk timeline
+   - 30-day warning milestone communicated
+   - Up to 90-day view-only retention may apply for non-renewed subscribers
+   - Export or assisted data migration after grace may attract a service fee
 
 ---
 
-## 5. Multi-Organization Switcher Flow
+## 5. Organization Access Model (MVP)
 
-1. User belongs to multiple organizations
-2. Navbar shows organization dropdown
-3. Select different org → update current_tenant_id in session/user
-4. Page reloads with new tenant context
-   - All data, limits, features scoped to selected tenant
+1. Each organization has distinct login credentials
+2. User logs in to one organization context at a time
+3. No cross-organization switcher is available in MVP
+4. All data, limits, and permissions remain scoped to the logged-in tenant
+
+---
+
+## 6. Multi-User Role Flow (Within One Organization)
+
+1. Organization administrator invites team users into same tenant
+2. Roles can include: administrator, HR staff, reviewer, approver
+3. Payroll flow can enforce maker-checker approvals before finalization
+4. Privilege controls are tenant-scoped and set by administrator
 
 ---
 
@@ -123,7 +139,9 @@ All flows follow the **Trial-First with Immediate Payment** model (Option 2): pa
 - Dashboard access = **after** successful payment confirmation
 - Full features = active subscription or within 7-day trial
 - No pre-payment dashboard preview or limited mode
+- Trial reports = view-only with watermark, no export
 - Read-only mode = post-cancellation / post-expiry / suspended
+- MVP access model = one organization per login, no switcher
 - All flows are tenant-aware (middleware sets context)
 
-Last updated: March 23, 2026
+Last updated: March 24, 2026
