@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import {
     ArrowRight,
     BadgeCheck,
@@ -76,6 +76,12 @@ export default function BillingPlans({
         errors: Partial<Record<string, string>>;
         flash?: Partial<Record<string, string>>;
     };
+    const csrfToken =
+        typeof document !== 'undefined'
+            ? (document
+                  .querySelector('meta[name="csrf-token"]')
+                  ?.getAttribute('content') ?? '')
+            : '';
 
     const resolveEmployeeCount = (plan: Plan): number => {
         const raw = employeeCounts[plan.slug];
@@ -335,27 +341,41 @@ export default function BillingPlans({
                                                     <ArrowRight className="h-4 w-4" />
                                                 </Button>
                                             ) : (
-                                                <Button
-                                                    className="w-full gap-2 text-sm"
-                                                    asChild
+                                                <form
+                                                    action="/billing/checkout"
+                                                    method="post"
+                                                    target="_blank"
+                                                    className="w-full"
                                                 >
-                                                    <Link
-                                                        href="/billing/checkout"
-                                                        method="post"
-                                                        data={{
-                                                            plan: plan.slug,
-                                                            employee_count:
-                                                                selectedEmployeeCount,
-                                                        }}
+                                                    <input
+                                                        type="hidden"
+                                                        name="_token"
+                                                        value={csrfToken}
+                                                    />
+                                                    <input
+                                                        type="hidden"
+                                                        name="plan"
+                                                        value={plan.slug}
+                                                    />
+                                                    <input
+                                                        type="hidden"
+                                                        name="employee_count"
+                                                        value={
+                                                            selectedEmployeeCount
+                                                        }
+                                                    />
+                                                    <Button
+                                                        type="submit"
+                                                        className="w-full gap-2 text-sm"
                                                     >
                                                         Start Free Trial
                                                         <ArrowRight className="h-4 w-4" />
-                                                    </Link>
-                                                </Button>
+                                                    </Button>
+                                                </form>
                                             )}
                                             <p className="text-xs text-muted-foreground">
-                                                Payment method selected on
-                                                Paystack. 7-day guarantee starts
+                                                Paystack opens in a new tab.
+                                                7-day guarantee starts
                                                 immediately.
                                             </p>
                                         </CardFooter>
