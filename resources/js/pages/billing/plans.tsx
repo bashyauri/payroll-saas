@@ -1,7 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import {
     ArrowRight,
-    BadgeCheck,
     CheckCircle2,
     CreditCard,
     Landmark,
@@ -157,10 +156,6 @@ export default function BillingPlans({
                             <span>
                                 {guaranteeDays}-day money-back guarantee
                             </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <BadgeCheck className="h-4 w-4 flex-shrink-0 text-primary" />
-                            <span>NTA 2025 compliance included</span>
                         </div>
                     </CardContent>
                 </Card>

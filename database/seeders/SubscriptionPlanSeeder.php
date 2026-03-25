@@ -24,7 +24,6 @@ class SubscriptionPlanSeeder extends Seeder
                 'features' => [
                     'employee_records',
                     'payroll_processing',
-                    'nta_2025_compliance',
                     'statutory_deductions',
                     'auto_tax_table_updates',
                     'payslip_generation',
@@ -43,7 +42,6 @@ class SubscriptionPlanSeeder extends Seeder
                 'features' => [
                     'employee_records',
                     'payroll_processing',
-                    'nta_2025_compliance',
                     'statutory_deductions',
                     'auto_tax_table_updates',
                     'payslip_generation',

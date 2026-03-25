@@ -4,7 +4,6 @@ import {
     Calculator,
     FileText,
     Lock,
-    CheckCircle2,
     ArrowRight,
     Shield,
     Clock,
@@ -25,7 +24,7 @@ export default function Welcome({
             icon: Calculator,
             title: 'Accurate Payroll Calculation',
             description:
-                'Automated PAYE, pension, NHF deductions compliant with Nigeria Tax Act 2025',
+                'Automated PAYE, pension, and NHF deductions for Nigerian payroll',
         },
         {
             icon: FileText,
@@ -173,10 +172,6 @@ export default function Welcome({
                     <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
                         <div className="mx-auto max-w-3xl text-center">
                             <div className="mb-6 inline-flex flex-col items-center gap-3 sm:gap-4">
-                                <div className="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-sm font-medium text-green-700 dark:bg-green-950/40 dark:text-green-400">
-                                    <CheckCircle2 className="h-4 w-4" />
-                                    Nigeria Tax Act 2025 Compliant
-                                </div>
                                 <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-400">
                                     <Shield className="h-4 w-4" />
                                     7-Day Money-Back Guarantee
