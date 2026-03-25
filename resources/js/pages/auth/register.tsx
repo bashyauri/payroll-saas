@@ -1,5 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,10 @@ import { login } from '@/routes';
 import { store } from '@/routes/register';
 
 export default function Register() {
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirmation, setShowPasswordConfirmation] =
+        useState(false);
+
     const steps = [
         { number: 1, title: 'Sign Up', completed: true },
         { number: 2, title: 'Verify Email', completed: false },
@@ -124,7 +129,7 @@ export default function Register() {
                                 </p>
                             </div>
 
-                            <div className="grid gap-2">
+                            <div className="relative grid gap-2">
                                 <Label
                                     htmlFor="password"
                                     className="text-sm font-medium"
@@ -133,14 +138,32 @@ export default function Register() {
                                 </Label>
                                 <Input
                                     id="password"
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     required
                                     tabIndex={3}
                                     autoComplete="new-password"
                                     name="password"
                                     placeholder="Create a strong password"
-                                    className="text-base sm:text-sm"
+                                    className="pr-10 text-base sm:text-sm"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setShowPassword((prev) => !prev)
+                                    }
+                                    className="absolute right-3 mt-8 text-muted-foreground hover:text-foreground"
+                                    aria-label={
+                                        showPassword
+                                            ? 'Hide password'
+                                            : 'Show password'
+                                    }
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-4 w-4" />
+                                    ) : (
+                                        <Eye className="h-4 w-4" />
+                                    )}
+                                </button>
                                 <InputError
                                     message={errors.password}
                                     className="text-xs sm:text-sm"
@@ -150,7 +173,7 @@ export default function Register() {
                                 </p>
                             </div>
 
-                            <div className="grid gap-2">
+                            <div className="relative grid gap-2">
                                 <Label
                                     htmlFor="password_confirmation"
                                     className="text-sm font-medium"
@@ -159,14 +182,38 @@ export default function Register() {
                                 </Label>
                                 <Input
                                     id="password_confirmation"
-                                    type="password"
+                                    type={
+                                        showPasswordConfirmation
+                                            ? 'text'
+                                            : 'password'
+                                    }
                                     required
                                     tabIndex={4}
                                     autoComplete="new-password"
                                     name="password_confirmation"
                                     placeholder="Confirm your password"
-                                    className="text-base sm:text-sm"
+                                    className="pr-10 text-base sm:text-sm"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setShowPasswordConfirmation(
+                                            (prev) => !prev,
+                                        )
+                                    }
+                                    className="absolute right-3 mt-8 text-muted-foreground hover:text-foreground"
+                                    aria-label={
+                                        showPasswordConfirmation
+                                            ? 'Hide password confirmation'
+                                            : 'Show password confirmation'
+                                    }
+                                >
+                                    {showPasswordConfirmation ? (
+                                        <EyeOff className="h-4 w-4" />
+                                    ) : (
+                                        <Eye className="h-4 w-4" />
+                                    )}
+                                </button>
                                 <InputError
                                     message={errors.password_confirmation}
                                     className="text-xs sm:text-sm"

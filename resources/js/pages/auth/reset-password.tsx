@@ -1,4 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
+import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +15,10 @@ type Props = {
 };
 
 export default function ResetPassword({ token, email }: Props) {
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirmation, setShowPasswordConfirmation] =
+        useState(false);
+
     return (
         <AuthLayout
             title="Reset password"
@@ -44,32 +50,70 @@ export default function ResetPassword({ token, email }: Props) {
                             />
                         </div>
 
-                        <div className="grid gap-2">
+                        <div className="relative grid gap-2">
                             <Label htmlFor="password">Password</Label>
                             <Input
                                 id="password"
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 name="password"
                                 autoComplete="new-password"
-                                className="mt-1 block w-full"
+                                className="mt-1 block w-full pr-10"
                                 autoFocus
                                 placeholder="Password"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((prev) => !prev)}
+                                className="absolute top-9 right-3 text-muted-foreground hover:text-foreground"
+                                aria-label={
+                                    showPassword
+                                        ? 'Hide password'
+                                        : 'Show password'
+                                }
+                            >
+                                {showPassword ? (
+                                    <EyeOff className="h-4 w-4" />
+                                ) : (
+                                    <Eye className="h-4 w-4" />
+                                )}
+                            </button>
                             <InputError message={errors.password} />
                         </div>
 
-                        <div className="grid gap-2">
+                        <div className="relative grid gap-2">
                             <Label htmlFor="password_confirmation">
                                 Confirm password
                             </Label>
                             <Input
                                 id="password_confirmation"
-                                type="password"
+                                type={
+                                    showPasswordConfirmation
+                                        ? 'text'
+                                        : 'password'
+                                }
                                 name="password_confirmation"
                                 autoComplete="new-password"
-                                className="mt-1 block w-full"
+                                className="mt-1 block w-full pr-10"
                                 placeholder="Confirm password"
                             />
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setShowPasswordConfirmation((prev) => !prev)
+                                }
+                                className="absolute top-9 right-3 text-muted-foreground hover:text-foreground"
+                                aria-label={
+                                    showPasswordConfirmation
+                                        ? 'Hide password confirmation'
+                                        : 'Show password confirmation'
+                                }
+                            >
+                                {showPasswordConfirmation ? (
+                                    <EyeOff className="h-4 w-4" />
+                                ) : (
+                                    <Eye className="h-4 w-4" />
+                                )}
+                            </button>
                             <InputError
                                 message={errors.password_confirmation}
                                 className="mt-2"
