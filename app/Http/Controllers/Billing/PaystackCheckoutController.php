@@ -52,7 +52,11 @@ class PaystackCheckoutController extends Controller
         }
 
         $billingCycleMonths = $plan->billing_period === 'annual' ? 12 : 1;
-        $amountKobo = (int) round(((float) $plan->price_per_employee * $employeeCount * $billingCycleMonths) * 100);
+        $vatRate = (float) config('billing.vat_rate', 0.075);
+
+        $subtotalKobo = (int) round(((float) $plan->price_per_employee * $employeeCount * $billingCycleMonths) * 100);
+        $vatAmountKobo = (int) round($subtotalKobo * $vatRate);
+        $amountKobo = $subtotalKobo + $vatAmountKobo;
         $reference = 'ps_' . Str::lower((string) Str::ulid());
 
         $response = Http::asJson()
@@ -69,6 +73,10 @@ class PaystackCheckoutController extends Controller
                     'employee_count' => $employeeCount,
                     'billing_period' => (string) $plan->billing_period,
                     'billing_cycle_months' => $billingCycleMonths,
+                    'vat_rate' => $vatRate,
+                    'subtotal_kobo' => $subtotalKobo,
+                    'vat_amount_kobo' => $vatAmountKobo,
+                    'total_amount_kobo' => $amountKobo,
                     'user_id' => (string) $request->user()->id,
                 ],
                 'channels' => ['card', 'bank', 'ussd', 'mobile_money'],

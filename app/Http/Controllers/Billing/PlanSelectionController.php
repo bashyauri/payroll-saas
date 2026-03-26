@@ -42,6 +42,7 @@ class PlanSelectionController extends Controller
             'paymentMethods' => ['Card', 'Bank Transfer', 'USSD', 'Mobile Money'],
             'guaranteeDays' => 7,
             'currency' => 'NGN',
+            'vatRate' => (float) config('billing.vat_rate', 0.075),
         ]);
     }
 }

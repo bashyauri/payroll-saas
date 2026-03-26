@@ -60,12 +60,14 @@ export default function BillingPlans({
     plans,
     hasPlans,
     guaranteeDays,
+    vatRate,
 }: {
     plans: Plan[];
     hasPlans: boolean;
     paymentMethods: string[];
     guaranteeDays: number;
     currency: string;
+    vatRate: number;
 }) {
     const [employeeCounts, setEmployeeCounts] = useState<
         Record<string, string>
@@ -145,9 +147,10 @@ export default function BillingPlans({
                             Choose Your Payroll Plan
                         </CardTitle>
                         <CardDescription className="text-xs sm:text-sm">
-                            Pricing is in NGN and billed annually. After
-                            choosing a plan, you will continue to Paystack to
-                            select your preferred payment method.
+                            Rates are in NGN and billed annually. Prices are
+                            VAT-exclusive, and 7.5% VAT is added at checkout.
+                            After choosing a plan, you will continue to Paystack
+                            to select your preferred payment method.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-3 text-xs sm:gap-4 sm:text-sm md:grid-cols-2">
@@ -174,8 +177,13 @@ export default function BillingPlans({
                                 const estimatedMonthlyAmount =
                                     selectedEmployeeCount *
                                     plan.price_per_employee;
-                                const estimatedCheckoutAmount =
+                                const estimatedSubtotalAmount =
                                     estimatedMonthlyAmount * billingCycleMonths;
+                                const estimatedVatAmount =
+                                    estimatedSubtotalAmount * vatRate;
+                                const estimatedCheckoutAmount =
+                                    estimatedSubtotalAmount +
+                                    estimatedVatAmount;
                                 const employeeRangeError =
                                     selectedEmployeeCount < plan.min_employees
                                         ? `${plan.name} requires at least ${plan.min_employees} employees.`
@@ -277,13 +285,29 @@ export default function BillingPlans({
                                                     )}
                                                 </p>
                                                 <p className="text-sm font-medium text-foreground">
-                                                    Estimated monthly amount:{' '}
+                                                    Estimated monthly amount
+                                                    (excl. VAT):{' '}
                                                     {formatNaira(
                                                         estimatedMonthlyAmount,
                                                     )}
                                                 </p>
+                                                <p className="text-sm font-medium text-foreground">
+                                                    Subtotal at checkout (excl.
+                                                    VAT):{' '}
+                                                    {formatNaira(
+                                                        estimatedSubtotalAmount,
+                                                    )}
+                                                </p>
+                                                <p className="text-sm font-medium text-foreground">
+                                                    VAT (
+                                                    {(vatRate * 100).toFixed(1)}
+                                                    %):{' '}
+                                                    {formatNaira(
+                                                        estimatedVatAmount,
+                                                    )}
+                                                </p>
                                                 <p className="text-sm font-semibold text-primary">
-                                                    Amount charged at checkout:{' '}
+                                                    Amount payable:{' '}
                                                     {formatNaira(
                                                         estimatedCheckoutAmount,
                                                     )}
@@ -380,7 +404,7 @@ export default function BillingPlans({
                         </div>
 
                         {/* Payment Methods Section */}
-                        <Card className="border-border/50 bg-muted/30">
+                        {/* <Card className="border-border/50 bg-muted/30">
                             <CardHeader>
                                 <CardTitle className="text-base sm:text-lg">
                                     Secure Payment Methods
@@ -408,7 +432,7 @@ export default function BillingPlans({
                                     <span>Mobile Money</span>
                                 </div>
                             </CardContent>
-                        </Card>
+                        </Card> */}
 
                         {/* FAQ Card */}
                         <Card>
