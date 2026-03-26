@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 import paystack from './paystack'
 /**
 * @see \App\Http\Controllers\Billing\PlanSelectionController::__invoke
- * @see app/Http/Controllers/Billing/PlanSelectionController.php:12
+ * @see app/Http/Controllers/Billing/PlanSelectionController.php:15
  * @route '/billing/plans'
  */
 export const plans = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -17,7 +17,7 @@ plans.definition = {
 
 /**
 * @see \App\Http\Controllers\Billing\PlanSelectionController::__invoke
- * @see app/Http/Controllers/Billing/PlanSelectionController.php:12
+ * @see app/Http/Controllers/Billing/PlanSelectionController.php:15
  * @route '/billing/plans'
  */
 plans.url = (options?: RouteQueryOptions) => {
@@ -26,7 +26,7 @@ plans.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Billing\PlanSelectionController::__invoke
- * @see app/Http/Controllers/Billing/PlanSelectionController.php:12
+ * @see app/Http/Controllers/Billing/PlanSelectionController.php:15
  * @route '/billing/plans'
  */
 plans.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -35,7 +35,7 @@ plans.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Billing\PlanSelectionController::__invoke
- * @see app/Http/Controllers/Billing/PlanSelectionController.php:12
+ * @see app/Http/Controllers/Billing/PlanSelectionController.php:15
  * @route '/billing/plans'
  */
 plans.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -45,7 +45,7 @@ plans.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Billing\PlanSelectionController::__invoke
- * @see app/Http/Controllers/Billing/PlanSelectionController.php:12
+ * @see app/Http/Controllers/Billing/PlanSelectionController.php:15
  * @route '/billing/plans'
  */
     const plansForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -55,7 +55,7 @@ plans.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Billing\PlanSelectionController::__invoke
- * @see app/Http/Controllers/Billing/PlanSelectionController.php:12
+ * @see app/Http/Controllers/Billing/PlanSelectionController.php:15
  * @route '/billing/plans'
  */
         plansForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -64,7 +64,7 @@ plans.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Billing\PlanSelectionController::__invoke
- * @see app/Http/Controllers/Billing/PlanSelectionController.php:12
+ * @see app/Http/Controllers/Billing/PlanSelectionController.php:15
  * @route '/billing/plans'
  */
         plansForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

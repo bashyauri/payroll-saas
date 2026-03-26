@@ -3,14 +3,37 @@
 namespace App\Http\Controllers\Billing;
 
 use App\Http\Controllers\Controller;
+use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PlanSelectionController extends Controller
 {
-    public function __invoke(): Response
+    public function __invoke(Request $request): Response|RedirectResponse
     {
+        $user = $request->user();
+
+        if ($user) {
+            $organization = $user->organizations()->first();
+
+            if ($organization) {
+                $hasActiveSubscription = Subscription::query()
+                    ->where('organization_id', $organization->id)
+                    ->whereIn('status', [
+                        Subscription::STATUS_ACTIVE,
+                        Subscription::STATUS_PAST_DUE,
+                    ])
+                    ->exists();
+
+                if ($hasActiveSubscription) {
+                    return redirect()->route('dashboard');
+                }
+            }
+        }
+
         $plans = SubscriptionPlan::query()
             ->active()
             ->orderBy('min_employees')

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Billing;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\Onboarding\OnboardingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,17 +65,34 @@ class PaystackCallbackController extends Controller
             'reference' => $reference,
         ]);
 
-        try {
-            // Create organization and subscription for the authenticated user
-            $user = Auth::user();
-            if ($user) {
-                $organization = $onboarding->setupOrganizationAfterPayment($user, $transactionData);
-                Log::info('Organization created after payment.', [
-                    'organization_id' => $organization->id,
-                    'user_id' => $user->id,
+        $user = Auth::user();
+
+        if (! $user) {
+            $userId = (string) data_get($transactionData, 'metadata.user_id', '');
+            $user = $userId !== '' ? User::query()->find($userId) : null;
+
+            if (! $user) {
+                Log::error('Paystack callback could not resolve paying user.', [
                     'reference' => $reference,
+                    'metadata_user_id' => $userId,
                 ]);
+
+                return redirect()
+                    ->route('login')
+                    ->withErrors(['checkout' => 'We could not restore your session after payment. Please sign in to continue.']);
             }
+
+            Auth::login($user);
+            $request->session()->regenerate();
+        }
+
+        try {
+            $organization = $onboarding->setupOrganizationAfterPayment($user, $transactionData);
+            Log::info('Organization created after payment.', [
+                'organization_id' => $organization->id,
+                'user_id' => $user->id,
+                'reference' => $reference,
+            ]);
         } catch (\Exception $e) {
             Log::error('Failed to setup organization after payment.', [
                 'reference' => $reference,

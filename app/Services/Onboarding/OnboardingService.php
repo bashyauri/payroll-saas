@@ -31,6 +31,19 @@ class OnboardingService
         $reference = (string) Arr::get($paystackData, 'reference', '');
         $amount = (int) Arr::get($paystackData, 'amount');
 
+        $existingOrganization = $user->organizations()
+            ->whereHas('subscriptions', function ($query) use ($reference): void {
+                $query->where('paystack_reference', $reference);
+            })
+            ->first();
+
+        if ($existingOrganization) {
+            session(['tenant_id' => $existingOrganization->id]);
+            Tenancy::initialize($existingOrganization);
+
+            return $existingOrganization;
+        }
+
         // Find the plan
         $plan = SubscriptionPlan::where('slug', $planSlug)->firstOrFail();
 
@@ -62,8 +75,8 @@ class OnboardingService
         ]);
 
         // Attach user to organization as owner
-        $organization->users()->attach($user->id, [
-            'role' => 'owner',
+        $organization->users()->syncWithoutDetaching([
+            $user->id => ['role' => 'owner'],
         ]);
 
         // Set current tenant in session so the user is immediately in tenant context
