@@ -33,6 +33,7 @@ class SubscriptionPlan extends Model
         'is_active' => 'boolean',
     ];
 
+    public const PLAN_INDIVIDUAL = 'individual';
     public const PLAN_ESSENTIAL = 'essential';
     public const PLAN_PROFESSIONAL = 'professional';
 

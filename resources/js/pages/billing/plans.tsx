@@ -1,13 +1,7 @@
-import { Head, usePage } from '@inertiajs/react';
-import {
-    ArrowRight,
-    CheckCircle2,
-    CreditCard,
-    Landmark,
-    Smartphone,
-    ShieldCheck,
-} from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { ArrowRight, CheckCircle2, LogOut, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
+import AppLogoIcon from '@/components/app-logo-icon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,8 +13,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
+import { logout } from '@/routes';
 
 type Plan = {
     name: string;
@@ -33,13 +26,6 @@ type Plan = {
     features: string[];
 };
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Billing Plans',
-        href: '/billing/plans',
-    },
-];
-
 function formatNaira(amount: number): string {
     return new Intl.NumberFormat('en-NG', {
         style: 'currency',
@@ -47,6 +33,24 @@ function formatNaira(amount: number): string {
         maximumFractionDigits: 0,
     }).format(amount);
 }
+
+const FEATURE_LABELS: Record<string, string> = {
+    employee_records: 'Employee records management',
+    payroll_processing: 'Automated payroll processing',
+    payslip_generation: 'PDF payslip generation',
+    basic_payroll_reports: 'Basic payroll reports',
+    statutory_deductions: 'PAYE, pension & NHF deductions',
+    auto_tax_table_updates: 'Automatic tax table updates',
+    standard_reports: 'Standard reports & exports',
+    leave_management: 'Leave management',
+    email_support: 'Email support',
+    advanced_analytics: 'Advanced analytics & insights',
+    custom_reports: 'Custom report builder',
+    bulk_employee_upload: 'Bulk employee CSV upload',
+    api_access: 'REST API access for integrations',
+    priority_phone_support: 'Priority phone support',
+    dedicated_account_manager: 'Dedicated account manager',
+};
 
 function staffBand(minEmployees: number, maxEmployees: number | null): string {
     if (!maxEmployees) {
@@ -99,8 +103,30 @@ export default function BillingPlans({
     ];
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Billing Plans" />
+
+            {/* Minimal top nav */}
+            <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+                <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
+                    <div className="flex items-center gap-2">
+                        <AppLogoIcon className="size-7" />
+                        <span className="text-sm font-semibold tracking-tight">
+                            The Niyi Consult
+                        </span>
+                    </div>
+                    <Link
+                        method="post"
+                        href={logout()}
+                        as="button"
+                        type="button"
+                        className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    >
+                        <LogOut className="size-4" />
+                        Sign out
+                    </Link>
+                </div>
+            </header>
 
             <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 p-4 md:p-6">
                 {(errors.checkout || flash?.onboarding_notice) && (
@@ -166,10 +192,8 @@ export default function BillingPlans({
                 {hasPlans ? (
                     <>
                         {/* Plans Grid - Mobile optimized */}
-                        <div className="grid gap-4 lg:grid-cols-2">
+                        <div className="grid gap-4 lg:grid-cols-3">
                             {plans.map((plan) => {
-                                const isProfessional =
-                                    plan.slug === 'professional';
                                 const selectedEmployeeCount =
                                     resolveEmployeeCount(plan);
                                 const billingCycleMonths =
@@ -197,7 +221,7 @@ export default function BillingPlans({
                                     <Card
                                         key={plan.slug}
                                         className={`flex flex-col transition-all duration-300 hover:shadow-lg ${
-                                            isProfessional
+                                            plan.slug === 'essential'
                                                 ? 'border-primary shadow-sm ring-1 ring-primary/20'
                                                 : ''
                                         }`}
@@ -207,16 +231,21 @@ export default function BillingPlans({
                                                 <CardTitle className="text-lg sm:text-xl">
                                                     {plan.name}
                                                 </CardTitle>
-                                                {isProfessional ? (
+                                                {plan.slug === 'essential' ? (
                                                     <Badge className="w-fit bg-primary text-xs text-primary-foreground">
-                                                        Recommended
+                                                        Most Popular
+                                                    </Badge>
+                                                ) : plan.slug ===
+                                                  'professional' ? (
+                                                    <Badge className="w-fit bg-green-600 text-xs text-white">
+                                                        Enterprise
                                                     </Badge>
                                                 ) : (
                                                     <Badge
-                                                        variant="secondary"
+                                                        variant="outline"
                                                         className="w-fit text-xs"
                                                     >
-                                                        Starter
+                                                        Solo / Freelancer
                                                     </Badge>
                                                 )}
                                             </div>
@@ -330,22 +359,25 @@ export default function BillingPlans({
                                                     Includes
                                                 </p>
                                                 <ul className="space-y-2 text-xs text-muted-foreground sm:text-sm">
-                                                    {plan.features
-                                                        .slice(0, 7)
-                                                        .map((feature) => (
+                                                    {plan.features.map(
+                                                        (feature) => (
                                                             <li
                                                                 key={feature}
                                                                 className="flex items-start gap-2"
                                                             >
                                                                 <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
                                                                 <span className="leading-snug">
-                                                                    {feature.replaceAll(
-                                                                        '_',
-                                                                        ' ',
-                                                                    )}
+                                                                    {FEATURE_LABELS[
+                                                                        feature
+                                                                    ] ??
+                                                                        feature.replaceAll(
+                                                                            '_',
+                                                                            ' ',
+                                                                        )}
                                                                 </span>
                                                             </li>
-                                                        ))}
+                                                        ),
+                                                    )}
                                                 </ul>
                                             </div>
                                         </CardContent>
@@ -499,6 +531,6 @@ export default function BillingPlans({
                     </Card>
                 )}
             </div>
-        </AppLayout>
+        </>
     );
 }
