@@ -27,6 +27,7 @@ class OnboardingService
         $metadata = Arr::get($paystackData, 'metadata', []);
         $planSlug = (string) Arr::get($metadata, 'plan_slug');
         $employeeCount = (int) Arr::get($metadata, 'employee_count', 1);
+        $billingPeriod = (string) Arr::get($metadata, 'billing_period', 'annual');
         $reference = (string) Arr::get($paystackData, 'reference', '');
         $amount = (int) Arr::get($paystackData, 'amount');
 
@@ -52,7 +53,9 @@ class OnboardingService
             'status' => Subscription::STATUS_ACTIVE,
             'trial_end_date' => now()->addDays(7),
             'refund_eligible_until' => now()->addDays(7),
-            'next_billing_date' => now()->addYear(),
+            'next_billing_date' => $billingPeriod === 'monthly'
+                ? now()->addMonth()
+                : now()->addYear(),
             'paystack_reference' => $reference,
             'amount_paid' => $amount,
             'currency' => 'NGN',

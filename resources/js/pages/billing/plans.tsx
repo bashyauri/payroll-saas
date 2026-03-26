@@ -26,6 +26,8 @@ type Plan = {
     features: string[];
 };
 
+type BillingCycle = 'monthly' | 'annual';
+
 function formatNaira(amount: number): string {
     return new Intl.NumberFormat('en-NG', {
         style: 'currency',
@@ -65,6 +67,7 @@ export default function BillingPlans({
     hasPlans,
     guaranteeDays,
     vatRate,
+    annualDiscountRate,
 }: {
     plans: Plan[];
     hasPlans: boolean;
@@ -72,7 +75,9 @@ export default function BillingPlans({
     guaranteeDays: number;
     currency: string;
     vatRate: number;
+    annualDiscountRate: number;
 }) {
+    const [billingCycle, setBillingCycle] = useState<BillingCycle>('annual');
     const [employeeCounts, setEmployeeCounts] = useState<
         Record<string, string>
     >({});
@@ -101,6 +106,8 @@ export default function BillingPlans({
         { number: 3, title: 'Choose Plan', completed: false },
         { number: 4, title: 'Start Free Trial', completed: false },
     ];
+    const billingCycleMonths = billingCycle === 'annual' ? 12 : 1;
+    const annualSavingsPercent = Math.round(annualDiscountRate * 100);
 
     return (
         <>
@@ -173,13 +180,49 @@ export default function BillingPlans({
                             Choose Your Payroll Plan
                         </CardTitle>
                         <CardDescription className="text-xs sm:text-sm">
-                            Rates are in NGN and billed annually. Prices are
-                            VAT-exclusive, and 7.5% VAT is added at checkout.
-                            After choosing a plan, you will continue to Paystack
-                            to select your preferred payment method.
+                            Rates are in NGN. Choose monthly or annual billing
+                            below. Annual billing saves {annualSavingsPercent}%.
+                            Prices are VAT-exclusive, and 7.5% VAT is added at
+                            checkout. After choosing a plan, you will continue
+                            to Paystack to select your preferred payment method.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-3 text-xs sm:gap-4 sm:text-sm md:grid-cols-2">
+                        <div className="md:col-span-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <div className="inline-flex rounded-md border border-border bg-background p-1">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setBillingCycle('monthly')
+                                        }
+                                        className={`rounded px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm ${
+                                            billingCycle === 'monthly'
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'text-muted-foreground hover:text-foreground'
+                                        }`}
+                                    >
+                                        Monthly billing
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setBillingCycle('annual')
+                                        }
+                                        className={`rounded px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm ${
+                                            billingCycle === 'annual'
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'text-muted-foreground hover:text-foreground'
+                                        }`}
+                                    >
+                                        Annual billing
+                                    </button>
+                                </div>
+                                <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                    Save {annualSavingsPercent}% on annual
+                                </Badge>
+                            </div>
+                        </div>
                         <div className="flex items-center gap-2">
                             <ShieldCheck className="h-4 w-4 flex-shrink-0 text-primary" />
                             <span>
@@ -196,13 +239,19 @@ export default function BillingPlans({
                             {plans.map((plan) => {
                                 const selectedEmployeeCount =
                                     resolveEmployeeCount(plan);
-                                const billingCycleMonths =
-                                    plan.billing_period === 'annual' ? 12 : 1;
                                 const estimatedMonthlyAmount =
                                     selectedEmployeeCount *
                                     plan.price_per_employee;
-                                const estimatedSubtotalAmount =
+                                const estimatedBaseSubtotalAmount =
                                     estimatedMonthlyAmount * billingCycleMonths;
+                                const estimatedDiscountAmount =
+                                    billingCycle === 'annual'
+                                        ? estimatedBaseSubtotalAmount *
+                                          annualDiscountRate
+                                        : 0;
+                                const estimatedSubtotalAmount =
+                                    estimatedBaseSubtotalAmount -
+                                    estimatedDiscountAmount;
                                 const estimatedVatAmount =
                                     estimatedSubtotalAmount * vatRate;
                                 const estimatedCheckoutAmount =
@@ -268,7 +317,7 @@ export default function BillingPlans({
                                                 <p className="text-xs text-muted-foreground sm:text-sm">
                                                     per employee / month
                                                     <br />
-                                                    Billed {plan.billing_period}
+                                                    Billed {billingCycle}
                                                 </p>
                                             </div>
 
@@ -327,6 +376,16 @@ export default function BillingPlans({
                                                         estimatedSubtotalAmount,
                                                     )}
                                                 </p>
+                                                {billingCycle === 'annual' && (
+                                                    <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                                                        Annual savings (
+                                                        {annualSavingsPercent}
+                                                        %): -
+                                                        {formatNaira(
+                                                            estimatedDiscountAmount,
+                                                        )}
+                                                    </p>
+                                                )}
                                                 <p className="text-sm font-medium text-foreground">
                                                     VAT (
                                                     {(vatRate * 100).toFixed(1)}
@@ -342,8 +401,7 @@ export default function BillingPlans({
                                                     )}
                                                 </p>
                                                 <p className="text-xs text-muted-foreground">
-                                                    This reflects{' '}
-                                                    {plan.billing_period}{' '}
+                                                    This reflects {billingCycle}{' '}
                                                     billing.
                                                 </p>
                                                 {employeeRangeError && (
@@ -395,7 +453,6 @@ export default function BillingPlans({
                                                 <form
                                                     action="/billing/checkout"
                                                     method="post"
-                                                    target="_blank"
                                                     className="w-full"
                                                 >
                                                     <input
@@ -415,6 +472,11 @@ export default function BillingPlans({
                                                             selectedEmployeeCount
                                                         }
                                                     />
+                                                    <input
+                                                        type="hidden"
+                                                        name="billing_cycle"
+                                                        value={billingCycle}
+                                                    />
                                                     <Button
                                                         type="submit"
                                                         className="w-full gap-2 text-sm"
@@ -425,8 +487,9 @@ export default function BillingPlans({
                                                 </form>
                                             )}
                                             <p className="text-xs text-muted-foreground">
-                                                Paystack opens in a new tab.
-                                                7-day guarantee starts
+                                                You will be redirected to
+                                                Paystack to complete payment.
+                                                Your 7-day guarantee starts
                                                 immediately.
                                             </p>
                                         </CardFooter>

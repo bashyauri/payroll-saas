@@ -43,6 +43,7 @@ class PlanSelectionController extends Controller
             'guaranteeDays' => 7,
             'currency' => 'NGN',
             'vatRate' => (float) config('billing.vat_rate', 0.075),
+            'annualDiscountRate' => (float) config('billing.annual_discount_rate', 0.10),
         ]);
     }
 }
