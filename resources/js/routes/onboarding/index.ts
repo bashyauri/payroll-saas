@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\Onboarding\ContinueOnboardingController::__invoke
- * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:15
+ * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:16
  * @route '/onboarding/continue'
  */
 export const continueMethod = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ continueMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\Onboarding\ContinueOnboardingController::__invoke
- * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:15
+ * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:16
  * @route '/onboarding/continue'
  */
 continueMethod.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ continueMethod.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Onboarding\ContinueOnboardingController::__invoke
- * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:15
+ * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:16
  * @route '/onboarding/continue'
  */
 continueMethod.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ continueMethod.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Onboarding\ContinueOnboardingController::__invoke
- * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:15
+ * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:16
  * @route '/onboarding/continue'
  */
 continueMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ continueMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
 
     /**
 * @see \App\Http\Controllers\Onboarding\ContinueOnboardingController::__invoke
- * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:15
+ * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:16
  * @route '/onboarding/continue'
  */
     const continueMethodForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ continueMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
 
             /**
 * @see \App\Http\Controllers\Onboarding\ContinueOnboardingController::__invoke
- * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:15
+ * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:16
  * @route '/onboarding/continue'
  */
         continueMethodForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ continueMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
         })
             /**
 * @see \App\Http\Controllers\Onboarding\ContinueOnboardingController::__invoke
- * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:15
+ * @see app/Http/Controllers/Onboarding/ContinueOnboardingController.php:16
  * @route '/onboarding/continue'
  */
         continueMethodForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

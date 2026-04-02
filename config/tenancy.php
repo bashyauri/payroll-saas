@@ -2,12 +2,20 @@
 
 declare(strict_types=1);
 
+use App\Models\Organization;
+use Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper;
+use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
+use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
+use Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper;
 use Stancl\Tenancy\Database\Models\Domain;
-use Stancl\Tenancy\Database\Models\Tenant;
+use Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager;
+use Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager;
+use Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager;
+use Stancl\Tenancy\UUIDGenerator;
 
 return [
-    'tenant_model' => Tenant::class,
-    'id_generator' => Stancl\Tenancy\UUIDGenerator::class,
+    'tenant_model' => Organization::class,
+    'id_generator' => UUIDGenerator::class,
 
     'domain_model' => Domain::class,
 
@@ -19,9 +27,16 @@ return [
     'central_domains' => [
         '127.0.0.1',
         'localhost',
+        'payrollsaas.test',
         'theniyiconsult.com.ng',
         'www.theniyiconsult.com.ng',
     ],
+
+    /**
+     * The base domain used to build tenant subdomains.
+     * Tenants will be served at {slug}.{base_domain}.
+     */
+    'base_domain' => env('TENANT_BASE_DOMAIN', 'payrollsaas.test'),
 
     /**
      * Tenancy bootstrappers are executed when tenancy is initialized.
@@ -29,13 +44,19 @@ return [
      *
      * To configure their behavior, see the config keys below.
      */
-    'bootstrappers' => [
-        Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper::class,
-        // Stancl\Tenancy\Bootstrappers\RedisTenancyBootstrapper::class, // Note: phpredis is needed
-    ],
+    'bootstrappers' => env('APP_ENV') === 'testing'
+        ? [
+            CacheTenancyBootstrapper::class,
+            FilesystemTenancyBootstrapper::class,
+            QueueTenancyBootstrapper::class,
+        ]
+        : [
+            DatabaseTenancyBootstrapper::class,
+            CacheTenancyBootstrapper::class,
+            FilesystemTenancyBootstrapper::class,
+            QueueTenancyBootstrapper::class,
+        ],
+    // Stancl\Tenancy\Bootstrappers\RedisTenancyBootstrapper::class, // Note: phpredis is needed
 
     /**
      * Database tenancy config. Used by DatabaseTenancyBootstrapper.
@@ -60,9 +81,9 @@ return [
          * TenantDatabaseManagers are classes that handle the creation & deletion of tenant databases.
          */
         'managers' => [
-            'sqlite' => Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager::class,
-            'mysql' => Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager::class,
-            'pgsql' => Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager::class,
+            'sqlite' => SQLiteDatabaseManager::class,
+            'mysql' => MySQLDatabaseManager::class,
+            'pgsql' => PostgreSQLDatabaseManager::class,
 
         /**
          * Use this database manager for MySQL to have a DB user created for each tenant database.

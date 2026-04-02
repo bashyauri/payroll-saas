@@ -18,9 +18,7 @@ class OnboardingService
     /**
      * Create an organization and subscription after successful payment.
      *
-     * @param  User  $user
      * @param  array  $paystackData  Full Paystack transaction data
-     * @return Organization
      */
     public function setupOrganizationAfterPayment(User $user, array $paystackData): Organization
     {
@@ -38,6 +36,7 @@ class OnboardingService
             ->first();
 
         if ($existingOrganization) {
+            $this->ensureDomainExists($existingOrganization);
             session(['tenant_id' => $existingOrganization->id]);
             Tenancy::initialize($existingOrganization);
 
@@ -48,8 +47,8 @@ class OnboardingService
         $plan = SubscriptionPlan::where('slug', $planSlug)->firstOrFail();
 
         // Generate organization name from user name
-        $organizationName = $user->name . "'s Payroll";
-        $organizationSlug = Str::slug($organizationName) . '-' . Str::random(6);
+        $organizationName = $user->name."'s Payroll";
+        $organizationSlug = Str::slug($organizationName).'-'.Str::random(6);
 
         // Create organization (tenant)
         $organization = Organization::create([
@@ -79,10 +78,43 @@ class OnboardingService
             $user->id => ['role' => 'owner'],
         ]);
 
+        // Attach subdomain
+        $this->ensureDomainExists($organization);
+
         // Set current tenant in session so the user is immediately in tenant context
         session(['tenant_id' => $organization->id]);
         Tenancy::initialize($organization);
 
         return $organization;
+    }
+
+    /**
+     * Ensure the organization has a domain record. Creates one if absent.
+     */
+    private function ensureDomainExists(Organization $organization): void
+    {
+        if ($organization->domains()->exists()) {
+            return;
+        }
+
+        $organization->domains()->create([
+            'id' => (string) Str::ulid(),
+            'domain' => $organization->slug.'.'.config('tenancy.base_domain'),
+        ]);
+    }
+
+    /**
+     * Build the full dashboard URL for a tenant's subdomain.
+     */
+    public function tenantDashboardUrl(Organization $organization): string
+    {
+        $domain = $organization->domains()->value('domain');
+        $scheme = app()->environment('local') ? 'http' : 'https';
+
+        if ($domain) {
+            return $scheme.'://'.$domain.'/dashboard';
+        }
+
+        return route('dashboard');
     }
 }

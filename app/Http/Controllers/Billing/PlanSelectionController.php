@@ -17,20 +17,38 @@ class PlanSelectionController extends Controller
         $user = $request->user();
 
         if ($user) {
-            $organization = $user->organizations()->first();
+            $activeStatuses = [
+                Subscription::STATUS_ACTIVE,
+                Subscription::STATUS_PAST_DUE,
+            ];
 
-            if ($organization) {
-                $hasActiveSubscription = Subscription::query()
-                    ->where('organization_id', $organization->id)
-                    ->whereIn('status', [
-                        Subscription::STATUS_ACTIVE,
-                        Subscription::STATUS_PAST_DUE,
-                    ])
-                    ->exists();
+            $sessionOrganizationId = (string) $request->session()->get('tenant_id', '');
 
-                if ($hasActiveSubscription) {
-                    return redirect()->route('dashboard');
+            if ($sessionOrganizationId !== '') {
+                $sessionOrganization = $user->organizations()->whereKey($sessionOrganizationId)->first();
+
+                if ($sessionOrganization) {
+                    $hasActiveSessionSubscription = Subscription::query()
+                        ->where('organization_id', $sessionOrganization->id)
+                        ->whereIn('status', $activeStatuses)
+                        ->exists();
+
+                    if ($hasActiveSessionSubscription) {
+                        return redirect()->route('dashboard');
+                    }
                 }
+            }
+
+            $activeOrganization = $user->organizations()
+                ->whereHas('subscriptions', function ($query) use ($activeStatuses): void {
+                    $query->whereIn('status', $activeStatuses);
+                })
+                ->first();
+
+            if ($activeOrganization) {
+                $request->session()->put('tenant_id', $activeOrganization->id);
+
+                return redirect()->route('dashboard');
             }
         }
 

@@ -1,6 +1,6 @@
 # User Flows & Journeys
-Last updated: March 24, 2026  
-Version: 1.1  
+Last updated: April 2, 2026  
+Version: 1.2  
 Reference: architecture.md (sections 3.1, 3.2, 6.2)
 
 This file documents the end-to-end user journeys for the Payroll SaaS platform.  
@@ -15,25 +15,29 @@ All flows follow the **Trial-First with Immediate Payment** model (Option 2): pa
 2. Clicks Sign Up → enters email + password (or Google SSO if implemented later)
    - Email verification email sent (required before proceeding)
 3. User verifies email → redirected to Plan Selection page
-4. User chooses plan (Essential or Professional)
+4. User chooses plan (Individual, Essential, or Professional)
    - Sees clear comparison table + "7-day full refund guarantee if not satisfied"
+   - Selects billing cycle: monthly or annual
+   - Annual selection applies 10% discount before VAT
    - Enters employee count and must satisfy plan band rules:
-     - Essential: max 50 employees
-     - Professional: min 51 employees
+     - Individual: 1-5 employees
+     - Essential: 6-50 employees
+     - Professional: 51+ employees
 5. Clicks "Start Trial" or "Subscribe"
-   - Redirected to Paystack checkout (card, bank transfer, USSD, mobile money)
+   - Redirected to Paystack checkout in the same tab (card, bank transfer, USSD, mobile money)
    - Payment is processed **immediately** (annualized charge based on employee count)
 6. Payment success
-   - Paystack redirects to success URL (/subscription/callback)
+   - Paystack redirects to success URL (/billing/paystack/callback)
    - Backend:
      - Creates/updates subscription record (status = active)
      - Sets trial_end_date = now + 7 days
      - Sets refund_eligible_until = now + 7 days
      - Creates organization record (type = 'organization' or 'personal')
+     - Creates tenant domain record ({slug}.payrollsaas.test)
      - Initializes tenant database
      - Attaches user as owner (organization_users table)
-     - Sets current_tenant_id in session/user meta
-7. Redirects to **/dashboard** (tenant-scoped)
+   - Sets tenant_id in session and initializes current tenant context
+7. Redirects to **https://{slug}.payrollsaas.test/dashboard** (tenant-scoped)
    - Full feature access unlocked immediately
    - Dashboard shows:
      - Organization name & type
@@ -50,10 +54,10 @@ All flows follow the **Trial-First with Immediate Payment** model (Option 2): pa
 
 **Goal**: Authenticated user uses the product with full (trial) or restricted (post-trial) access.
 
-1. User visits https://theniyiconsult.com.ng/dashboard (or auto-redirect after payment)
+1. User visits tenant dashboard URL (for example, https://acme.payrollsaas.test/dashboard) or is auto-redirected after payment
    - Middleware checks:
      - User authenticated?
-     - Current tenant set?
+       - Tenant resolved from subdomain?
      - Subscription active or within trial window?
 2. If checks pass → full dashboard loads
    - Shows:
@@ -119,9 +123,14 @@ All flows follow the **Trial-First with Immediate Payment** model (Option 2): pa
 ## 5. Organization Access Model (MVP)
 
 1. Each organization has distinct login credentials
-2. User logs in to one organization context at a time
-3. No cross-organization switcher is available in MVP
-4. All data, limits, and permissions remain scoped to the logged-in tenant
+2. Each organization has a unique tenant URL ({slug}.payrollsaas.test)
+3. User logs in to one organization context at a time
+4. Organization owner can update workspace subdomain in settings
+   - Reserved names are blocked
+   - Duplicate subdomains are blocked
+   - Non-owners cannot change workspace URL
+5. No cross-organization switcher is available in MVP
+6. All data, limits, and permissions remain scoped to the logged-in tenant
 
 ---
 
@@ -143,5 +152,7 @@ All flows follow the **Trial-First with Immediate Payment** model (Option 2): pa
 - Read-only mode = post-cancellation / post-expiry / suspended
 - MVP access model = one organization per login, no switcher
 - All flows are tenant-aware (middleware sets context)
+- Tenant dashboard access is domain-resolved by subdomain
+- Workspace URL changes are owner-only and validated
 
-Last updated: March 24, 2026
+Last updated: April 2, 2026

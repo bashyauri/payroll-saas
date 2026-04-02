@@ -33,7 +33,7 @@ class PaystackCallbackController extends Controller
 
         $response = Http::withToken((string) config('services.paystack.secret_key'))
             ->acceptJson()
-            ->get(rtrim((string) config('services.paystack.base_url'), '/') . '/transaction/verify/' . $reference);
+            ->get(rtrim((string) config('services.paystack.base_url'), '/').'/transaction/verify/'.$reference);
 
         if (! $response->successful() || ! $response->json('status')) {
             Log::error('Paystack callback verification failed.', [
@@ -105,7 +105,7 @@ class PaystackCallbackController extends Controller
         }
 
         return redirect()
-            ->route('dashboard')
+            ->away($onboarding->tenantDashboardUrl($organization))
             ->with('success', 'Welcome! Your 7-day free trial has started.');
     }
 }

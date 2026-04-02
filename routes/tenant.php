@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Settings\WorkspaceController;
 use App\Http\Controllers\Tenant\PayrollFinalizationController;
+use App\Http\Middleware\EnsureBillingOnboardingComplete;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -12,10 +14,8 @@ use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 | Tenant Routes
 |--------------------------------------------------------------------------
 |
-| Here you can register the tenant routes for your application.
-| These routes are loaded by the TenantRouteServiceProvider.
-|
-| Feel free to customize them however you want. Good luck!
+| These routes are served on tenant subdomains (e.g. acme.payrollsaas.test).
+| InitializeTenancyByDomain resolves the tenant from the domains table.
 |
 */
 
@@ -24,8 +24,11 @@ Route::middleware([
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
 ])->group(function () {
-    Route::get('/', function () {
-        return 'This is your multi-tenant application. The id of the current tenant is ' . tenant('id');
+    Route::middleware(['auth', 'verified', EnsureBillingOnboardingComplete::class])->group(function () {
+        Route::inertia('dashboard', 'dashboard')->name('dashboard');
+
+        Route::get('settings/workspace', [WorkspaceController::class, 'edit'])->name('workspace.edit');
+        Route::patch('settings/workspace', [WorkspaceController::class, 'update'])->name('workspace.update');
     });
 
     Route::post('/payroll/finalize', PayrollFinalizationController::class)

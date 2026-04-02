@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Organization;
 use App\Models\Subscription;
 use Closure;
 use Illuminate\Http\Request;
@@ -10,7 +11,20 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureBillingOnboardingComplete
 {
     /**
+     * @var array<int, string>
+     */
+    private array $activeSubscriptionStatuses = [
+        Subscription::STATUS_ACTIVE,
+        Subscription::STATUS_PAST_DUE,
+    ];
+
+    /**
      * Handle an incoming request.
+     *
+     * When running in tenant context (subdomain routing), tenancy is already
+     * initialized by InitializeTenancyByDomain before this middleware runs.
+     * In that case we validate the resolved tenant directly instead of relying
+     * on the session.
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -20,28 +34,58 @@ class EnsureBillingOnboardingComplete
             return $next($request);
         }
 
-        $organization = $user->organizations()->first();
+        // Tenant context: resolved by subdomain via InitializeTenancyByDomain.
+        if (tenancy()->initialized) {
+            /** @var Organization $tenant */
+            $tenant = tenancy()->tenant;
 
-        if (! $organization) {
-            return redirect()
-                ->route('billing.plans')
-                ->with('onboarding_notice', 'Complete plan selection and payment to access your dashboard.');
-        }
+            // Ensure this authenticated user actually belongs to the resolved tenant.
+            if (! $user->organizations()->whereKey($tenant->id)->exists()) {
+                return redirect()->route('login');
+            }
 
-        $hasActiveSubscription = Subscription::query()
-            ->where('organization_id', $organization->id)
-            ->whereIn('status', [
-                Subscription::STATUS_ACTIVE,
-                Subscription::STATUS_PAST_DUE,
-            ])
-            ->exists();
+            if ($this->hasActiveSubscription($tenant->id)) {
+                return $next($request);
+            }
 
-        if (! $hasActiveSubscription) {
             return redirect()
                 ->route('billing.plans')
                 ->with('onboarding_notice', 'Complete payment to unlock dashboard access.');
         }
 
+        // Central domain context: resolve org via session, then any active-subscription org.
+        $sessionOrganizationId = (string) $request->session()->get('tenant_id', '');
+
+        if ($sessionOrganizationId !== '') {
+            $sessionOrganization = $user->organizations()->whereKey($sessionOrganizationId)->first();
+
+            if ($sessionOrganization && $this->hasActiveSubscription($sessionOrganization->id)) {
+                return $next($request);
+            }
+        }
+
+        $activeOrganization = $user->organizations()
+            ->whereHas('subscriptions', function ($query): void {
+                $query->whereIn('status', $this->activeSubscriptionStatuses);
+            })
+            ->first();
+
+        if (! $activeOrganization) {
+            return redirect()
+                ->route('billing.plans')
+                ->with('onboarding_notice', 'Complete payment to unlock dashboard access.');
+        }
+
+        $request->session()->put('tenant_id', $activeOrganization->id);
+
         return $next($request);
+    }
+
+    private function hasActiveSubscription(string $organizationId): bool
+    {
+        return Subscription::query()
+            ->where('organization_id', $organizationId)
+            ->whereIn('status', $this->activeSubscriptionStatuses)
+            ->exists();
     }
 }

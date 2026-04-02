@@ -5,7 +5,6 @@ use App\Http\Controllers\Billing\PaystackCheckoutController;
 use App\Http\Controllers\Billing\PaystackWebhookController;
 use App\Http\Controllers\Billing\PlanSelectionController;
 use App\Http\Controllers\Onboarding\ContinueOnboardingController;
-use App\Http\Middleware\EnsureBillingOnboardingComplete;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -16,10 +15,6 @@ Route::inertia('/', 'welcome', [
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('onboarding/continue', ContinueOnboardingController::class)
         ->name('onboarding.continue');
-
-    Route::inertia('dashboard', 'dashboard')
-        ->middleware(EnsureBillingOnboardingComplete::class)
-        ->name('dashboard');
 
     Route::get('billing/plans', PlanSelectionController::class)->name('billing.plans');
     Route::post('billing/checkout', PaystackCheckoutController::class)->name('billing.checkout');

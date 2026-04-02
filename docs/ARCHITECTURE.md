@@ -58,24 +58,26 @@ Why:
 ### 3.2 Detailed Flow (Source of Truth)
 
 1. User registers (email, password).
-2. User selects plan (Essential or Professional).
-3. User enters payment details through Paystack.
-4. Payment confirmation received.
-5. System creates subscription in central DB with:
+2. User selects plan (Individual, Essential, or Professional).
+3. User selects billing cycle (monthly or annual).
+   - Annual cycle applies a 10% discount before VAT.
+4. User enters payment details through Paystack.
+5. Payment confirmation received.
+6. System creates subscription in central DB with:
    - status = active
    - trial_end_date = now + 7 days
    - refund_eligible_until = now + 7 days
-6. System creates organization and initializes tenant database.
-7. User lands in dashboard with full feature access.
-8. User can run full payroll workflow, including payroll finalization.
-9. If canceled within 7 days:
+7. System creates organization and initializes tenant database.
+8. System stores active tenant_id in session and routes user to dashboard.
+9. User can run full payroll workflow, including payroll finalization.
+10. If canceled within 7 days:
    - refund workflow is executed (minus disclosed fees if applicable)
    - subscription status becomes canceled
    - tenant remains accessible as read-only
-10. After day 7:
+11. After day 7:
    - refund_eligible_until is cleared
    - normal recurring billing continues
-11. On future billing failure:
+12. On future billing failure:
    - payroll finalization is blocked
    - notifications and grace period are triggered
    - billing_status becomes suspended after grace period
@@ -94,11 +96,17 @@ Why:
 
 Use one naming set consistently across product, sales, and code:
 
-- Essential: NGN 800 per employee per month, billed annually, staff range 1-50.
-- Professional: NGN 850 per employee per month, billed annually, staff range 51+.
+- Individual: NGN 500 per employee per month, staff range 1-5.
+- Essential: NGN 800 per employee per month, staff range 6-50.
+- Professional: NGN 850 per employee per month, staff range 51+.
+
+Billing cycles:
+- Monthly billing is supported.
+- Annual billing is supported and applies a 10% discount before VAT.
 
 Plan band rules:
-- Essential checkout blocks employee_count above 50.
+- Individual checkout blocks employee_count outside 1-5.
+- Essential checkout blocks employee_count outside 6-50.
 - Professional checkout blocks employee_count below 51.
 - Validation messages must clearly instruct users to choose the correct plan.
 
