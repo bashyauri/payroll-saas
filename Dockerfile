@@ -4,7 +4,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-ENV SKIP_WAYFINDER=true
 RUN npm run build
 
 # PHP production

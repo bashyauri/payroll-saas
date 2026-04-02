@@ -1,6 +1,6 @@
 # User Flows & Journeys
 Last updated: April 2, 2026  
-Version: 1.2  
+Version: 1.3  
 Reference: architecture.md (sections 3.1, 3.2, 6.2)
 
 This file documents the end-to-end user journeys for the Payroll SaaS platform.  
@@ -53,6 +53,21 @@ All flows follow the **Trial-First with Immediate Payment** model (Option 2): pa
 ## 2. Dashboard & Core Usage Flow (Post-Payment)
 
 **Goal**: Authenticated user uses the product with full (trial) or restricted (post-trial) access.
+
+### 2.1 Immediate Operations After Payment
+
+1. User lands on tenant dashboard (for example, https://acme.payrollsaas.test/dashboard)
+2. User confirms subscription/trial banner and plan limits
+3. User adds first employee records (within the plan band limit)
+4. User configures payroll basics (pay period, salary components, deductions)
+5. User creates first payroll run and reviews draft calculations
+6. User finalizes payroll if billing guard allows (active/trial)
+7. User distributes payslips (email from platform) and reviews payroll reports
+
+Operational guardrails after payment:
+- Employee creation is limited by plan band
+- Payroll finalization is blocked when billing status is suspended/canceled
+- Trial report exports remain blocked until fully paid access
 
 1. User visits tenant dashboard URL (for example, https://acme.payrollsaas.test/dashboard) or is auto-redirected after payment
    - Middleware checks:
