@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 class BillingEvent extends Model
 {
-    use HasUlids;
+    use CentralConnection, HasUlids;
 
     public $incrementing = false;
 
@@ -39,6 +40,6 @@ class BillingEvent extends Model
 
     public function subscription(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Subscription::class, 'subscription_id');
+        return $this->belongsTo(Subscription::class, 'subscription_id');
     }
 }

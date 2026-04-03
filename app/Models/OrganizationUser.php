@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 /**
  * Pivot model linking users to organizations with roles
@@ -13,14 +14,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class OrganizationUser extends Model
 {
-    use HasUlids;
+    use CentralConnection, HasUlids;
 
     protected $table = 'organization_user';
 
     protected $fillable = ['user_id', 'organization_id', 'role'];
 
     public const ROLE_OWNER = 'owner';
+
     public const ROLE_ADMIN = 'admin';
+
     public const ROLE_MEMBER = 'member';
 
     public function user(): BelongsTo

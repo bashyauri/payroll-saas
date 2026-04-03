@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 class Subscription extends Model
 {
-    use HasUlids;
+    use CentralConnection, HasUlids;
 
     public $incrementing = false;
 
@@ -41,9 +42,13 @@ class Subscription extends Model
     ];
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_PAST_DUE = 'past_due';
+
     public const STATUS_FAILED = 'failed';
+
     public const STATUS_CANCELED = 'canceled';
 
     public function organization(): BelongsTo
@@ -58,11 +63,11 @@ class Subscription extends Model
 
     public function billingEvents(): HasMany
     {
-        return $this->hasMany(\App\Models\BillingEvent::class, 'subscription_id');
+        return $this->hasMany(BillingEvent::class, 'subscription_id');
     }
 
     public function paymentAttempts(): HasMany
     {
-        return $this->hasMany(\App\Models\PaymentAttempt::class, 'subscription_id');
+        return $this->hasMany(PaymentAttempt::class, 'subscription_id');
     }
 }
