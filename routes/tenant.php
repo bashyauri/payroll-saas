@@ -26,6 +26,7 @@ Route::middleware([
     InitializeTenancyByDomain::class,
 ])->group(function () {
     Route::middleware(['auth', 'verified', EnsureBillingOnboardingComplete::class])->group(function () {
+        Route::redirect('dashboardcheck', 'dashboard')->name('dashboard.check');
         Route::get('dashboard', DashboardController::class)->name('dashboard');
 
         Route::get('settings/workspace', [WorkspaceController::class, 'edit'])->name('workspace.edit');

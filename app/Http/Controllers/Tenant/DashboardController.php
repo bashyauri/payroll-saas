@@ -33,6 +33,20 @@ class DashboardController extends Controller
             ? max(0, now()->startOfDay()->diffInDays($trialEndsAt->startOfDay(), false))
             : null;
 
+        $isReadOnly = in_array($organization->billing_status, [
+            Organization::BILLING_CANCELED,
+            Organization::BILLING_SUSPENDED,
+        ], true);
+
+        $isTrial = $daysRemaining !== null && $daysRemaining > 0;
+
+        $accessMode = $isReadOnly ? 'read_only' : 'full';
+        $accessMessage = $isReadOnly
+            ? 'Read-only mode is enabled. You can review records but write actions are blocked until billing is reactivated.'
+            : ($isTrial
+                ? 'Full feature access is active during your refund window.'
+                : 'Full feature access is active.');
+
         $user = $request->user();
         $organizationOptions = $user
             ? $user->organizations()
@@ -75,6 +89,14 @@ class DashboardController extends Controller
             ],
             'quickStats' => [
                 'employees' => 0,
+            ],
+            'guards' => [
+                'isReadOnly' => $isReadOnly,
+                'isTrial' => $isTrial,
+                'accessMode' => $accessMode,
+                'accessMessage' => $accessMessage,
+                'canFinalizePayroll' => ! $isReadOnly,
+                'canAddEmployee' => ! $isReadOnly,
             ],
             'organizationOptions' => $organizationOptions,
         ]);
