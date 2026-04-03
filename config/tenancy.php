@@ -27,6 +27,7 @@ return [
     'central_domains' => [
         '127.0.0.1',
         'localhost',
+        'payroll-saas.test',
         'payrollsaas.test',
         'theniyiconsult.com.ng',
         'www.theniyiconsult.com.ng',
@@ -36,7 +37,7 @@ return [
      * The base domain used to build tenant subdomains.
      * Tenants will be served at {slug}.{base_domain}.
      */
-    'base_domain' => env('TENANT_BASE_DOMAIN', 'payrollsaas.test'),
+    'base_domain' => env('TENANT_BASE_DOMAIN', 'payroll-saas.test'),
 
     /**
      * Tenancy bootstrappers are executed when tenancy is initialized.

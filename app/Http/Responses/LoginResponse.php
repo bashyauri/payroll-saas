@@ -13,6 +13,6 @@ class LoginResponse implements LoginResponseContract
     {
         return $request->wantsJson()
             ? response()->json(['two_factor' => false])
-            : redirect()->intended(route('onboarding.continue'));
+            : redirect()->route('onboarding.continue');
     }
 }

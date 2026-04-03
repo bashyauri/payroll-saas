@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Settings\WorkspaceController;
+use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\Tenant\PayrollFinalizationController;
 use App\Http\Middleware\EnsureBillingOnboardingComplete;
 use Illuminate\Support\Facades\Route;
@@ -25,7 +26,7 @@ Route::middleware([
     PreventAccessFromCentralDomains::class,
 ])->group(function () {
     Route::middleware(['auth', 'verified', EnsureBillingOnboardingComplete::class])->group(function () {
-        Route::inertia('dashboard', 'dashboard')->name('dashboard');
+        Route::get('dashboard', DashboardController::class)->name('dashboard');
 
         Route::get('settings/workspace', [WorkspaceController::class, 'edit'])->name('workspace.edit');
         Route::patch('settings/workspace', [WorkspaceController::class, 'update'])->name('workspace.update');

@@ -88,6 +88,15 @@ test('authenticated users with active subscription can visit the dashboard', fun
     $response = $this->get('http://test-org.payrollsaas.test/dashboard');
 
     $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('dashboard')
+        ->where('organization.name', 'Test Org')
+        ->where('organization.type', 'organization')
+        ->where('plan.name', 'Essential')
+        ->where('quickStats.employees', 0)
+        ->has('trial.countdownLabel')
+        ->has('organizationOptions')
+    );
 });
 
 test('users with an unpaid org and a paid org are routed to dashboard using paid org context', function () {
