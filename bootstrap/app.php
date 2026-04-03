@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\DynamicAppUrl;
 use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -27,7 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(prepend: [
             TrustProxies::class,
             ForceHttps::class,
-        
+            DynamicAppUrl::class,
+            UseCentralSessionConnection::class,
         ], append: [
             HandleAppearance::class,
             HandleInertiaRequests::class,
