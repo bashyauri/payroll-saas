@@ -24,12 +24,33 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureUrl();
+        $this->configureDefaults();
+    }
+
+    /**
+     * Force correct URL and asset paths for custom domain
+     */
+    protected function configureUrl(): void
+    {
+        $appUrl = config('app.url');
+
+        // Force root URL to your main custom domain
+        if ($appUrl) {
+            URL::forceRootUrl($appUrl);
+        }
+
         // Force HTTPS in production
         if (app()->isProduction()) {
             URL::forceScheme('https');
         }
 
-        $this->configureDefaults();
+        // Optional: Override asset() helper to always use main domain
+        if (app()->isProduction()) {
+            URL::macro('asset', function ($path) {
+                return rtrim(config('app.url'), '/') . '/' . ltrim($path, '/');
+            });
+        }
     }
 
     /**
