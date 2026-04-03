@@ -1,9 +1,10 @@
 <?php
 
+use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
-use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\TrustProxies;
+use App\Http\Middleware\UseCentralSessionConnection;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(prepend: [
             TrustProxies::class,
             ForceHttps::class,
+            UseCentralSessionConnection::class,
         ], append: [
             HandleAppearance::class,
             HandleInertiaRequests::class,

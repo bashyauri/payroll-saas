@@ -73,8 +73,7 @@ return [
     |
     */
 
-    'connection' => ($_ENV['SESSION_CONNECTION'] ?? $_SERVER['SESSION_CONNECTION'] ?? null)
-        ?: env('DB_CONNECTION', 'pgsql'),
+    'connection' => env('SESSION_CONNECTION', 'pgsql'),
 
     /*
     |--------------------------------------------------------------------------
