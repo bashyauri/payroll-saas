@@ -1,6 +1,8 @@
+import DashboardController from './DashboardController'
 import PayrollFinalizationController from './PayrollFinalizationController'
 const Tenant = {
-    PayrollFinalizationController: Object.assign(PayrollFinalizationController, PayrollFinalizationController),
+    DashboardController: Object.assign(DashboardController, DashboardController),
+PayrollFinalizationController: Object.assign(PayrollFinalizationController, PayrollFinalizationController),
 }
 
 export default Tenant
