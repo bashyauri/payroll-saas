@@ -22,8 +22,8 @@ use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
 Route::middleware([
     'web',
-    InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
+    InitializeTenancyByDomain::class,
 ])->group(function () {
     Route::middleware(['auth', 'verified', EnsureBillingOnboardingComplete::class])->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
