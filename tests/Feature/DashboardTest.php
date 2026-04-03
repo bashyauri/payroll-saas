@@ -157,3 +157,50 @@ test('users with an unpaid org and a paid org are routed to dashboard using paid
 
     $response->assertOk();
 });
+
+test('tenant dashboard assets are not pinned to central domain', function () {
+    $user = User::factory()->create();
+    $organization = Organization::create([
+        'name' => 'Tenant Asset Org',
+        'slug' => 'tenant-asset-org',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+    $organization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => 'tenant-asset-org.payrollsaas.test',
+    ]);
+
+    $plan = SubscriptionPlan::create([
+        'name' => 'Essential',
+        'slug' => 'essential-tenant-asset-test',
+        'currency' => 'NGN',
+        'price_per_employee' => 800,
+        'billing_period' => 'annual',
+        'min_employees' => 1,
+        'max_employees' => 50,
+        'features' => ['payroll'],
+        'is_active' => true,
+    ]);
+
+    $organization->users()->attach($user->id, ['role' => 'owner']);
+
+    Subscription::create([
+        'organization_id' => $organization->id,
+        'plan_id' => $plan->id,
+        'status' => Subscription::STATUS_ACTIVE,
+        'trial_end_date' => now()->addDays(7),
+        'refund_eligible_until' => now()->addDays(7),
+        'next_billing_date' => now()->addYear(),
+        'paystack_reference' => 'test-ref-tenant-asset',
+        'amount_paid' => 80000,
+        'currency' => 'NGN',
+    ]);
+
+    $this->actingAs($user);
+
+    $response = $this->get('http://tenant-asset-org.payrollsaas.test/dashboard');
+
+    $response->assertOk();
+    $response->assertDontSee('https://theniyiconsult.com.ng/tenancy/assets', false);
+});
