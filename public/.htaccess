@@ -1,3 +1,12 @@
+<IfModule mod_headers.c>
+    # Allow shared central assets to be loaded by tenant subdomains.
+    <FilesMatch "\.(js|mjs|css|map|json|woff|woff2|ttf|otf|eot|svg)$">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, OPTIONS"
+        Header set Vary "Origin"
+    </FilesMatch>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
