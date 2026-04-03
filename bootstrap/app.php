@@ -27,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(prepend: [
             TrustProxies::class,
             ForceHttps::class,
-            UseCentralSessionConnection::class,
+        
         ], append: [
             HandleAppearance::class,
             HandleInertiaRequests::class,
