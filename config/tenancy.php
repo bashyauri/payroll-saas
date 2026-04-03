@@ -26,7 +26,9 @@ return [
      */
     'central_domains' => array_values(array_filter(array_map('trim', explode(',', (string) env(
         'TENANCY_CENTRAL_DOMAINS',
-        '127.0.0.1,localhost,payroll-saas.test,payrollsaas.test,theniyiconsult.com.ng,www.theniyiconsult.com.ng'
+        env('APP_ENV') === 'local'
+            ? '127.0.0.1,localhost,payroll-saas.test,payrollsaas.test'
+            : 'theniyiconsult.com.ng,www.theniyiconsult.com.ng'
     ))))),
 
     /**
