@@ -1,10 +1,11 @@
 # Build React/Inertia assets
-FROM node:20-alpine AS assets
+FROM node:20-bookworm-slim AS assets
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --include=dev --no-audit --no-fund
 COPY . .
 ENV SKIP_WAYFINDER=true
+ENV ENABLE_REACT_COMPILER=false
 RUN npm run build
 
 # PHP production

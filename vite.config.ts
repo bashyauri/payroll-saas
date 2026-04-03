@@ -5,6 +5,8 @@ import laravel from 'laravel-vite-plugin';
 import path from 'path';
 import { defineConfig } from 'vite';
 
+const enableReactCompiler = process.env.ENABLE_REACT_COMPILER === 'true';
+
 export default defineConfig({
     resolve: {
         alias: {
@@ -18,9 +20,13 @@ export default defineConfig({
             refresh: true,
         }),
         react({
-            babel: {
-                plugins: ['babel-plugin-react-compiler'],
-            },
+            ...(enableReactCompiler
+                ? {
+                      babel: {
+                          plugins: ['babel-plugin-react-compiler'],
+                      },
+                  }
+                : {}),
         }),
         tailwindcss(),
         ...(process.env.SKIP_WAYFINDER !== 'true'
