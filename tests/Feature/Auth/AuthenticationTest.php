@@ -22,6 +22,23 @@ test('users can authenticate using the login screen', function () {
     $response->assertRedirect(route('onboarding.continue', absolute: false));
 });
 
+test('inertia login requests are redirected after authentication', function () {
+    $user = User::factory()->create();
+
+    $response = $this
+        ->withHeaders([
+            'X-Inertia' => 'true',
+            'X-Requested-With' => 'XMLHttpRequest',
+        ])
+        ->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('onboarding.continue', absolute: false));
+});
+
 test('users with two factor enabled are redirected to two factor challenge', function () {
     if (! Features::canManageTwoFactorAuthentication()) {
         $this->markTestSkipped('Two-factor authentication is not enabled.');

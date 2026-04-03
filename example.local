@@ -2,7 +2,7 @@ APP_NAME=Laravel
 APP_ENV=local
 APP_KEY=base64:gGUcOgVfvUcIZ9hi7gQkzUVSClm64h0gEPJ616Uf1xw=
 APP_DEBUG=true
-APP_URL=http://localhost:8000
+APP_URL=https://payroll-saas.test
 
 APP_LOCALE=en
 APP_FALLBACK_LOCALE=en
@@ -32,7 +32,10 @@ SESSION_DRIVER=database
 SESSION_LIFETIME=120
 SESSION_ENCRYPT=false
 SESSION_PATH=/
-SESSION_DOMAIN=null
+SESSION_DOMAIN=.payroll-saas.test
+
+TENANT_BASE_DOMAIN=payroll-saas.test
+TENANCY_CENTRAL_DOMAINS=127.0.0.1,localhost,payroll-saas.test,theniyiconsult.com.ng,www.theniyiconsult.com.ng
 
 BROADCAST_CONNECTION=log
 FILESYSTEM_DISK=local
