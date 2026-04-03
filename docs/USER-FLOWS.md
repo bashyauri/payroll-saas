@@ -6,6 +6,10 @@ Reference: architecture.md (sections 3.1, 3.2, 6.2)
 This file documents the end-to-end user journeys for the Payroll SaaS platform.  
 All flows follow the **Trial-First with Immediate Payment** model (Option 2): payment is required upfront, but full access is granted immediately with a 7-day money-back guarantee.
 
+Domain note:
+- Production examples use `theniyiconsult.com.ng`
+- Local development typically uses `payroll-saas.test`
+
 ## 1. First-Time Registration & Onboarding Flow
 
 **Goal**: New user signs up, pays, creates organization, and reaches the dashboard with full access.
@@ -33,11 +37,11 @@ All flows follow the **Trial-First with Immediate Payment** model (Option 2): pa
      - Sets trial_end_date = now + 7 days
      - Sets refund_eligible_until = now + 7 days
      - Creates organization record (type = 'organization' or 'personal')
-     - Creates tenant domain record ({slug}.payrollsaas.test)
+   - Creates tenant domain record ({slug}.theniyiconsult.com.ng)
      - Initializes tenant database
      - Attaches user as owner (organization_users table)
    - Sets tenant_id in session and initializes current tenant context
-7. Redirects to **https://{slug}.payrollsaas.test/dashboard** (tenant-scoped)
+7. Redirects to **https://{slug}.theniyiconsult.com.ng/dashboard** (tenant-scoped)
    - Full feature access unlocked immediately
    - Dashboard shows:
      - Organization name & type
@@ -56,7 +60,7 @@ All flows follow the **Trial-First with Immediate Payment** model (Option 2): pa
 
 ### 2.1 Immediate Operations After Payment
 
-1. User lands on tenant dashboard (for example, https://acme.payrollsaas.test/dashboard)
+1. User lands on tenant dashboard (for example, https://acme.theniyiconsult.com.ng/dashboard)
 2. User confirms subscription/trial banner and plan limits
 3. User adds first employee records (within the plan band limit)
 4. User configures payroll basics (pay period, salary components, deductions)
@@ -69,7 +73,7 @@ Operational guardrails after payment:
 - Payroll finalization is blocked when billing status is suspended/canceled
 - Trial report exports remain blocked until fully paid access
 
-1. User visits tenant dashboard URL (for example, https://acme.payrollsaas.test/dashboard) or is auto-redirected after payment
+1. User visits tenant dashboard URL (for example, https://acme.theniyiconsult.com.ng/dashboard) or is auto-redirected after payment
    - Middleware checks:
      - User authenticated?
        - Tenant resolved from subdomain?
@@ -138,7 +142,7 @@ Operational guardrails after payment:
 ## 5. Organization Access Model (MVP)
 
 1. Each organization has distinct login credentials
-2. Each organization has a unique tenant URL ({slug}.payrollsaas.test)
+2. Each organization has a unique tenant URL ({slug}.theniyiconsult.com.ng)
 3. User logs in to one organization context at a time
 4. Organization owner can update workspace subdomain in settings
    - Reserved names are blocked

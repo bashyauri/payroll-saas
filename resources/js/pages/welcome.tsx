@@ -10,7 +10,7 @@ import {
     CreditCard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { dashboard, login, register } from '@/routes';
+import { login, register } from '@/routes';
 
 export default function Welcome({
     canRegister = true,
@@ -126,7 +126,7 @@ export default function Welcome({
                             </div>
                             <div className="flex items-center gap-2 sm:gap-4">
                                 {auth.user ? (
-                                    <Link href={dashboard()}>
+                                    <Link href="/onboarding/continue">
                                         <Button
                                             variant="outline"
                                             size="sm"
