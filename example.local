@@ -3,6 +3,7 @@ APP_ENV=local
 APP_KEY=base64:gGUcOgVfvUcIZ9hi7gQkzUVSClm64h0gEPJ616Uf1xw=
 APP_DEBUG=true
 APP_URL=https://payroll-saas.test
+ASSET_URL=https://theniyiconsult.com.ng
 
 APP_LOCALE=en
 APP_FALLBACK_LOCALE=en
