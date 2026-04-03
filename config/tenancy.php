@@ -24,21 +24,10 @@ return [
      *
      * Only relevant if you're using the domain or subdomain identification middleware.
      */
-<<<<<<< HEAD
     'central_domains' => array_values(array_filter(array_map('trim', explode(',', (string) env(
         'TENANCY_CENTRAL_DOMAINS',
         '127.0.0.1,localhost,payroll-saas.test,payrollsaas.test,theniyiconsult.com.ng,www.theniyiconsult.com.ng'
     ))))),
-=======
-    'central_domains' => [
-        '127.0.0.1',
-        'localhost',
-        'payroll-saas.test',
-        'payrollsaas.test',
-        'theniyiconsult.com.ng',
-        'www.theniyiconsult.com.ng',
-    ],
->>>>>>> 4c600d616870dceed965c1a23ecd8398941a43bd
 
     /**
      * The base domain used to build tenant subdomains.
