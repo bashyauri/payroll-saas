@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-            Schema::table('sessions', function (Blueprint $table) {
-                // Change user_id from bigint to string for ULID
-                $table->string('user_id')->nullable()->change();
-            });
+        if (! Schema::hasTable('sessions') || ! Schema::hasColumn('sessions', 'user_id')) {
+            return;
+        }
+
+        Schema::table('sessions', function (Blueprint $table): void {
+            $table->string('user_id')->nullable()->change();
+        });
     }
 
     /**
@@ -22,9 +25,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-            Schema::table('sessions', function (Blueprint $table) {
-                // Change back to bigint
-                $table->unsignedBigInteger('user_id')->nullable()->change();
-            });
+        if (! Schema::hasTable('sessions') || ! Schema::hasColumn('sessions', 'user_id')) {
+            return;
+        }
+
+        Schema::table('sessions', function (Blueprint $table): void {
+            $table->unsignedBigInteger('user_id')->nullable()->change();
+        });
     }
 };
