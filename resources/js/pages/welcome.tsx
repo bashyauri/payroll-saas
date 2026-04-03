@@ -8,9 +8,10 @@ import {
     Shield,
     Clock,
     CreditCard,
+    LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { login, register } from '@/routes';
+import { login, logout, register } from '@/routes';
 
 export default function Welcome({
     canRegister = true,
@@ -126,15 +127,32 @@ export default function Welcome({
                             </div>
                             <div className="flex items-center gap-2 sm:gap-4">
                                 {auth.user ? (
-                                    <Link href="/onboarding/continue">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="text-xs sm:text-sm"
+                                    <div className="flex items-center gap-2">
+                                        <Link href="/onboarding/continue">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-xs sm:text-sm"
+                                            >
+                                                Dashboard
+                                            </Button>
+                                        </Link>
+                                        <Link
+                                            method="post"
+                                            href={logout()}
+                                            as="button"
+                                            type="button"
                                         >
-                                            Dashboard
-                                        </Button>
-                                    </Link>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="gap-1 text-xs sm:text-sm"
+                                            >
+                                                <LogOut className="h-4 w-4" />
+                                                Logout
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 ) : (
                                     <>
                                         <Link href={login()}>

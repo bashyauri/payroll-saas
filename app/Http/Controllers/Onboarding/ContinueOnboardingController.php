@@ -7,13 +7,15 @@ use App\Models\Subscription;
 use App\Services\Onboarding\OnboardingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 class ContinueOnboardingController extends Controller
 {
     /**
      * Route verified users to the correct next step.
      */
-    public function __invoke(Request $request, OnboardingService $onboarding): RedirectResponse
+    public function __invoke(Request $request, OnboardingService $onboarding): Response|RedirectResponse
     {
         $user = $request->user();
 
@@ -38,7 +40,7 @@ class ContinueOnboardingController extends Controller
                     ->exists();
 
                 if ($hasActiveSessionSubscription) {
-                    return redirect()->away($onboarding->tenantDashboardUrl($sessionOrganization));
+                    return Inertia::location($onboarding->tenantDashboardUrl($sessionOrganization));
                 }
             }
         }
@@ -55,6 +57,6 @@ class ContinueOnboardingController extends Controller
 
         $request->session()->put('tenant_id', $activeOrganization->id);
 
-        return redirect()->away($onboarding->tenantDashboardUrl($activeOrganization));
+        return Inertia::location($onboarding->tenantDashboardUrl($activeOrganization));
     }
 }
