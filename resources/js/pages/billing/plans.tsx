@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowRight, CheckCircle2, LogOut, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
@@ -81,17 +81,26 @@ export default function BillingPlans({
     const [employeeCounts, setEmployeeCounts] = useState<
         Record<string, string>
     >({});
+    const [submittingPlan, setSubmittingPlan] = useState<string | null>(null);
 
     const { errors, flash } = usePage().props as {
         errors: Partial<Record<string, string>>;
         flash?: Partial<Record<string, string>>;
     };
-    const csrfToken =
-        typeof document !== 'undefined'
-            ? (document
-                  .querySelector('meta[name="csrf-token"]')
-                  ?.getAttribute('content') ?? '')
-            : '';
+    const submitCheckout = (plan: Plan, employeeCount: number): void => {
+        router.post(
+            '/billing/checkout',
+            {
+                plan: plan.slug,
+                employee_count: employeeCount,
+                billing_cycle: billingCycle,
+            },
+            {
+                onStart: () => setSubmittingPlan(plan.slug),
+                onFinish: () => setSubmittingPlan(null),
+            },
+        );
+    };
 
     const resolveEmployeeCount = (plan: Plan): number => {
         const raw = employeeCounts[plan.slug];
@@ -450,41 +459,20 @@ export default function BillingPlans({
                                                     <ArrowRight className="h-4 w-4" />
                                                 </Button>
                                             ) : (
-                                                <form
-                                                    action="/billing/checkout"
-                                                    method="post"
-                                                    className="w-full"
+                                                <Button
+                                                    type="button"
+                                                    className="w-full gap-2 text-sm"
+                                                    disabled={submittingPlan === plan.slug}
+                                                    onClick={() =>
+                                                        submitCheckout(
+                                                            plan,
+                                                            selectedEmployeeCount,
+                                                        )
+                                                    }
                                                 >
-                                                    <input
-                                                        type="hidden"
-                                                        name="_token"
-                                                        value={csrfToken}
-                                                    />
-                                                    <input
-                                                        type="hidden"
-                                                        name="plan"
-                                                        value={plan.slug}
-                                                    />
-                                                    <input
-                                                        type="hidden"
-                                                        name="employee_count"
-                                                        value={
-                                                            selectedEmployeeCount
-                                                        }
-                                                    />
-                                                    <input
-                                                        type="hidden"
-                                                        name="billing_cycle"
-                                                        value={billingCycle}
-                                                    />
-                                                    <Button
-                                                        type="submit"
-                                                        className="w-full gap-2 text-sm"
-                                                    >
-                                                        Start Free Trial
-                                                        <ArrowRight className="h-4 w-4" />
-                                                    </Button>
-                                                </form>
+                                                    Start Free Trial
+                                                    <ArrowRight className="h-4 w-4" />
+                                                </Button>
                                             )}
                                             <p className="text-xs text-muted-foreground">
                                                 You will be redirected to
