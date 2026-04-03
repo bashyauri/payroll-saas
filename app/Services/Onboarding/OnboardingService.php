@@ -108,13 +108,16 @@ class OnboardingService
      */
     public function tenantDashboardUrl(Organization $organization): string
     {
+        // Backfill missing domains for older organizations before redirecting.
+        $this->ensureDomainExists($organization);
+
         $domain = $organization->domains()->value('domain');
-        $scheme = app()->environment('local') ? 'http' : 'https';
+        $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
 
         if ($domain) {
             return $scheme.'://'.$domain.'/dashboard';
         }
 
-        return route('dashboard');
+        return route('home');
     }
 }
