@@ -8,9 +8,6 @@ import { defineConfig } from 'vite';
 const enableReactCompiler = process.env.ENABLE_REACT_COMPILER === 'true';
 
 export default defineConfig({
-    // THIS IS THE MOST IMPORTANT LINE FOR YOUR CUSTOM DOMAIN
-    base: 'https://theniyiconsult.com.ng/', // ← Force main domain
-
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './resources/js'),
