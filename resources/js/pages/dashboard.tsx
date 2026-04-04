@@ -222,13 +222,23 @@ export default function Dashboard({
                                     {organization.domain ?? 'N/A'}
                                 </span>
                             </p>
-                            <div className="flex gap-2">
-                                <Button asChild size="sm" variant="outline">
+                            <div className="flex flex-wrap gap-2">
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    variant="outline"
+                                    className="w-full sm:w-auto"
+                                >
                                     <Link href={editWorkspace()}>
                                         Change workspace URL
                                     </Link>
                                 </Button>
-                                <Button asChild size="sm" variant="outline">
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    variant="outline"
+                                    className="w-full sm:w-auto"
+                                >
                                     <Link href={editProfile()}>
                                         Update organization profile
                                     </Link>
