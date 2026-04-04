@@ -1,12 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import {
-    Building2,
-    Clock3,
-    CreditCard,
-    FileText,
-    Settings,
-    Users,
-} from 'lucide-react';
+import { Building2, Clock3, CreditCard, FileText, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,6 +40,17 @@ type DashboardProps = {
     };
     quickStats: {
         employees: number;
+    };
+    guards: {
+        isReadOnly: boolean;
+        isTrial: boolean;
+        accessMode: string;
+        accessMessage: string;
+        canFinalizePayroll: boolean;
+        canAddEmployee: boolean;
+        employeeLimit: number | null;
+        isNearEmployeeLimit: boolean;
+        isAtEmployeeLimit: boolean;
     };
     organizationOptions: Array<{
         id: string;
@@ -91,6 +95,7 @@ export default function Dashboard({
     trial,
     plan,
     quickStats,
+    guards,
     organizationOptions,
 }: DashboardProps) {
     const hasMultipleOrganizations = organizationOptions.length > 1;
@@ -187,6 +192,14 @@ export default function Dashboard({
                                           : `${plan.minEmployees}-${plan.maxEmployees}`}
                                 </span>
                             </p>
+                            <p>
+                                Employee usage:{' '}
+                                <span className="font-medium text-foreground">
+                                    {guards.employeeLimit === null
+                                        ? `${quickStats.employees} / N/A`
+                                        : `${quickStats.employees} / ${guards.employeeLimit}`}
+                                </span>
+                            </p>
                             <Badge variant="secondary" className="capitalize">
                                 {plan.subscriptionStatus ??
                                     organization.billingStatus}
@@ -221,9 +234,9 @@ export default function Dashboard({
                                 variant="ghost"
                                 className="w-full justify-start"
                             >
-                                <Link href={editWorkspace()}>
-                                    <Settings className="mr-2 h-4 w-4" />
-                                    View Settings
+                                <Link href="#">
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    View Payslips
                                 </Link>
                             </Button>
                         </CardContent>
@@ -266,6 +279,29 @@ export default function Dashboard({
                         </CardContent>
                     </Card>
                 </div>
+
+                {(guards.isNearEmployeeLimit || guards.isAtEmployeeLimit) && (
+                    <Card className="border-orange-200 bg-orange-50/40 dark:border-orange-700 dark:bg-orange-950/20">
+                        <CardHeader>
+                            <CardTitle className="text-base">
+                                {guards.isAtEmployeeLimit
+                                    ? 'Employee limit reached'
+                                    : 'You are close to your employee limit'}
+                            </CardTitle>
+                            <CardDescription>
+                                Upgrade to add more employees
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="text-sm text-muted-foreground">
+                            Current usage:{' '}
+                            <span className="font-medium text-foreground">
+                                {guards.employeeLimit === null
+                                    ? `${quickStats.employees} / N/A`
+                                    : `${quickStats.employees} / ${guards.employeeLimit}`}
+                            </span>
+                        </CardContent>
+                    </Card>
+                )}
 
                 {hasMultipleOrganizations && (
                     <Card>
