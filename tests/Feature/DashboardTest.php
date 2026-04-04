@@ -81,6 +81,7 @@ test('authenticated users with active subscription can visit the dashboard', fun
         'paystack_reference' => 'test-ref-123',
         'amount_paid' => 80000,
         'currency' => 'NGN',
+        'employee_count' => 10,
     ]);
 
     $this->actingAs($user);
@@ -93,6 +94,9 @@ test('authenticated users with active subscription can visit the dashboard', fun
         ->where('organization.name', 'Test Org')
         ->where('organization.type', 'organization')
         ->where('plan.name', 'Essential')
+        ->where('plan.paidEmployeeCount', 10)
+        ->where('plan.minEmployees', 1)
+        ->where('plan.maxEmployees', 50)
         ->where('quickStats.employees', 0)
         ->has('trial.countdownLabel')
         ->has('organizationOptions')

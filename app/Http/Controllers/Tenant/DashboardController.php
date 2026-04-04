@@ -86,6 +86,9 @@ class DashboardController extends Controller
                 'pricePerEmployee' => $subscription?->plan?->price_per_employee,
                 'currency' => $subscription?->plan?->currency,
                 'subscriptionStatus' => $subscription?->status,
+                'paidEmployeeCount' => $subscription?->employee_count,
+                'minEmployees' => $subscription?->plan?->min_employees,
+                'maxEmployees' => $subscription?->plan?->max_employees,
             ],
             'quickStats' => [
                 'employees' => 0,

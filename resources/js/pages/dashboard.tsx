@@ -41,6 +41,9 @@ type DashboardProps = {
         pricePerEmployee: string | number | null;
         currency: string | null;
         subscriptionStatus: string | null;
+        paidEmployeeCount: number | null;
+        minEmployees: number | null;
+        maxEmployees: number | null;
     };
     quickStats: {
         employees: number;
@@ -166,6 +169,22 @@ export default function Dashboard({
                                         plan.currency,
                                         plan.pricePerEmployee,
                                     )}
+                                </span>
+                            </p>
+                            <p>
+                                Paid employee count:{' '}
+                                <span className="font-medium text-foreground">
+                                    {plan.paidEmployeeCount ?? 'N/A'}
+                                </span>
+                            </p>
+                            <p>
+                                Plan employee band:{' '}
+                                <span className="font-medium text-foreground">
+                                    {plan.minEmployees === null
+                                        ? 'N/A'
+                                        : plan.maxEmployees === null
+                                          ? `${plan.minEmployees}+`
+                                          : `${plan.minEmployees}-${plan.maxEmployees}`}
                                 </span>
                             </p>
                             <Badge variant="secondary" className="capitalize">

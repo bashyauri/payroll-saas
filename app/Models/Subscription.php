@@ -30,6 +30,7 @@ class Subscription extends Model
         'paystack_subscription_code',
         'amount_paid',
         'currency',
+        'employee_count',
     ];
 
     protected $casts = [
@@ -39,6 +40,7 @@ class Subscription extends Model
         'grace_period_ends_at' => 'datetime',
         'canceled_at' => 'datetime',
         'amount_paid' => 'decimal:2',
+        'employee_count' => 'integer',
     ];
 
     public const STATUS_PENDING = 'pending';

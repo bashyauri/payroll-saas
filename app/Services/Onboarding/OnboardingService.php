@@ -45,6 +45,11 @@ class OnboardingService
 
         // Find the plan
         $plan = SubscriptionPlan::where('slug', $planSlug)->firstOrFail();
+        $employeeCount = max($employeeCount, (int) $plan->min_employees);
+
+        if ($plan->max_employees !== null) {
+            $employeeCount = min($employeeCount, (int) $plan->max_employees);
+        }
 
         // Generate organization name from user name
         $organizationName = $user->name."'s Payroll";
@@ -71,6 +76,7 @@ class OnboardingService
             'paystack_reference' => $reference,
             'amount_paid' => $amount,
             'currency' => 'NGN',
+            'employee_count' => $employeeCount,
         ]);
 
         // Attach user to organization as owner
