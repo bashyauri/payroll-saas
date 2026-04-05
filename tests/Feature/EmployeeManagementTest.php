@@ -1,0 +1,170 @@
+<?php
+
+use App\Models\Employee;
+use App\Models\Organization;
+use App\Models\Subscription;
+use App\Models\SubscriptionPlan;
+use App\Models\User;
+use Illuminate\Support\Str;
+use Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper;
+use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
+use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
+use Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper;
+use Stancl\Tenancy\Facades\Tenancy;
+use Tests\TestCase;
+
+beforeEach(function () {
+    config([
+        'tenancy.bootstrappers' => [
+            DatabaseTenancyBootstrapper::class,
+            CacheTenancyBootstrapper::class,
+            FilesystemTenancyBootstrapper::class,
+            QueueTenancyBootstrapper::class,
+        ],
+    ]);
+});
+
+afterEach(function () {
+    Tenancy::end();
+});
+
+function createTenantContext(int $employeeLimit = 3): array
+{
+    $user = User::factory()->create();
+    $organization = Organization::create([
+        'name' => 'Acme Payroll',
+        'slug' => 'acme-payroll',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+
+    $organization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => 'acme-payroll.payrollsaas.test',
+    ]);
+
+    $organization->users()->attach($user->id, ['role' => 'owner']);
+
+    $plan = SubscriptionPlan::create([
+        'name' => 'Essential',
+        'slug' => 'essential-employee-'.Str::lower(Str::random(8)),
+        'currency' => 'NGN',
+        'price_per_employee' => 800,
+        'billing_period' => 'annual',
+        'min_employees' => 1,
+        'max_employees' => 50,
+        'features' => ['payroll'],
+        'is_active' => true,
+    ]);
+
+    Subscription::create([
+        'organization_id' => $organization->id,
+        'plan_id' => $plan->id,
+        'status' => Subscription::STATUS_ACTIVE,
+        'trial_end_date' => now()->addDays(7),
+        'refund_eligible_until' => now()->addDays(7),
+        'next_billing_date' => now()->addYear(),
+        'paystack_reference' => 'employee-ref-'.Str::lower(Str::random(10)),
+        'amount_paid' => 80000,
+        'currency' => 'NGN',
+        'employee_count' => $employeeLimit,
+    ]);
+
+    return [$user, $organization];
+}
+
+test('tenant users can view the add employee form', function () {
+    /** @var TestCase $this */
+    [$user] = createTenantContext();
+
+    $response = $this
+        ->actingAs($user)
+        ->get('http://acme-payroll.payrollsaas.test/employees/create');
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('employees/create')
+        ->where('employeeCount', 0)
+        ->where('employeeLimit', 3)
+        ->where('canCreateEmployee', true)
+    );
+});
+
+test('tenant users can add employees within plan limit', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContext(2);
+
+    $response = $this
+        ->actingAs($user)
+        ->post('http://acme-payroll.payrollsaas.test/employees', [
+            'employee_number' => 'EMP-0001',
+            'first_name' => 'Amina',
+            'last_name' => 'Yusuf',
+            'middle_name' => 'B.',
+            'work_email' => 'amina.yusuf@example.com',
+            'phone' => '08012345678',
+            'nin' => '12345678901',
+            'bvn' => '10987654321',
+            'tax_identification_number' => 'TIN-0001',
+            'pension_pin' => 'PEN-0001',
+            'bank_name' => 'Access Bank',
+            'bank_account_name' => 'Amina Yusuf',
+            'bank_account_number' => '0123456789',
+            'monthly_gross_salary' => '250000',
+            'monthly_tax_deduction' => '15000',
+            'monthly_pension_deduction' => '20000',
+            'monthly_nhf_deduction' => '2500',
+            'other_monthly_deductions' => '1000',
+            'department' => 'Finance',
+            'job_title' => 'Payroll Officer',
+            'employment_type' => 'full_time',
+            'hire_date' => '2026-04-01',
+            'status' => 'active',
+        ]);
+
+    $response->assertRedirect('http://acme-payroll.payrollsaas.test/employees');
+
+    Tenancy::initialize($organization);
+
+    expect(Employee::query()->count())->toBe(1);
+    expect(Employee::query()->firstOrFail()->nin)->toBe('12345678901');
+});
+
+test('employee creation is blocked when plan limit is reached', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContext(1);
+
+    Tenancy::initialize($organization);
+    Employee::query()->create([
+        'employee_number' => 'EMP-0001',
+        'first_name' => 'Existing',
+        'last_name' => 'Employee',
+        'bank_name' => 'GTBank',
+        'bank_account_name' => 'Existing Employee',
+        'bank_account_number' => '1234567890',
+        'monthly_gross_salary' => 100000,
+        'employment_type' => 'full_time',
+        'status' => 'active',
+    ]);
+    Tenancy::end();
+
+    $response = $this
+        ->actingAs($user)
+        ->from('http://acme-payroll.payrollsaas.test/employees/create')
+        ->post('http://acme-payroll.payrollsaas.test/employees', [
+            'employee_number' => 'EMP-0002',
+            'first_name' => 'Second',
+            'last_name' => 'Employee',
+            'bank_name' => 'Access Bank',
+            'bank_account_name' => 'Second Employee',
+            'bank_account_number' => '0123456789',
+            'monthly_gross_salary' => '250000',
+            'employment_type' => 'full_time',
+            'status' => 'active',
+        ]);
+
+    $response->assertSessionHasErrors('employee_limit');
+
+    Tenancy::initialize($organization);
+    expect(Employee::query()->count())->toBe(1);
+});

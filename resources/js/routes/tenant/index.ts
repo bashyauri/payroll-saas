@@ -1,6 +1,8 @@
+import employees from './employees'
 import payroll from './payroll'
 const tenant = {
-    payroll: Object.assign(payroll, payroll),
+    employees: Object.assign(employees, employees),
+payroll: Object.assign(payroll, payroll),
 }
 
 export default tenant

@@ -12,6 +12,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
+import { create as createEmployee } from '@/routes/tenant/employees';
 import { edit as editWorkspace } from '@/routes/workspace';
 import type { BreadcrumbItem } from '@/types';
 
@@ -214,7 +215,7 @@ export default function Dashboard({
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <Button asChild className="w-full justify-start">
-                                <Link href="#">
+                                <Link href={createEmployee()}>
                                     <Users className="mr-2 h-4 w-4" />
                                     Add Employee
                                 </Link>

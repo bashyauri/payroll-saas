@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Settings\WorkspaceController;
 use App\Http\Controllers\Tenant\DashboardController;
+use App\Http\Controllers\Tenant\EmployeeController;
 use App\Http\Controllers\Tenant\PayrollFinalizationController;
 use App\Http\Middleware\EnsureBillingOnboardingComplete;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,10 @@ Route::middleware([
     Route::middleware(['auth', 'verified', EnsureBillingOnboardingComplete::class])->group(function () {
         Route::redirect('dashboardcheck', 'dashboard')->name('dashboard.check');
         Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+        Route::get('employees', [EmployeeController::class, 'index'])->name('tenant.employees.index');
+        Route::get('employees/create', [EmployeeController::class, 'create'])->name('tenant.employees.create');
+        Route::post('employees', [EmployeeController::class, 'store'])->name('tenant.employees.store');
 
         Route::get('settings/workspace', [WorkspaceController::class, 'edit'])->name('workspace.edit');
         Route::patch('settings/workspace', [WorkspaceController::class, 'update'])->name('workspace.update');

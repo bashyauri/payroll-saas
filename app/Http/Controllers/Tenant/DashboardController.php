@@ -5,15 +5,14 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Models\Subscription;
+use App\Services\Employee\EmployeeLimitService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request, EmployeeLimitService $employeeLimitService): Response
     {
         /** @var Organization $organization */
         $organization = tenancy()->tenant;
@@ -42,17 +41,7 @@ class DashboardController extends Controller
 
         $isTrial = $daysRemaining !== null && $daysRemaining > 0;
 
-        $employeeCount = Schema::hasTable('employees')
-            ? (int) DB::table('employees')->count()
-            : 0;
-
-        $employeeLimit = $subscription?->employee_count
-            ?? $subscription?->plan?->max_employees;
-        $isAtEmployeeLimit = $employeeLimit !== null && $employeeCount >= $employeeLimit;
-        $nearLimitThreshold = $employeeLimit !== null ? max(1, (int) ceil($employeeLimit * 0.8)) : null;
-        $isNearEmployeeLimit = $employeeLimit !== null
-            && ! $isAtEmployeeLimit
-            && $employeeCount >= $nearLimitThreshold;
+        $employeeUsage = $employeeLimitService->usage($organization);
 
         $accessMode = $isReadOnly ? 'read_only' : 'full';
         $accessMessage = $isReadOnly
@@ -105,7 +94,7 @@ class DashboardController extends Controller
                 'maxEmployees' => $subscription?->plan?->max_employees,
             ],
             'quickStats' => [
-                'employees' => $employeeCount,
+                'employees' => $employeeUsage['employeeCount'],
             ],
             'guards' => [
                 'isReadOnly' => $isReadOnly,
@@ -114,9 +103,9 @@ class DashboardController extends Controller
                 'accessMessage' => $accessMessage,
                 'canFinalizePayroll' => ! $isReadOnly,
                 'canAddEmployee' => ! $isReadOnly,
-                'employeeLimit' => $employeeLimit,
-                'isNearEmployeeLimit' => $isNearEmployeeLimit,
-                'isAtEmployeeLimit' => $isAtEmployeeLimit,
+                'employeeLimit' => $employeeUsage['employeeLimit'],
+                'isNearEmployeeLimit' => $employeeUsage['isNearEmployeeLimit'],
+                'isAtEmployeeLimit' => $employeeUsage['isAtEmployeeLimit'],
             ],
             'organizationOptions' => $organizationOptions,
         ]);

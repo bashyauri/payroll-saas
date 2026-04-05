@@ -18,6 +18,12 @@ chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap /var/lo
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/log/php
 chmod 755 /var/www/html/public
 
+echo "Running database migrations..."
+php artisan migrate --force
+echo "Running tenant database migrations..."
+php artisan tenants:migrate --force
+echo "Migrations complete."
+
 echo "Initialization complete, starting PHP-FPM and Nginx..."
 
 # Validate nginx config before boot
