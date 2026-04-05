@@ -394,23 +394,18 @@ class OnboardingService
         $expectedDomain = $organization->slug.'.'.config('tenancy.base_domain');
         $domainModelClass = (string) config('tenancy.domain_model');
 
-        $existingDomain = $domainModelClass::query()
-            ->where('domain', $expectedDomain)
-            ->first();
+        try {
+            $domain = $domainModelClass::query()->firstOrCreate(
+                ['domain' => $expectedDomain],
+                [
+                    'id' => (string) Str::ulid(),
+                    'tenant_id' => $organization->id,
+                ]
+            );
 
-        if ($existingDomain) {
-            if ((string) $existingDomain->tenant_id !== (string) $organization->id) {
+            if ((string) $domain->tenant_id !== (string) $organization->id) {
                 throw new DomainConflictException($expectedDomain);
             }
-
-            return;
-        }
-
-        try {
-            $organization->domains()->create([
-                'id' => (string) Str::ulid(),
-                'domain' => $expectedDomain,
-            ]);
         } catch (QueryException $exception) {
             if (! $this->isDuplicateDomainException($exception)) {
                 throw $exception;

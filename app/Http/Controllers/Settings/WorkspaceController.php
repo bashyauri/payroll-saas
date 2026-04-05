@@ -37,6 +37,18 @@ class WorkspaceController extends Controller
         $newSlug = (string) $request->validated('subdomain');
         $baseDomain = (string) config('tenancy.base_domain');
         $newDomain = $newSlug.'.'.$baseDomain;
+        $domainModelClass = (string) config('tenancy.domain_model');
+
+        $domainOwnedByAnotherOrganization = $domainModelClass::query()
+            ->where('domain', $newDomain)
+            ->where('tenant_id', '!=', $organization->id)
+            ->exists();
+
+        if ($domainOwnedByAnotherOrganization) {
+            return back()->withErrors([
+                'subdomain' => 'This subdomain is already taken. Please choose a different one.',
+            ]);
+        }
 
         $organization->update(['slug' => $newSlug]);
 
