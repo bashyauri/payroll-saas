@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -19,24 +20,24 @@ class DatabaseSeeder extends Seeder
 
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::query()->updateOrCreate(
+            ['email' => 'test@example.com'],
+            ['name' => 'Test User', 'password' => Hash::make('password')]
+        );
 
-        User::factory()->create([
-            'name' => 'Staff Test User',
-            'email' => 'staff.test@example.com',
-        ]);
+        User::query()->updateOrCreate(
+            ['email' => 'staff.test@example.com'],
+            ['name' => 'Staff Test User', 'password' => Hash::make('password')]
+        );
 
-        User::factory()->create([
-            'name' => 'Manager Test User',
-            'email' => 'manager.test@example.com',
-        ]);
+        User::query()->updateOrCreate(
+            ['email' => 'manager.test@example.com'],
+            ['name' => 'Manager Test User', 'password' => Hash::make('password')]
+        );
 
-        User::factory()->create([
-            'name' => 'Admin Test User',
-            'email' => 'admin.test@example.com',
-        ]);
+        User::query()->updateOrCreate(
+            ['email' => 'admin.test@example.com'],
+            ['name' => 'Admin Test User', 'password' => Hash::make('password')]
+        );
     }
 }

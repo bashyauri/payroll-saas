@@ -23,7 +23,7 @@ class LoginResponse implements LoginResponseContract
         $url = "{$scheme}://{$centralDomain}{$path}";
 
         if ($request->hasHeader('X-Inertia')) {
-            return redirect()->intended($url);
+            return redirect()->to($url);
         }
 
         return $request->wantsJson()
