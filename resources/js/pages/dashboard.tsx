@@ -226,6 +226,20 @@ export default function Dashboard({
                                 variant="outline"
                                 className="w-full justify-start"
                             >
+                                <Link
+                                    href={billingPlans({
+                                        query: { upgrade: 1 },
+                                    })}
+                                >
+                                    <CreditCard className="mr-2 h-4 w-4" />
+                                    Upgrade plan
+                                </Link>
+                            </Button>
+                            <Button
+                                asChild
+                                variant="outline"
+                                className="w-full justify-start"
+                            >
                                 <Link href="#">
                                     <FileText className="mr-2 h-4 w-4" />
                                     Run Payroll
