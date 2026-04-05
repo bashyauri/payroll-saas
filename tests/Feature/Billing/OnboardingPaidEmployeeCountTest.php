@@ -267,3 +267,72 @@ test('onboarding payment reuses an existing owner organization with a domain ins
         'domain' => 'test-users-payroll-muga2r.'.config('tenancy.base_domain'),
     ]);
 });
+
+test('onboarding links users with an already paid owner subdomain to that existing tenant', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create([
+        'name' => 'Paid Existing User',
+    ]);
+
+    $currentPlan = SubscriptionPlan::query()->create([
+        'name' => 'Essential',
+        'slug' => 'essential-paid-existing-org',
+        'currency' => 'NGN',
+        'price_per_employee' => 800,
+        'billing_period' => 'annual',
+        'min_employees' => 1,
+        'max_employees' => 50,
+        'features' => ['payroll_processing'],
+        'is_active' => true,
+    ]);
+
+    $organization = Organization::create([
+        'name' => "{$user->name}'s Payroll",
+        'slug' => 'paid-existing-user-subdomain',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+    $organization->users()->attach($user->id, ['role' => 'owner']);
+    $organization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => 'paid-existing-user-subdomain.'.config('tenancy.base_domain'),
+    ]);
+
+    $subscription = Subscription::create([
+        'organization_id' => $organization->id,
+        'plan_id' => $currentPlan->id,
+        'status' => Subscription::STATUS_ACTIVE,
+        'trial_end_date' => now()->addDays(7),
+        'refund_eligible_until' => now()->addDays(7),
+        'next_billing_date' => now()->addMonth(),
+        'paystack_reference' => 'ps_existing_paid_subdomain_ref',
+        'amount_paid' => 100000,
+        'currency' => 'NGN',
+        'employee_count' => 5,
+    ]);
+
+    $result = app(OnboardingService::class)->setupOrganizationAfterPayment($user, [
+        'reference' => 'ps_new_paid_callback_ref',
+        'amount' => 9288000,
+        'metadata' => [
+            'plan_slug' => $currentPlan->slug,
+            'employee_count' => 10,
+            'billing_period' => 'annual',
+        ],
+    ]);
+
+    expect($result->is($organization))->toBeTrue();
+    expect(Organization::query()->count())->toBe(1);
+    expect(Subscription::query()->count())->toBe(1);
+
+    $subscription->refresh();
+
+    expect($subscription->paystack_reference)->toBe('ps_existing_paid_subdomain_ref');
+    expect($subscription->employee_count)->toBe(5);
+
+    $this->assertDatabaseCount('domains', 1);
+    $this->assertDatabaseHas('domains', [
+        'tenant_id' => $organization->id,
+        'domain' => 'paid-existing-user-subdomain.'.config('tenancy.base_domain'),
+    ]);
+});

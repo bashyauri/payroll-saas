@@ -56,11 +56,23 @@ class OnboardingService
             return $existingOrganization;
         }
 
-        $reusableOrganization = $this->resolveReusableOnboardingOrganization($user, $organizationId);
+        $ownedOrganizationWithDomain = $this->resolveOwnedOrganizationWithDomain($user, $organizationId);
 
-        if ($reusableOrganization) {
+        if ($ownedOrganizationWithDomain) {
+            $alreadyPaid = $ownedOrganizationWithDomain
+                ->subscriptions
+                ->contains(fn (Subscription $subscription): bool => $subscription->isAccessEligible());
+
+            if ($alreadyPaid) {
+                $this->ensureDomainExists($ownedOrganizationWithDomain);
+                session(['tenant_id' => $ownedOrganizationWithDomain->id]);
+                Tenancy::initialize($ownedOrganizationWithDomain);
+
+                return $ownedOrganizationWithDomain;
+            }
+
             $organization = $this->applyOnboardingPaymentToExistingOrganization(
-                $reusableOrganization,
+                $ownedOrganizationWithDomain,
                 $plan,
                 $employeeCount,
                 $billingPeriod,
@@ -117,7 +129,7 @@ class OnboardingService
         return $organization;
     }
 
-    private function resolveReusableOnboardingOrganization(User $user, string $organizationId = ''): ?Organization
+    private function resolveOwnedOrganizationWithDomain(User $user, string $organizationId = ''): ?Organization
     {
         $organizations = $user->organizations()
             ->wherePivot('role', 'owner')
@@ -129,15 +141,14 @@ class OnboardingService
         if ($organizationId !== '') {
             $requestedOrganization = $organizations->firstWhere('id', $organizationId);
 
-            if ($requestedOrganization && ! $requestedOrganization->subscriptions->contains(fn (Subscription $subscription): bool => $subscription->isAccessEligible())) {
+            if ($requestedOrganization && $requestedOrganization->domains->isNotEmpty()) {
                 return $requestedOrganization;
             }
         }
 
         return $organizations
             ->filter(function (Organization $organization): bool {
-                return $organization->domains->isNotEmpty()
-                    && ! $organization->subscriptions->contains(fn (Subscription $subscription): bool => $subscription->isAccessEligible());
+                return $organization->domains->isNotEmpty();
             })
             ->sortByDesc(fn (Organization $organization): string => (string) $organization->updated_at)
             ->first();
