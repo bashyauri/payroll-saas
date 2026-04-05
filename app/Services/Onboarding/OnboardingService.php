@@ -6,6 +6,7 @@ use App\Models\Organization;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -39,6 +40,7 @@ class OnboardingService
     public function setupOrganizationAfterPayment(User $user, array $paystackData): Organization
     {
         [$plan, $employeeCount, $billingPeriod, $reference, $amount] = $this->resolvePlanCheckoutData($paystackData);
+        $organizationId = (string) Arr::get($paystackData, 'metadata.organization_id', '');
 
         $existingOrganization = $user->organizations()
             ->whereHas('subscriptions', function ($query) use ($reference): void {
@@ -54,9 +56,27 @@ class OnboardingService
             return $existingOrganization;
         }
 
+        $reusableOrganization = $this->resolveReusableOnboardingOrganization($user, $organizationId);
+
+        if ($reusableOrganization) {
+            $organization = $this->applyOnboardingPaymentToExistingOrganization(
+                $reusableOrganization,
+                $plan,
+                $employeeCount,
+                $billingPeriod,
+                $reference,
+                $amount,
+            );
+
+            session(['tenant_id' => $organization->id]);
+            Tenancy::initialize($organization);
+
+            return $organization;
+        }
+
         // Generate organization name from user name
         $organizationName = $user->name."'s Payroll";
-        $organizationSlug = Str::slug($organizationName).'-'.Str::random(6);
+        $organizationSlug = $this->generateUniqueOrganizationSlug($organizationName);
 
         // Create organization (tenant)
         $organization = Organization::create([
@@ -93,6 +113,98 @@ class OnboardingService
         // Set current tenant in session so the user is immediately in tenant context
         session(['tenant_id' => $organization->id]);
         Tenancy::initialize($organization);
+
+        return $organization;
+    }
+
+    private function resolveReusableOnboardingOrganization(User $user, string $organizationId = ''): ?Organization
+    {
+        $organizations = $user->organizations()
+            ->wherePivot('role', 'owner')
+            ->with(['domains', 'subscriptions' => function ($query): void {
+                $query->latest();
+            }])
+            ->get();
+
+        if ($organizationId !== '') {
+            $requestedOrganization = $organizations->firstWhere('id', $organizationId);
+
+            if ($requestedOrganization && ! $requestedOrganization->subscriptions->contains(fn (Subscription $subscription): bool => $subscription->isAccessEligible())) {
+                return $requestedOrganization;
+            }
+        }
+
+        return $organizations
+            ->filter(function (Organization $organization): bool {
+                return $organization->domains->isNotEmpty()
+                    && ! $organization->subscriptions->contains(fn (Subscription $subscription): bool => $subscription->isAccessEligible());
+            })
+            ->sortByDesc(fn (Organization $organization): string => (string) $organization->updated_at)
+            ->first();
+    }
+
+    private function applyOnboardingPaymentToExistingOrganization(
+        Organization $organization,
+        SubscriptionPlan $plan,
+        int $employeeCount,
+        string $billingPeriod,
+        string $reference,
+        int $amount,
+    ): Organization {
+        $organization->forceFill([
+            'billing_status' => Organization::BILLING_ACTIVE,
+            'billing_status_updated_at' => now(),
+            'read_only_mode' => false,
+            'suspended_at' => null,
+        ])->save();
+
+        /** @var Subscription|null $subscription */
+        $subscription = $organization->subscriptions()
+            ->where(function ($query): void {
+                $query->whereNull('paystack_reference')
+                    ->orWhereIn('status', [
+                        Subscription::STATUS_PENDING,
+                        Subscription::STATUS_FAILED,
+                        Subscription::STATUS_CANCELED,
+                    ]);
+            })
+            ->latest()
+            ->first();
+
+        if ($subscription) {
+            $subscription->forceFill([
+                'plan_id' => $plan->id,
+                'status' => Subscription::STATUS_ACTIVE,
+                'trial_end_date' => now()->addDays(7),
+                'refund_eligible_until' => now()->addDays(7),
+                'next_billing_date' => $billingPeriod === 'monthly'
+                    ? now()->addMonth()
+                    : now()->addYear(),
+                'grace_period_ends_at' => null,
+                'canceled_at' => null,
+                'paystack_reference' => $reference,
+                'amount_paid' => $amount,
+                'currency' => 'NGN',
+                'employee_count' => $employeeCount,
+            ])->save();
+        } else {
+            Subscription::create([
+                'organization_id' => $organization->id,
+                'plan_id' => $plan->id,
+                'status' => Subscription::STATUS_ACTIVE,
+                'trial_end_date' => now()->addDays(7),
+                'refund_eligible_until' => now()->addDays(7),
+                'next_billing_date' => $billingPeriod === 'monthly'
+                    ? now()->addMonth()
+                    : now()->addYear(),
+                'paystack_reference' => $reference,
+                'amount_paid' => $amount,
+                'currency' => 'NGN',
+                'employee_count' => $employeeCount,
+            ]);
+        }
+
+        $this->ensureDomainExists($organization);
 
         return $organization;
     }
@@ -152,11 +264,38 @@ class OnboardingService
     private function ensureDomainExists(Organization $organization): void
     {
         $expectedDomain = $organization->slug.'.'.config('tenancy.base_domain');
+        $domainModelClass = (string) config('tenancy.domain_model');
 
-        $organization->domains()->createOrFirst(
-            ['domain' => $expectedDomain],
-            ['id' => (string) Str::ulid()]
-        );
+        $existingDomain = $domainModelClass::query()
+            ->where('domain', $expectedDomain)
+            ->first();
+
+        if ($existingDomain) {
+            if ((string) $existingDomain->tenant_id !== (string) $organization->id) {
+                throw new InvalidArgumentException('The organization subdomain is already assigned to another organization.');
+            }
+
+            return;
+        }
+
+        try {
+            $organization->domains()->create([
+                'id' => (string) Str::ulid(),
+                'domain' => $expectedDomain,
+            ]);
+        } catch (QueryException $exception) {
+            if (! $this->isDuplicateDomainException($exception)) {
+                throw $exception;
+            }
+
+            $conflictingDomain = $domainModelClass::query()
+                ->where('domain', $expectedDomain)
+                ->first();
+
+            if (! $conflictingDomain || (string) $conflictingDomain->tenant_id !== (string) $organization->id) {
+                throw new InvalidArgumentException('The organization subdomain is already assigned to another organization.', previous: $exception);
+            }
+        }
     }
 
     /**
@@ -164,21 +303,50 @@ class OnboardingService
      */
     public function tenantDashboardUrl(Organization $organization): string
     {
-        // Backfill missing domains for older organizations before redirecting.
+        // Ensure the organization uses its canonical subdomain.
         $this->ensureDomainExists($organization);
 
         $expectedDomain = $organization->slug.'.'.config('tenancy.base_domain');
-        $domain = $organization->domains()
-            ->where('domain', $expectedDomain)
-            ->value('domain')
-            ?? $organization->domains()->value('domain');
         $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
 
-        if ($domain) {
-            return $scheme.'://'.$domain.'/dashboard';
+        return $scheme.'://'.$expectedDomain.'/dashboard';
+    }
+
+    private function generateUniqueOrganizationSlug(string $organizationName): string
+    {
+        $baseSlug = Str::slug($organizationName);
+
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $candidateSlug = $baseSlug.'-'.Str::lower(Str::random(6));
+
+            if (Organization::query()->where('slug', $candidateSlug)->exists()) {
+                continue;
+            }
+
+            if ($this->domainExists($candidateSlug.'.'.config('tenancy.base_domain'))) {
+                continue;
+            }
+
+            return $candidateSlug;
         }
 
-        return route('home');
+        throw new InvalidArgumentException('Unable to generate a unique organization subdomain. Please try again.');
+    }
+
+    private function domainExists(string $domain): bool
+    {
+        $domainModelClass = (string) config('tenancy.domain_model');
+
+        return $domainModelClass::query()
+            ->where('domain', $domain)
+            ->exists();
+    }
+
+    private function isDuplicateDomainException(QueryException $exception): bool
+    {
+        return (string) $exception->getCode() === '23505'
+            || (string) Arr::get($exception->errorInfo, 0) === '23505'
+            || str_contains($exception->getMessage(), 'domains_domain_unique');
     }
 
     /**
