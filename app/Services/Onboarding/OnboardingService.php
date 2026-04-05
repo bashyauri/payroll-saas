@@ -2,12 +2,16 @@
 
 namespace App\Services\Onboarding;
 
+use App\Exceptions\DomainConflictException;
+use App\Models\BillingEvent;
 use App\Models\Organization;
+use App\Models\PaymentAttempt;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Stancl\Tenancy\Facades\Tenancy;
@@ -22,14 +26,127 @@ class OnboardingService
      */
     public function completePayment(User $user, array $paystackData): Organization
     {
+        $reference = (string) Arr::get($paystackData, 'reference', '');
+
+        if ($reference === '') {
+            throw new InvalidArgumentException('Missing Paystack reference in verified payment payload.');
+        }
+
+        $alreadyProcessedOrganization = $this->resolveOrganizationByProcessedReference($user, $reference);
+
+        if ($alreadyProcessedOrganization) {
+            $this->ensureDomainExists($alreadyProcessedOrganization);
+            session(['tenant_id' => $alreadyProcessedOrganization->id]);
+            Tenancy::initialize($alreadyProcessedOrganization);
+
+            return $alreadyProcessedOrganization;
+        }
+
         $organizationId = (string) Arr::get($paystackData, 'metadata.organization_id', '');
         $subscriptionId = (string) Arr::get($paystackData, 'metadata.subscription_id', '');
 
-        if ($organizationId !== '' && $subscriptionId !== '') {
-            return $this->upgradeSubscriptionAfterPayment($user, $paystackData);
+        return DB::transaction(function () use ($user, $paystackData, $reference, $organizationId, $subscriptionId): Organization {
+            User::query()->whereKey($user->id)->lockForUpdate()->first();
+
+            $processedOrganization = $this->resolveOrganizationByProcessedReference($user, $reference);
+
+            if ($processedOrganization) {
+                $this->ensureDomainExists($processedOrganization);
+                session(['tenant_id' => $processedOrganization->id]);
+                Tenancy::initialize($processedOrganization);
+
+                return $processedOrganization;
+            }
+
+            if ($organizationId !== '' && $subscriptionId !== '') {
+                $organization = $this->upgradeSubscriptionAfterPayment($user, $paystackData);
+            } else {
+                $organization = $this->setupOrganizationAfterPayment($user, $paystackData);
+            }
+
+            $subscription = Subscription::query()
+                ->where('organization_id', $organization->id)
+                ->where('paystack_reference', $reference)
+                ->latest()
+                ->first();
+
+            $this->recordProcessedPayment($organization, $subscription, $paystackData);
+
+            return $organization;
+        }, 3);
+    }
+
+    private function resolveOrganizationByProcessedReference(User $user, string $reference): ?Organization
+    {
+        $organization = $user->organizations()
+            ->whereHas('subscriptions', function ($query) use ($reference): void {
+                $query->where('paystack_reference', $reference);
+            })
+            ->first();
+
+        if ($organization) {
+            return $organization;
         }
 
-        return $this->setupOrganizationAfterPayment($user, $paystackData);
+        $processedOrganizationId = BillingEvent::query()
+            ->where('provider', 'paystack')
+            ->where('provider_event_id', $reference)
+            ->value('organization_id');
+
+        if (! $processedOrganizationId) {
+            return null;
+        }
+
+        return $user->organizations()->whereKey($processedOrganizationId)->first();
+    }
+
+    private function recordProcessedPayment(Organization $organization, ?Subscription $subscription, array $paystackData): void
+    {
+        $reference = (string) Arr::get($paystackData, 'reference', '');
+
+        if ($reference === '') {
+            return;
+        }
+
+        PaymentAttempt::query()->updateOrCreate(
+            [
+                'organization_id' => $organization->id,
+                'reference' => $reference,
+            ],
+            [
+                'subscription_id' => $subscription?->id,
+                'amount' => (int) Arr::get($paystackData, 'amount', 0),
+                'status' => 'success',
+                'attempted_at' => now(),
+            ]
+        );
+
+        $billingEvent = BillingEvent::query()->firstOrCreate(
+            [
+                'provider' => 'paystack',
+                'provider_event_id' => $reference,
+            ],
+            [
+                'organization_id' => $organization->id,
+                'subscription_id' => $subscription?->id,
+                'event_type' => 'payment_verified',
+                'reference' => $reference,
+                'payload_json' => $paystackData,
+                'processed_at' => now(),
+            ]
+        );
+
+        if ((string) $billingEvent->organization_id !== (string) $organization->id) {
+            throw new InvalidArgumentException('Payment reference is already linked to another organization.');
+        }
+
+        $billingEvent->forceFill([
+            'subscription_id' => $subscription?->id,
+            'event_type' => 'payment_verified',
+            'reference' => $reference,
+            'payload_json' => $paystackData,
+            'processed_at' => now(),
+        ])->save();
     }
 
     /**
@@ -283,7 +400,7 @@ class OnboardingService
 
         if ($existingDomain) {
             if ((string) $existingDomain->tenant_id !== (string) $organization->id) {
-                throw new InvalidArgumentException('The organization subdomain is already assigned to another organization.');
+                throw new DomainConflictException($expectedDomain);
             }
 
             return;
@@ -304,7 +421,7 @@ class OnboardingService
                 ->first();
 
             if (! $conflictingDomain || (string) $conflictingDomain->tenant_id !== (string) $organization->id) {
-                throw new InvalidArgumentException('The organization subdomain is already assigned to another organization.', previous: $exception);
+                throw new DomainConflictException($expectedDomain, previous: $exception);
             }
         }
     }

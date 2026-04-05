@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Billing;
 
+use App\Exceptions\DomainConflictException;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Onboarding\OnboardingService;
@@ -96,6 +97,16 @@ class PaystackCallbackController extends Controller
                 'reference' => $reference,
                 'checkout_mode' => $checkoutMode,
             ]);
+        } catch (DomainConflictException $e) {
+            Log::warning('Payment verified but workspace domain is conflicted.', [
+                'reference' => $reference,
+                'domain' => $e->domain,
+                'user_id' => $user->id,
+            ]);
+
+            return redirect()
+                ->route('home')
+                ->withErrors(['checkout' => 'Payment was verified, but we could not resolve your workspace subdomain. Please contact support.']);
         } catch (\Exception $e) {
             Log::error('Failed to setup organization after payment.', [
                 'reference' => $reference,

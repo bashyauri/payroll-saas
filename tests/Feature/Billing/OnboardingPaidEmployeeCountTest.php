@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\BillingEvent;
 use App\Models\Organization;
+use App\Models\PaymentAttempt;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
@@ -334,5 +336,49 @@ test('onboarding links users with an already paid owner subdomain to that existi
     $this->assertDatabaseHas('domains', [
         'tenant_id' => $organization->id,
         'domain' => 'paid-existing-user-subdomain.'.config('tenancy.base_domain'),
+    ]);
+});
+
+test('complete payment is idempotent for repeated onboarding callbacks with same reference', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create([
+        'name' => 'Idempotent User',
+    ]);
+
+    $plan = SubscriptionPlan::query()->create([
+        'name' => 'Essential',
+        'slug' => 'essential-idempotent-onboarding',
+        'currency' => 'NGN',
+        'price_per_employee' => 800,
+        'billing_period' => 'annual',
+        'min_employees' => 1,
+        'max_employees' => 50,
+        'features' => ['payroll_processing'],
+        'is_active' => true,
+    ]);
+
+    $payload = [
+        'reference' => 'ps_idempotent_onboarding_ref',
+        'amount' => 9288000,
+        'metadata' => [
+            'plan_slug' => $plan->slug,
+            'employee_count' => 10,
+            'billing_period' => 'annual',
+        ],
+    ];
+
+    $firstOrganization = app(OnboardingService::class)->completePayment($user, $payload);
+    $secondOrganization = app(OnboardingService::class)->completePayment($user, $payload);
+
+    expect($secondOrganization->is($firstOrganization))->toBeTrue();
+    expect(Organization::query()->count())->toBe(1);
+    expect(Subscription::query()->count())->toBe(1);
+    expect(PaymentAttempt::query()->where('reference', 'ps_idempotent_onboarding_ref')->count())->toBe(1);
+    expect(BillingEvent::query()->where('provider', 'paystack')->where('provider_event_id', 'ps_idempotent_onboarding_ref')->count())->toBe(1);
+
+    $this->assertDatabaseHas('subscriptions', [
+        'organization_id' => $firstOrganization->id,
+        'paystack_reference' => 'ps_idempotent_onboarding_ref',
+        'status' => Subscription::STATUS_ACTIVE,
     ]);
 });

@@ -141,6 +141,120 @@ test('onboarding continuation prefers configured base domain over older stored t
     ]);
 });
 
+test('onboarding continuation prefers the current host organization when it is paid and owned by the user', function () {
+    $user = User::factory()->create();
+
+    $hostOrganization = Organization::create([
+        'name' => 'Host Org',
+        'slug' => 'host-org',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+    $otherOrganization = Organization::create([
+        'name' => 'Other Org',
+        'slug' => 'other-org',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+
+    $hostOrganization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => 'host-org.payrollsaas.test',
+    ]);
+    $otherOrganization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => 'other-org.payrollsaas.test',
+    ]);
+
+    $hostOrganization->users()->attach($user->id, ['role' => 'owner']);
+    $otherOrganization->users()->attach($user->id, ['role' => 'owner']);
+
+    $plan = SubscriptionPlan::create([
+        'name' => 'Essential',
+        'slug' => 'essential-host-priority-auth-test',
+        'currency' => 'NGN',
+        'price_per_employee' => 800,
+        'billing_period' => 'annual',
+        'min_employees' => 1,
+        'max_employees' => 50,
+        'features' => ['payroll'],
+        'is_active' => true,
+    ]);
+
+    foreach ([$hostOrganization, $otherOrganization] as $organization) {
+        Subscription::create([
+            'organization_id' => $organization->id,
+            'plan_id' => $plan->id,
+            'status' => Subscription::STATUS_ACTIVE,
+            'trial_end_date' => now()->addDays(7),
+            'refund_eligible_until' => now()->addDays(7),
+            'next_billing_date' => now()->addYear(),
+            'paystack_reference' => 'ps_'.$organization->slug,
+            'amount_paid' => 80000,
+            'currency' => 'NGN',
+        ]);
+    }
+
+    $response = $this->actingAs($user)
+        ->withSession(['tenant_id' => $otherOrganization->id])
+        ->get('http://host-org.payrollsaas.test/onboarding/continue');
+
+    $response->assertRedirect('http://host-org.payrollsaas.test/dashboard');
+    expect(session('tenant_id'))->toBe($hostOrganization->id);
+});
+
+test('onboarding continuation redirects home instead of crashing on workspace subdomain conflict', function () {
+    $user = User::factory()->create();
+
+    $paidOrganization = Organization::create([
+        'name' => 'Paid Org',
+        'slug' => 'conflicted-slug',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+    $foreignOrganization = Organization::create([
+        'name' => 'Foreign Org',
+        'slug' => 'foreign-org',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+
+    $foreignOrganization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => 'conflicted-slug.'.config('tenancy.base_domain'),
+    ]);
+    $paidOrganization->users()->attach($user->id, ['role' => 'owner']);
+
+    $plan = SubscriptionPlan::create([
+        'name' => 'Essential',
+        'slug' => 'essential-conflict-graceful-auth-test',
+        'currency' => 'NGN',
+        'price_per_employee' => 800,
+        'billing_period' => 'annual',
+        'min_employees' => 1,
+        'max_employees' => 50,
+        'features' => ['payroll'],
+        'is_active' => true,
+    ]);
+
+    Subscription::create([
+        'organization_id' => $paidOrganization->id,
+        'plan_id' => $plan->id,
+        'status' => Subscription::STATUS_ACTIVE,
+        'trial_end_date' => now()->addDays(7),
+        'refund_eligible_until' => now()->addDays(7),
+        'next_billing_date' => now()->addYear(),
+        'paystack_reference' => 'ps_conflicted_org',
+        'amount_paid' => 80000,
+        'currency' => 'NGN',
+    ]);
+
+    $response = $this->actingAs($user)->get(route('onboarding.continue'));
+
+    $response->assertRedirect(route('home'));
+    $response->assertSessionHas('status', 'We could not resolve your workspace subdomain. Please contact support.');
+});
+
 test('users with two factor enabled are redirected to two factor challenge', function () {
     if (! Features::canManageTwoFactorAuthentication()) {
         $this->markTestSkipped('Two-factor authentication is not enabled.');

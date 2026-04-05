@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Onboarding;
 
+use App\Exceptions\DomainConflictException;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Models\Subscription;
@@ -38,6 +39,17 @@ class ContinueOnboardingController extends Controller
 
             if ($hostOrganization) {
                 $userBelongsToHostOrganization = $user->organizations()->whereKey($hostOrganization->id)->exists();
+
+                $hostOrganizationHasActiveSubscription = Subscription::query()
+                    ->where('organization_id', $hostOrganization->id)
+                    ->accessEligible()
+                    ->exists();
+
+                if ($userBelongsToHostOrganization && $hostOrganizationHasActiveSubscription) {
+                    $request->session()->put('tenant_id', $hostOrganization->id);
+
+                    return Inertia::location($request->getSchemeAndHttpHost().'/dashboard');
+                }
             }
         }
 
@@ -53,7 +65,13 @@ class ContinueOnboardingController extends Controller
                     ->exists();
 
                 if ($hasActiveSessionSubscription) {
-                    return Inertia::location($onboarding->tenantDashboardUrl($sessionOrganization));
+                    try {
+                        return Inertia::location($onboarding->tenantDashboardUrl($sessionOrganization));
+                    } catch (DomainConflictException) {
+                        return redirect()
+                            ->route('home')
+                            ->with('status', 'We could not resolve your workspace subdomain. Please contact support.');
+                    }
                 }
             }
         }
@@ -78,6 +96,12 @@ class ContinueOnboardingController extends Controller
 
         $request->session()->put('tenant_id', $activeOrganization->id);
 
-        return Inertia::location($onboarding->tenantDashboardUrl($activeOrganization));
+        try {
+            return Inertia::location($onboarding->tenantDashboardUrl($activeOrganization));
+        } catch (DomainConflictException) {
+            return redirect()
+                ->route('home')
+                ->with('status', 'We could not resolve your workspace subdomain. Please contact support.');
+        }
     }
 }

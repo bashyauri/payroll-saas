@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Billing\PaystackCallbackController::__invoke
- * @see app/Http/Controllers/Billing/PaystackCallbackController.php:16
+ * @see app/Http/Controllers/Billing/PaystackCallbackController.php:17
  * @route '/billing/paystack/callback'
  */
 export const callback = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ callback.definition = {
 
 /**
 * @see \App\Http\Controllers\Billing\PaystackCallbackController::__invoke
- * @see app/Http/Controllers/Billing/PaystackCallbackController.php:16
+ * @see app/Http/Controllers/Billing/PaystackCallbackController.php:17
  * @route '/billing/paystack/callback'
  */
 callback.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ callback.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Billing\PaystackCallbackController::__invoke
- * @see app/Http/Controllers/Billing/PaystackCallbackController.php:16
+ * @see app/Http/Controllers/Billing/PaystackCallbackController.php:17
  * @route '/billing/paystack/callback'
  */
 callback.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ callback.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Billing\PaystackCallbackController::__invoke
- * @see app/Http/Controllers/Billing/PaystackCallbackController.php:16
+ * @see app/Http/Controllers/Billing/PaystackCallbackController.php:17
  * @route '/billing/paystack/callback'
  */
 callback.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ callback.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Billing\PaystackCallbackController::__invoke
- * @see app/Http/Controllers/Billing/PaystackCallbackController.php:16
+ * @see app/Http/Controllers/Billing/PaystackCallbackController.php:17
  * @route '/billing/paystack/callback'
  */
     const callbackForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ callback.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Billing\PaystackCallbackController::__invoke
- * @see app/Http/Controllers/Billing/PaystackCallbackController.php:16
+ * @see app/Http/Controllers/Billing/PaystackCallbackController.php:17
  * @route '/billing/paystack/callback'
  */
         callbackForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ callback.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Billing\PaystackCallbackController::__invoke
- * @see app/Http/Controllers/Billing/PaystackCallbackController.php:16
+ * @see app/Http/Controllers/Billing/PaystackCallbackController.php:17
  * @route '/billing/paystack/callback'
  */
         callbackForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
