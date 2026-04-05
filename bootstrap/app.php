@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\DynamicAppUrl;
+use App\Http\Middleware\EnsureUserBelongsToTenantHost;
 use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ForceHttps::class,
             DynamicAppUrl::class,
         ], append: [
+            EnsureUserBelongsToTenantHost::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
