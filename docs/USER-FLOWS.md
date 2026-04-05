@@ -1,6 +1,6 @@
 # User Flows & Journeys
-Last updated: April 2, 2026  
-Version: 1.3  
+Last updated: April 6, 2026  
+Version: 1.4  
 Reference: architecture.md (sections 3.1, 3.2, 6.2)
 
 This file documents the end-to-end user journeys for the Payroll SaaS platform.  
@@ -139,7 +139,37 @@ Operational guardrails after payment:
 
 ---
 
-## 5. Organization Access Model (MVP)
+## 5. Logout & Session End Flow
+
+1. User clicks Sign Out anywhere in the app
+   - Backend securely logs out user (guard logout)
+   - Session is invalidated entirely
+   - CSRF token is regenerated
+   - Redirects to **https://theniyiconsult.com.ng/login** on central domain
+   - Message flash (optional): "You have been signed out."
+
+2. If user tries to access unauthorized tenant subdomain while logged in
+   - `EnsureUserBelongsToTenantHost` middleware intercepts
+   - User is not attached to that organization
+   - Backend logs out user + invalidates session
+   - Redirects to **https://theniyiconsult.com.ng/login** with flash message
+   - Message: "You do not have access to that organization."
+
+3. If user deletes their account via Settings → Delete Account
+   - Backend logs out user
+   - User record deleted from database
+   - Session invalidated
+   - Redirects to **https://theniyiconsult.com.ng/login** with flash message
+   - Message: "Your account has been deleted."
+
+**Key security rules**:
+- All logout paths redirect to central domain login (never local paths or home page)
+- Session destruction is atomic (guard logout + session invalidate + token regenerate)
+- Cross-tenant access attempts result in logout (prevent data leakage via session hijacking)
+
+---
+
+## 6. Organization Access Model (MVP)
 
 1. Each organization has distinct login credentials
 2. Each organization has a unique tenant URL ({slug}.theniyiconsult.com.ng)
@@ -153,7 +183,7 @@ Operational guardrails after payment:
 
 ---
 
-## 6. Multi-User Role Flow (Within One Organization)
+## 7. Multi-User Role Flow (Within One Organization)
 
 1. Organization administrator invites team users into same tenant
 2. Roles can include: administrator, HR staff, reviewer, approver
