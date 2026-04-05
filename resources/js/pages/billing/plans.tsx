@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { logout } from '@/routes';
+import { checkout } from '@/routes/billing';
 
 type Plan = {
     name: string;
@@ -27,6 +28,14 @@ type Plan = {
 };
 
 type BillingCycle = 'monthly' | 'annual';
+
+type CurrentSubscription = {
+    organizationName: string;
+    planSlug: string | null;
+    planName: string | null;
+    employeeCount: number | null;
+    status: string;
+};
 
 function formatNaira(amount: number): string {
     return new Intl.NumberFormat('en-NG', {
@@ -68,6 +77,8 @@ export default function BillingPlans({
     guaranteeDays,
     vatRate,
     annualDiscountRate,
+    isUpgrade,
+    currentSubscription,
 }: {
     plans: Plan[];
     hasPlans: boolean;
@@ -76,6 +87,8 @@ export default function BillingPlans({
     currency: string;
     vatRate: number;
     annualDiscountRate: number;
+    isUpgrade: boolean;
+    currentSubscription: CurrentSubscription | null;
 }) {
     const [billingCycle, setBillingCycle] = useState<BillingCycle>('annual');
     const [employeeCounts, setEmployeeCounts] = useState<
@@ -87,13 +100,25 @@ export default function BillingPlans({
         errors: Partial<Record<string, string>>;
         flash?: Partial<Record<string, string>>;
     };
+
+    const defaultEmployeeCount = (plan: Plan): number => {
+        const currentLicensedCount = currentSubscription?.employeeCount;
+
+        if (isUpgrade && currentLicensedCount !== null) {
+            return Math.max(currentLicensedCount, plan.min_employees);
+        }
+
+        return plan.min_employees;
+    };
+
     const submitCheckout = (plan: Plan, employeeCount: number): void => {
         router.post(
-            '/billing/checkout',
+            checkout.url(),
             {
                 plan: plan.slug,
                 employee_count: employeeCount,
                 billing_cycle: billingCycle,
+                upgrade: isUpgrade,
             },
             {
                 onStart: () => setSubmittingPlan(plan.slug),
@@ -106,7 +131,7 @@ export default function BillingPlans({
         const raw = employeeCounts[plan.slug];
         const parsed = Number.parseInt(raw ?? '', 10);
 
-        return Number.isNaN(parsed) ? plan.min_employees : parsed;
+        return Number.isNaN(parsed) ? defaultEmployeeCount(plan) : parsed;
     };
 
     const steps = [
@@ -153,47 +178,63 @@ export default function BillingPlans({
                     </Card>
                 )}
 
-                {/* Step Indicator */}
-                <div className="flex justify-between gap-2 rounded-lg border border-border bg-muted/30 p-4 sm:gap-3 md:border-0 md:bg-transparent md:p-0">
-                    {steps.map((step) => (
-                        <div
-                            key={step.number}
-                            className="flex flex-1 flex-col items-center gap-1"
-                        >
+                {isUpgrade ? (
+                    <Card className="border-primary/20 bg-primary/5">
+                        <CardHeader>
+                            <CardTitle className="text-lg">
+                                Upgrade your subscription
+                            </CardTitle>
+                            <CardDescription>
+                                {currentSubscription?.organizationName} is
+                                currently on{' '}
+                                {currentSubscription?.planName ?? 'a paid plan'}{' '}
+                                with {currentSubscription?.employeeCount ?? 0}{' '}
+                                licensed employees.
+                            </CardDescription>
+                        </CardHeader>
+                    </Card>
+                ) : (
+                    <div className="flex justify-between gap-2 rounded-lg border border-border bg-muted/30 p-4 sm:gap-3 md:border-0 md:bg-transparent md:p-0">
+                        {steps.map((step) => (
                             <div
-                                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-all sm:h-10 sm:w-10 sm:text-sm ${
-                                    step.completed
-                                        ? 'bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-400'
-                                        : step.number === 3
-                                          ? 'bg-primary text-primary-foreground'
-                                          : 'bg-muted text-muted-foreground'
-                                }`}
+                                key={step.number}
+                                className="flex flex-1 flex-col items-center gap-1"
                             >
-                                {step.completed ? (
-                                    <CheckCircle2 className="h-5 w-5" />
-                                ) : (
-                                    step.number
-                                )}
+                                <div
+                                    className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-all sm:h-10 sm:w-10 sm:text-sm ${
+                                        step.completed
+                                            ? 'bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-400'
+                                            : step.number === 3
+                                              ? 'bg-primary text-primary-foreground'
+                                              : 'bg-muted text-muted-foreground'
+                                    }`}
+                                >
+                                    {step.completed ? (
+                                        <CheckCircle2 className="h-5 w-5" />
+                                    ) : (
+                                        step.number
+                                    )}
+                                </div>
+                                <span className="hidden text-center text-xs font-medium text-muted-foreground sm:inline">
+                                    {step.title}
+                                </span>
                             </div>
-                            <span className="hidden text-center text-xs font-medium text-muted-foreground sm:inline">
-                                {step.title}
-                            </span>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
 
                 {/* Header Card */}
                 <Card className="border-primary/20 bg-gradient-to-r from-primary/10 via-accent/10 to-background">
                     <CardHeader>
                         <CardTitle className="text-xl sm:text-2xl">
-                            Choose Your Payroll Plan
+                            {isUpgrade
+                                ? 'Choose Your Upgrade'
+                                : 'Choose Your Payroll Plan'}
                         </CardTitle>
                         <CardDescription className="text-xs sm:text-sm">
-                            Rates are in NGN. Choose monthly or annual billing
-                            below. Annual billing saves {annualSavingsPercent}%.
-                            Prices are VAT-exclusive, and 7.5% VAT is added at
-                            checkout. After choosing a plan, you will continue
-                            to Paystack to select your preferred payment method.
+                            {isUpgrade
+                                ? 'Choose the plan and employee count you want to move to. The selected employee count cannot be lower than your current licensed count.'
+                                : `Rates are in NGN. Choose monthly or annual billing below. Annual billing saves ${annualSavingsPercent}%. Prices are VAT-exclusive, and 7.5% VAT is added at checkout. After choosing a plan, you will continue to Paystack to select your preferred payment method.`}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-3 text-xs sm:gap-4 sm:text-sm md:grid-cols-2">
@@ -248,6 +289,8 @@ export default function BillingPlans({
                             {plans.map((plan) => {
                                 const selectedEmployeeCount =
                                     resolveEmployeeCount(plan);
+                                const isCurrentPlan =
+                                    currentSubscription?.planSlug === plan.slug;
                                 const estimatedMonthlyAmount =
                                     selectedEmployeeCount *
                                     plan.price_per_employee;
@@ -289,7 +332,12 @@ export default function BillingPlans({
                                                 <CardTitle className="text-lg sm:text-xl">
                                                     {plan.name}
                                                 </CardTitle>
-                                                {plan.slug === 'essential' ? (
+                                                {isCurrentPlan ? (
+                                                    <Badge className="w-fit bg-slate-900 text-xs text-white dark:bg-slate-100 dark:text-slate-900">
+                                                        Current plan
+                                                    </Badge>
+                                                ) : plan.slug ===
+                                                  'essential' ? (
                                                     <Badge className="w-fit bg-primary text-xs text-primary-foreground">
                                                         Most Popular
                                                     </Badge>
@@ -350,7 +398,9 @@ export default function BillingPlans({
                                                             plan.slug
                                                         ] ??
                                                         String(
-                                                            plan.min_employees,
+                                                            defaultEmployeeCount(
+                                                                plan,
+                                                            ),
                                                         )
                                                     }
                                                     onChange={(event) => {
@@ -462,7 +512,10 @@ export default function BillingPlans({
                                                 <Button
                                                     type="button"
                                                     className="w-full gap-2 text-sm"
-                                                    disabled={submittingPlan === plan.slug}
+                                                    disabled={
+                                                        submittingPlan ===
+                                                        plan.slug
+                                                    }
                                                     onClick={() =>
                                                         submitCheckout(
                                                             plan,
@@ -470,15 +523,18 @@ export default function BillingPlans({
                                                         )
                                                     }
                                                 >
-                                                    Start Free Trial
+                                                    {isUpgrade
+                                                        ? 'Continue to Paystack'
+                                                        : 'Start Free Trial'}
                                                     <ArrowRight className="h-4 w-4" />
                                                 </Button>
                                             )}
                                             <p className="text-xs text-muted-foreground">
                                                 You will be redirected to
                                                 Paystack to complete payment.
-                                                Your 7-day guarantee starts
-                                                immediately.
+                                                {isUpgrade
+                                                    ? ' Your existing subscription will be updated after successful payment.'
+                                                    : ' Your 7-day guarantee starts immediately.'}
                                             </p>
                                         </CardFooter>
                                     </Card>

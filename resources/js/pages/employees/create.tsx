@@ -13,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { plans as billingPlans } from '@/routes/billing';
 import { create, index, store } from '@/routes/tenant/employees';
 import type { BreadcrumbItem } from '@/types';
 
@@ -63,7 +64,22 @@ export default function CreateEmployee({
                     <Alert>
                         <AlertTitle>Employee limit reached</AlertTitle>
                         <AlertDescription>
-                            Upgrade to add more employees.
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <span>Upgrade to add more employees.</span>
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    className="w-full sm:w-auto"
+                                >
+                                    <Link
+                                        href={billingPlans({
+                                            query: { upgrade: 1 },
+                                        })}
+                                    >
+                                        Upgrade plan
+                                    </Link>
+                                </Button>
+                            </div>
                         </AlertDescription>
                     </Alert>
                 )}

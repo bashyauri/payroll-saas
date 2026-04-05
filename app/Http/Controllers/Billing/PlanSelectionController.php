@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Billing;
 use App\Http\Controllers\Controller;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
+use App\Services\Billing\ActiveSubscriptionContextResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,9 +13,11 @@ use Inertia\Response;
 
 class PlanSelectionController extends Controller
 {
-    public function __invoke(Request $request): Response|RedirectResponse
+    public function __invoke(Request $request, ActiveSubscriptionContextResolver $resolver): Response|RedirectResponse
     {
         $user = $request->user();
+        $upgradeSubscription = null;
+        $isUpgrade = false;
 
         if ($user) {
             $activeStatuses = [
@@ -22,9 +25,15 @@ class PlanSelectionController extends Controller
                 Subscription::STATUS_PAST_DUE,
             ];
 
+            $isUpgrade = $request->boolean('upgrade');
+
+            if ($isUpgrade) {
+                $upgradeSubscription = $resolver->resolveSubscription($request, $user);
+            }
+
             $sessionOrganizationId = (string) $request->session()->get('tenant_id', '');
 
-            if ($sessionOrganizationId !== '') {
+            if (! $isUpgrade && $sessionOrganizationId !== '') {
                 $sessionOrganization = $user->organizations()->whereKey($sessionOrganizationId)->first();
 
                 if ($sessionOrganization) {
@@ -39,11 +48,13 @@ class PlanSelectionController extends Controller
                 }
             }
 
-            $activeOrganization = $user->organizations()
-                ->whereHas('subscriptions', function ($query) use ($activeStatuses): void {
-                    $query->whereIn('status', $activeStatuses);
-                })
-                ->first();
+            $activeOrganization = $isUpgrade
+                ? null
+                : $user->organizations()
+                    ->whereHas('subscriptions', function ($query) use ($activeStatuses): void {
+                        $query->whereIn('status', $activeStatuses);
+                    })
+                    ->first();
 
             if ($activeOrganization) {
                 $request->session()->put('tenant_id', $activeOrganization->id);
@@ -85,6 +96,16 @@ class PlanSelectionController extends Controller
             'currency' => 'NGN',
             'vatRate' => (float) config('billing.vat_rate', 0.075),
             'annualDiscountRate' => (float) config('billing.annual_discount_rate', 0.10),
+            'isUpgrade' => $isUpgrade && $upgradeSubscription !== null,
+            'currentSubscription' => $upgradeSubscription === null
+                ? null
+                : [
+                    'organizationName' => $upgradeSubscription->organization->name,
+                    'planSlug' => $upgradeSubscription->plan?->slug,
+                    'planName' => $upgradeSubscription->plan?->name,
+                    'employeeCount' => $upgradeSubscription->employee_count,
+                    'status' => $upgradeSubscription->status,
+                ],
         ]);
     }
 }

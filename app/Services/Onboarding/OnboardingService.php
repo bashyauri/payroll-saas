@@ -16,18 +16,28 @@ use Stancl\Tenancy\Facades\Tenancy;
 class OnboardingService
 {
     /**
+     * Apply a successful Paystack payment to either onboarding or subscription upgrade.
+     */
+    public function completePayment(User $user, array $paystackData): Organization
+    {
+        $organizationId = (string) Arr::get($paystackData, 'metadata.organization_id', '');
+        $subscriptionId = (string) Arr::get($paystackData, 'metadata.subscription_id', '');
+
+        if ($organizationId !== '' && $subscriptionId !== '') {
+            return $this->upgradeSubscriptionAfterPayment($user, $paystackData);
+        }
+
+        return $this->setupOrganizationAfterPayment($user, $paystackData);
+    }
+
+    /**
      * Create an organization and subscription after successful payment.
      *
      * @param  array  $paystackData  Full Paystack transaction data
      */
     public function setupOrganizationAfterPayment(User $user, array $paystackData): Organization
     {
-        $metadata = Arr::get($paystackData, 'metadata', []);
-        $planSlug = (string) Arr::get($metadata, 'plan_slug');
-        $employeeCount = (int) Arr::get($metadata, 'employee_count', 1);
-        $billingPeriod = (string) Arr::get($metadata, 'billing_period', 'annual');
-        $reference = (string) Arr::get($paystackData, 'reference', '');
-        $amount = (int) Arr::get($paystackData, 'amount');
+        [$plan, $employeeCount, $billingPeriod, $reference, $amount] = $this->resolvePlanCheckoutData($paystackData);
 
         $existingOrganization = $user->organizations()
             ->whereHas('subscriptions', function ($query) use ($reference): void {
@@ -41,14 +51,6 @@ class OnboardingService
             Tenancy::initialize($existingOrganization);
 
             return $existingOrganization;
-        }
-
-        // Find the plan
-        $plan = SubscriptionPlan::where('slug', $planSlug)->firstOrFail();
-        $employeeCount = max($employeeCount, (int) $plan->min_employees);
-
-        if ($plan->max_employees !== null) {
-            $employeeCount = min($employeeCount, (int) $plan->max_employees);
         }
 
         // Generate organization name from user name
@@ -95,6 +97,55 @@ class OnboardingService
     }
 
     /**
+     * Update an existing subscription after successful payment.
+     */
+    public function upgradeSubscriptionAfterPayment(User $user, array $paystackData): Organization
+    {
+        $organizationId = (string) Arr::get($paystackData, 'metadata.organization_id', '');
+        $subscriptionId = (string) Arr::get($paystackData, 'metadata.subscription_id', '');
+        [$plan, $employeeCount, $billingPeriod, $reference, $amount] = $this->resolvePlanCheckoutData($paystackData);
+
+        $organization = $user->organizations()->whereKey($organizationId)->firstOrFail();
+        $subscription = $organization->subscriptions()->whereKey($subscriptionId)->firstOrFail();
+
+        if ($subscription->paystack_reference === $reference) {
+            $this->ensureDomainExists($organization);
+            session(['tenant_id' => $organization->id]);
+            Tenancy::initialize($organization);
+
+            return $organization;
+        }
+
+        $organization->forceFill([
+            'billing_status' => Organization::BILLING_ACTIVE,
+            'billing_status_updated_at' => now(),
+            'read_only_mode' => false,
+            'suspended_at' => null,
+        ])->save();
+
+        $subscription->forceFill([
+            'plan_id' => $plan->id,
+            'status' => Subscription::STATUS_ACTIVE,
+            'next_billing_date' => $billingPeriod === 'monthly'
+                ? now()->addMonth()
+                : now()->addYear(),
+            'grace_period_ends_at' => null,
+            'canceled_at' => null,
+            'paystack_reference' => $reference,
+            'amount_paid' => $amount,
+            'currency' => 'NGN',
+            'employee_count' => $employeeCount,
+        ])->save();
+
+        $this->ensureDomainExists($organization);
+
+        session(['tenant_id' => $organization->id]);
+        Tenancy::initialize($organization);
+
+        return $organization;
+    }
+
+    /**
      * Ensure the organization has a domain record. Creates one if absent.
      */
     private function ensureDomainExists(Organization $organization): void
@@ -125,5 +176,27 @@ class OnboardingService
         }
 
         return route('home');
+    }
+
+    /**
+     * @return array{0: SubscriptionPlan, 1: int, 2: string, 3: string, 4: int}
+     */
+    private function resolvePlanCheckoutData(array $paystackData): array
+    {
+        $metadata = Arr::get($paystackData, 'metadata', []);
+        $planSlug = (string) Arr::get($metadata, 'plan_slug');
+        $employeeCount = (int) Arr::get($metadata, 'employee_count', 1);
+        $billingPeriod = (string) Arr::get($metadata, 'billing_period', 'annual');
+        $reference = (string) Arr::get($paystackData, 'reference', '');
+        $amount = (int) Arr::get($paystackData, 'amount');
+
+        $plan = SubscriptionPlan::where('slug', $planSlug)->firstOrFail();
+        $employeeCount = max($employeeCount, (int) $plan->min_employees);
+
+        if ($plan->max_employees !== null) {
+            $employeeCount = min($employeeCount, (int) $plan->max_employees);
+        }
+
+        return [$plan, $employeeCount, $billingPeriod, $reference, $amount];
     }
 }

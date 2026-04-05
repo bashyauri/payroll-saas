@@ -86,12 +86,15 @@ class PaystackCallbackController extends Controller
             $request->session()->regenerate();
         }
 
+        $checkoutMode = (string) data_get($transactionData, 'metadata.checkout_mode', 'onboarding');
+
         try {
-            $organization = $onboarding->setupOrganizationAfterPayment($user, $transactionData);
-            Log::info('Organization created after payment.', [
+            $organization = $onboarding->completePayment($user, $transactionData);
+            Log::info('Payment applied successfully.', [
                 'organization_id' => $organization->id,
                 'user_id' => $user->id,
                 'reference' => $reference,
+                'checkout_mode' => $checkoutMode,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to setup organization after payment.', [
@@ -106,6 +109,8 @@ class PaystackCallbackController extends Controller
 
         return redirect()
             ->away($onboarding->tenantDashboardUrl($organization))
-            ->with('success', 'Welcome! Your 7-day free trial has started.');
+            ->with('success', $checkoutMode === 'upgrade'
+                ? 'Your subscription has been updated successfully.'
+                : 'Welcome! Your 7-day free trial has started.');
     }
 }

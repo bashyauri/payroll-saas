@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
+import { plans as billingPlans } from '@/routes/billing';
 import { edit as editProfile } from '@/routes/profile';
 import { create as createEmployee } from '@/routes/tenant/employees';
 import { edit as editWorkspace } from '@/routes/workspace';
@@ -293,13 +294,28 @@ export default function Dashboard({
                                 Upgrade to add more employees
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="text-sm text-muted-foreground">
-                            Current usage:{' '}
-                            <span className="font-medium text-foreground">
-                                {guards.employeeLimit === null
-                                    ? `${quickStats.employees} / N/A`
-                                    : `${quickStats.employees} / ${guards.employeeLimit}`}
-                            </span>
+                        <CardContent className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                Current usage:{' '}
+                                <span className="font-medium text-foreground">
+                                    {guards.employeeLimit === null
+                                        ? `${quickStats.employees} / N/A`
+                                        : `${quickStats.employees} / ${guards.employeeLimit}`}
+                                </span>
+                            </div>
+                            <Button
+                                asChild
+                                size="sm"
+                                className="w-full sm:w-auto"
+                            >
+                                <Link
+                                    href={billingPlans({
+                                        query: { upgrade: 1 },
+                                    })}
+                                >
+                                    Upgrade plan
+                                </Link>
+                            </Button>
                         </CardContent>
                     </Card>
                 )}
