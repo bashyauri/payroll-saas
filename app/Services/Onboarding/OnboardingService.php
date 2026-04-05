@@ -45,7 +45,52 @@ class OnboardingService
         $organizationId = (string) Arr::get($paystackData, 'metadata.organization_id', '');
         $subscriptionId = (string) Arr::get($paystackData, 'metadata.subscription_id', '');
 
-        return DB::transaction(function () use ($user, $paystackData, $reference, $organizationId, $subscriptionId): Organization {
+        if ($organizationId === '' || $subscriptionId === '') {
+            return $this->completeOnboardingPaymentWithoutTransaction($user, $paystackData, $reference);
+        }
+
+        return $this->completeUpgradePaymentWithinTransaction(
+            $user,
+            $paystackData,
+            $reference,
+            $organizationId,
+            $subscriptionId,
+        );
+    }
+
+    private function completeOnboardingPaymentWithoutTransaction(User $user, array $paystackData, string $reference): Organization
+    {
+        $processedOrganization = $this->resolveOrganizationByProcessedReference($user, $reference);
+
+        if ($processedOrganization) {
+            $this->ensureDomainExists($processedOrganization);
+            session(['tenant_id' => $processedOrganization->id]);
+            Tenancy::initialize($processedOrganization);
+
+            return $processedOrganization;
+        }
+
+        $organization = $this->setupOrganizationAfterPayment($user, $paystackData);
+
+        $subscription = Subscription::query()
+            ->where('organization_id', $organization->id)
+            ->where('paystack_reference', $reference)
+            ->latest()
+            ->first();
+
+        $this->recordProcessedPayment($organization, $subscription, $paystackData);
+
+        return $organization;
+    }
+
+    private function completeUpgradePaymentWithinTransaction(
+        User $user,
+        array $paystackData,
+        string $reference,
+        string $organizationId,
+        string $subscriptionId,
+    ): Organization {
+        return DB::transaction(function () use ($user, $paystackData, $reference): Organization {
             User::query()->whereKey($user->id)->lockForUpdate()->first();
 
             $processedOrganization = $this->resolveOrganizationByProcessedReference($user, $reference);
@@ -58,11 +103,7 @@ class OnboardingService
                 return $processedOrganization;
             }
 
-            if ($organizationId !== '' && $subscriptionId !== '') {
-                $organization = $this->upgradeSubscriptionAfterPayment($user, $paystackData);
-            } else {
-                $organization = $this->setupOrganizationAfterPayment($user, $paystackData);
-            }
+            $organization = $this->upgradeSubscriptionAfterPayment($user, $paystackData);
 
             $subscription = Subscription::query()
                 ->where('organization_id', $organization->id)
