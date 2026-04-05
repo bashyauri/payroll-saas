@@ -103,6 +103,53 @@ test('authenticated users with active subscription can visit the dashboard', fun
     );
 });
 
+test('authenticated users with unpaid active records are redirected from their tenant dashboard', function () {
+    $user = User::factory()->create();
+    $organization = Organization::create([
+        'name' => 'Unpaid Active Org',
+        'slug' => 'unpaid-active-org',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+    $organization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => 'unpaid-active-org.payrollsaas.test',
+    ]);
+
+    $plan = SubscriptionPlan::create([
+        'name' => 'Essential',
+        'slug' => 'essential-unpaid-dashboard-test',
+        'currency' => 'NGN',
+        'price_per_employee' => 800,
+        'billing_period' => 'annual',
+        'min_employees' => 1,
+        'max_employees' => 50,
+        'features' => ['payroll'],
+        'is_active' => true,
+    ]);
+
+    $organization->users()->attach($user->id, ['role' => 'owner']);
+
+    Subscription::create([
+        'organization_id' => $organization->id,
+        'plan_id' => $plan->id,
+        'status' => Subscription::STATUS_ACTIVE,
+        'trial_end_date' => now()->addDays(7),
+        'refund_eligible_until' => now()->addDays(7),
+        'next_billing_date' => now()->addYear(),
+        'paystack_reference' => null,
+        'amount_paid' => 0,
+        'currency' => 'NGN',
+        'employee_count' => 1,
+    ]);
+
+    $this->actingAs($user);
+
+    $response = $this->get('http://unpaid-active-org.payrollsaas.test/dashboard');
+
+    $response->assertRedirect(route('billing.plans'));
+});
+
 test('users with an unpaid org and a paid org are routed to dashboard using paid org context', function () {
     $user = User::factory()->create();
 
@@ -160,6 +207,27 @@ test('users with an unpaid org and a paid org are routed to dashboard using paid
     $response = $this->get('http://paid-org.payrollsaas.test/dashboard');
 
     $response->assertOk();
+});
+
+test('non-member users without a paid organization are redirected to home from tenant dashboard', function () {
+    $user = User::factory()->create();
+
+    $foreignOrganization = Organization::create([
+        'name' => 'Foreign Org',
+        'slug' => 'foreign-org',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+    $foreignOrganization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => 'foreign-org.payrollsaas.test',
+    ]);
+
+    $this->actingAs($user);
+
+    $response = $this->get('http://foreign-org.payrollsaas.test/dashboard');
+
+    $response->assertRedirect(route('home'));
 });
 
 test('tenant dashboard assets are not pinned to central domain', function () {

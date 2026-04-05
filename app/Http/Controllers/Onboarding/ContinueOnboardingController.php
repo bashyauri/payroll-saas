@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Onboarding;
 
 use App\Http\Controllers\Controller;
+use App\Models\Organization;
 use App\Models\Subscription;
 use App\Services\Onboarding\OnboardingService;
 use Illuminate\Http\RedirectResponse;
@@ -28,6 +29,23 @@ class ContinueOnboardingController extends Controller
             Subscription::STATUS_PAST_DUE,
         ];
 
+        $host = $request->getHost();
+        $centralDomains = config('tenancy.central_domains', []);
+        $hostOrganization = null;
+        $userBelongsToHostOrganization = false;
+
+        if ($host !== '' && ! in_array($host, $centralDomains, true)) {
+            $hostOrganization = Organization::query()
+                ->whereHas('domains', function ($query) use ($host): void {
+                    $query->where('domain', $host);
+                })
+                ->first();
+
+            if ($hostOrganization) {
+                $userBelongsToHostOrganization = $user->organizations()->whereKey($hostOrganization->id)->exists();
+            }
+        }
+
         $sessionOrganizationId = (string) $request->session()->get('tenant_id', '');
 
         if ($sessionOrganizationId !== '') {
@@ -37,6 +55,7 @@ class ContinueOnboardingController extends Controller
                 $hasActiveSessionSubscription = Subscription::query()
                     ->where('organization_id', $sessionOrganization->id)
                     ->whereIn('status', $activeStatuses)
+                    ->whereNotNull('paystack_reference')
                     ->exists();
 
                 if ($hasActiveSessionSubscription) {
@@ -47,12 +66,22 @@ class ContinueOnboardingController extends Controller
 
         $activeOrganization = $user->organizations()
             ->whereHas('subscriptions', function ($query) use ($activeStatuses): void {
-                $query->whereIn('status', $activeStatuses);
+                $query
+                    ->whereIn('status', $activeStatuses)
+                    ->whereNotNull('paystack_reference');
             })
             ->first();
 
         if (! $activeOrganization) {
-            return redirect()->route('billing.plans');
+            if ($hostOrganization && ! $userBelongsToHostOrganization) {
+                return redirect()
+                    ->route('home')
+                    ->with('status', 'You do not have access to that organization.');
+            }
+
+            return redirect()
+                ->route('billing.plans')
+                ->with('onboarding_notice', 'Complete payment to unlock dashboard access.');
         }
 
         $request->session()->put('tenant_id', $activeOrganization->id);

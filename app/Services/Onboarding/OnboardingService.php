@@ -150,14 +150,12 @@ class OnboardingService
      */
     private function ensureDomainExists(Organization $organization): void
     {
-        if ($organization->domains()->exists()) {
-            return;
-        }
+        $expectedDomain = $organization->slug.'.'.config('tenancy.base_domain');
 
-        $organization->domains()->create([
-            'id' => (string) Str::ulid(),
-            'domain' => $organization->slug.'.'.config('tenancy.base_domain'),
-        ]);
+        $organization->domains()->createOrFirst(
+            ['domain' => $expectedDomain],
+            ['id' => (string) Str::ulid()]
+        );
     }
 
     /**
@@ -168,7 +166,11 @@ class OnboardingService
         // Backfill missing domains for older organizations before redirecting.
         $this->ensureDomainExists($organization);
 
-        $domain = $organization->domains()->value('domain');
+        $expectedDomain = $organization->slug.'.'.config('tenancy.base_domain');
+        $domain = $organization->domains()
+            ->where('domain', $expectedDomain)
+            ->value('domain')
+            ?? $organization->domains()->value('domain');
         $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
 
         if ($domain) {

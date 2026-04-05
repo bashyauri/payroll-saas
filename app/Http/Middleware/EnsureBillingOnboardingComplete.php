@@ -41,7 +41,21 @@ class EnsureBillingOnboardingComplete
 
             // Ensure this authenticated user actually belongs to the resolved tenant.
             if (! $user->organizations()->whereKey($tenant->id)->exists()) {
-                return redirect()->route('login');
+                $hasPaidOrganization = $user->organizations()
+                    ->whereHas('subscriptions', function ($query): void {
+                        $query
+                            ->whereIn('status', $this->activeSubscriptionStatuses)
+                            ->whereNotNull('paystack_reference');
+                    })
+                    ->exists();
+
+                if ($hasPaidOrganization) {
+                    return redirect()->route('onboarding.continue');
+                }
+
+                return redirect()
+                    ->route('home')
+                    ->with('status', 'You do not have access to that organization.');
             }
 
             if ($this->hasActiveSubscription($tenant->id)) {
@@ -66,7 +80,9 @@ class EnsureBillingOnboardingComplete
 
         $activeOrganization = $user->organizations()
             ->whereHas('subscriptions', function ($query): void {
-                $query->whereIn('status', $this->activeSubscriptionStatuses);
+                $query
+                    ->whereIn('status', $this->activeSubscriptionStatuses)
+                    ->whereNotNull('paystack_reference');
             })
             ->first();
 
@@ -86,6 +102,7 @@ class EnsureBillingOnboardingComplete
         return Subscription::query()
             ->where('organization_id', $organizationId)
             ->whereIn('status', $this->activeSubscriptionStatuses)
+            ->whereNotNull('paystack_reference')
             ->exists();
     }
 }
