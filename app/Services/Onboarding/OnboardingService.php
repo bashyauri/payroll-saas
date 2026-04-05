@@ -8,6 +8,7 @@ use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Stancl\Tenancy\Facades\Tenancy;
 
 /**
@@ -191,6 +192,14 @@ class OnboardingService
         $billingPeriod = (string) Arr::get($metadata, 'billing_period', 'annual');
         $reference = (string) Arr::get($paystackData, 'reference', '');
         $amount = (int) Arr::get($paystackData, 'amount');
+
+        if ($reference === '') {
+            throw new InvalidArgumentException('Missing Paystack reference in verified payment payload.');
+        }
+
+        if ($amount <= 0) {
+            throw new InvalidArgumentException('Invalid Paystack amount in verified payment payload.');
+        }
 
         $plan = SubscriptionPlan::where('slug', $planSlug)->firstOrFail();
         $employeeCount = max($employeeCount, (int) $plan->min_employees);

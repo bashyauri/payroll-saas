@@ -24,11 +24,6 @@ class ContinueOnboardingController extends Controller
             return redirect()->route('login');
         }
 
-        $activeStatuses = [
-            Subscription::STATUS_ACTIVE,
-            Subscription::STATUS_PAST_DUE,
-        ];
-
         $host = $request->getHost();
         $centralDomains = config('tenancy.central_domains', []);
         $hostOrganization = null;
@@ -54,8 +49,7 @@ class ContinueOnboardingController extends Controller
             if ($sessionOrganization) {
                 $hasActiveSessionSubscription = Subscription::query()
                     ->where('organization_id', $sessionOrganization->id)
-                    ->whereIn('status', $activeStatuses)
-                    ->whereNotNull('paystack_reference')
+                    ->accessEligible()
                     ->exists();
 
                 if ($hasActiveSessionSubscription) {
@@ -65,10 +59,8 @@ class ContinueOnboardingController extends Controller
         }
 
         $activeOrganization = $user->organizations()
-            ->whereHas('subscriptions', function ($query) use ($activeStatuses): void {
-                $query
-                    ->whereIn('status', $activeStatuses)
-                    ->whereNotNull('paystack_reference');
+            ->whereHas('subscriptions', function ($query): void {
+                $query->accessEligible();
             })
             ->first();
 

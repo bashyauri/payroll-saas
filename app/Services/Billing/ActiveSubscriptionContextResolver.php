@@ -9,20 +9,12 @@ use Illuminate\Http\Request;
 
 class ActiveSubscriptionContextResolver
 {
-    /**
-     * @var array<int, string>
-     */
-    private array $activeStatuses = [
-        Subscription::STATUS_ACTIVE,
-        Subscription::STATUS_PAST_DUE,
-    ];
-
     public function resolveSubscription(Request $request, User $user): ?Subscription
     {
         foreach ($this->candidateOrganizations($request, $user) as $organization) {
             $subscription = $organization->subscriptions()
                 ->with('plan')
-                ->whereIn('status', $this->activeStatuses)
+                ->accessEligible()
                 ->latest('created_at')
                 ->first();
 
@@ -70,7 +62,7 @@ class ActiveSubscriptionContextResolver
 
         $activeOrganization = $user->organizations()
             ->whereHas('subscriptions', function ($query): void {
-                $query->whereIn('status', $this->activeStatuses);
+                $query->accessEligible();
             })
             ->first();
 

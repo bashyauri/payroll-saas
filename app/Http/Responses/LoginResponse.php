@@ -12,13 +12,22 @@ class LoginResponse implements LoginResponseContract
      */
     public function toResponse($request): Response
     {
+        // Use payroll-saas.test locally, otherwise use the first central domain
+        $centralDomains = config('tenancy.central_domains');
+        $centralDomain = in_array('payroll-saas.test', $centralDomains, true)
+            ? 'payroll-saas.test'
+            : ($centralDomains[0] ?? 'payroll-saas.test');
+
+        $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
+        $path = route('onboarding.continue', [], false);
+        $url = "{$scheme}://{$centralDomain}{$path}";
 
         if ($request->hasHeader('X-Inertia')) {
-            return redirect()->intended(route('onboarding.continue'));
+            return redirect()->intended($url);
         }
 
         return $request->wantsJson()
             ? response()->json(['two_factor' => false])
-            : redirect()->route('onboarding.continue');
+            : redirect()->to($url);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -52,6 +53,30 @@ class Subscription extends Model
     public const STATUS_FAILED = 'failed';
 
     public const STATUS_CANCELED = 'canceled';
+
+    /**
+     * @return array<int, string>
+     */
+    public static function accessEligibleStatuses(): array
+    {
+        return [
+            self::STATUS_ACTIVE,
+            self::STATUS_PAST_DUE,
+        ];
+    }
+
+    public function scopeAccessEligible(Builder $query): Builder
+    {
+        return $query
+            ->whereIn('status', self::accessEligibleStatuses())
+            ->whereNotNull('paystack_reference');
+    }
+
+    public function isAccessEligible(): bool
+    {
+        return in_array($this->status, self::accessEligibleStatuses(), true)
+            && $this->paystack_reference !== null;
+    }
 
     public function organization(): BelongsTo
     {

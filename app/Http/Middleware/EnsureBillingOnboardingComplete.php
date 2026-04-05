@@ -11,14 +11,6 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureBillingOnboardingComplete
 {
     /**
-     * @var array<int, string>
-     */
-    private array $activeSubscriptionStatuses = [
-        Subscription::STATUS_ACTIVE,
-        Subscription::STATUS_PAST_DUE,
-    ];
-
-    /**
      * Handle an incoming request.
      *
      * When running in tenant context (subdomain routing), tenancy is already
@@ -43,9 +35,7 @@ class EnsureBillingOnboardingComplete
             if (! $user->organizations()->whereKey($tenant->id)->exists()) {
                 $hasPaidOrganization = $user->organizations()
                     ->whereHas('subscriptions', function ($query): void {
-                        $query
-                            ->whereIn('status', $this->activeSubscriptionStatuses)
-                            ->whereNotNull('paystack_reference');
+                        $query->accessEligible();
                     })
                     ->exists();
 
@@ -80,9 +70,7 @@ class EnsureBillingOnboardingComplete
 
         $activeOrganization = $user->organizations()
             ->whereHas('subscriptions', function ($query): void {
-                $query
-                    ->whereIn('status', $this->activeSubscriptionStatuses)
-                    ->whereNotNull('paystack_reference');
+                $query->accessEligible();
             })
             ->first();
 
@@ -101,8 +89,7 @@ class EnsureBillingOnboardingComplete
     {
         return Subscription::query()
             ->where('organization_id', $organizationId)
-            ->whereIn('status', $this->activeSubscriptionStatuses)
-            ->whereNotNull('paystack_reference')
+            ->accessEligible()
             ->exists();
     }
 }
