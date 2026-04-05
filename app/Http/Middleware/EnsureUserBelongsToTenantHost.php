@@ -6,6 +6,7 @@ use App\Models\Organization;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserBelongsToTenantHost
@@ -51,6 +52,14 @@ class EnsureUserBelongsToTenantHost
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        abort(403, 'Unauthorized organization access.');
+        $centralDomains = config('tenancy.central_domains', []);
+        $centralDomain = in_array('payroll-saas.test', $centralDomains, true)
+            ? 'payroll-saas.test'
+            : ($centralDomains[0] ?? 'theniyiconsult.com.ng');
+
+        $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
+
+        return redirect()->to("{$scheme}://{$centralDomain}/login")
+            ->with('status', 'You do not have access to that organization.');
     }
 }

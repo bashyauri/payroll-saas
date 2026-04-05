@@ -55,6 +55,14 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        $centralDomains = config('tenancy.central_domains', []);
+        $centralDomain = in_array('payroll-saas.test', $centralDomains, true)
+            ? 'payroll-saas.test'
+            : ($centralDomains[0] ?? 'theniyiconsult.com.ng');
+
+        $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
+
+        return redirect()->to("{$scheme}://{$centralDomain}/login")
+            ->with('status', 'Your account has been deleted.');
     }
 }
