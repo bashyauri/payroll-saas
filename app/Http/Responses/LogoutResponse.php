@@ -20,6 +20,7 @@ class LogoutResponse implements LogoutResponseContract
         // Use explicit https for production, http for local dev
         $scheme = app()->isProduction() ? 'https' : 'http';
 
+
         return redirect()->to("{$scheme}://{$centralDomain}/login");
     }
 }

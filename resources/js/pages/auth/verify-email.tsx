@@ -135,6 +135,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
                             </div>
 
                             <TextLink
+                                method="post"
                                 href={logout()}
                                 className="block text-sm font-medium text-primary hover:text-primary/80"
                             >
