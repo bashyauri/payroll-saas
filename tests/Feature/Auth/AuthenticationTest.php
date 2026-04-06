@@ -23,7 +23,12 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('onboarding.continue', absolute: false));
+    $scheme = app()->isProduction() ? 'https' : 'http';
+    $centralDomains = config('tenancy.central_domains', []);
+    $centralDomain = in_array('payroll-saas.test', $centralDomains, true)
+        ? 'payroll-saas.test'
+        : ($centralDomains[0] ?? 'theniyiconsult.com.ng');
+    $response->assertRedirect("{$scheme}://{$centralDomain}/onboarding/continue");
 });
 
 test('inertia login requests are redirected after authentication', function () {
@@ -40,7 +45,14 @@ test('inertia login requests are redirected after authentication', function () {
         ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('onboarding.continue', absolute: false));
+    $scheme = app()->isProduction() ? 'https' : 'http';
+    $centralDomains = config('tenancy.central_domains', []);
+    $centralDomain = in_array('payroll-saas.test', $centralDomains, true)
+        ? 'payroll-saas.test'
+        : ($centralDomains[0] ?? 'theniyiconsult.com.ng');
+
+    $response->assertStatus(409);
+    $response->assertHeader('X-Inertia-Location', "{$scheme}://{$centralDomain}/onboarding/continue");
 });
 
 test('onboarding continuation does not send unpaid tenant owners to dashboard', function () {

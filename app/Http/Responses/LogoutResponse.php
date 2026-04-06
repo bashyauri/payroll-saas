@@ -2,11 +2,12 @@
 
 namespace App\Http\Responses;
 
+use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
-use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use Laravel\Fortify\Contracts\LogoutResponse as LogoutResponseContract;
 use Symfony\Component\HttpFoundation\Response;
 
-class LoginResponse implements LoginResponseContract
+class LogoutResponse implements LogoutResponseContract
 {
     /**
      * Create an HTTP response that represents the object.
@@ -16,18 +17,17 @@ class LoginResponse implements LoginResponseContract
         $centralDomains = config('tenancy.central_domains', []);
         $centralDomain = in_array('payroll-saas.test', $centralDomains, true)
             ? 'payroll-saas.test'
-            : ($centralDomains[0] ?? 'payroll-saas.test');
+            : ($centralDomains[0] ?? 'theniyiconsult.com.ng');
 
         $scheme = app()->isProduction() ? 'https' : 'http';
-        $path = route('onboarding.continue', [], false);
-        $url = "{$scheme}://{$centralDomain}{$path}";
+        $url = "{$scheme}://{$centralDomain}/login";
 
         if ($request->hasHeader('X-Inertia')) {
             return Inertia::location($url);
         }
 
         return $request->wantsJson()
-            ? response()->json(['two_factor' => false])
+            ? new JsonResponse('', 204)
             : redirect()->to($url);
     }
 }
