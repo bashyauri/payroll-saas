@@ -300,7 +300,13 @@ test('users can logout', function () {
     $response = $this->actingAs($user)->post(route('logout'));
 
     $this->assertGuest();
-    $response->assertRedirect(route('login'));
+    // Logout redirects to central domain login with http (local) or https (production)
+    $scheme = app()->isProduction() ? 'https' : 'http';
+    $centralDomains = config('tenancy.central_domains', []);
+    $centralDomain = in_array('payroll-saas.test', $centralDomains, true)
+        ? 'payroll-saas.test'
+        : ($centralDomains[0] ?? 'theniyiconsult.com.ng');
+    $response->assertRedirect("{$scheme}://{$centralDomain}/login");
 });
 
 test('users are rate limited', function () {

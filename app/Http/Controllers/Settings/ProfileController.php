@@ -60,7 +60,7 @@ class ProfileController extends Controller
             ? 'payroll-saas.test'
             : ($centralDomains[0] ?? 'theniyiconsult.com.ng');
 
-        $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
+        $scheme = app()->isProduction() ? 'https' : 'http';
 
         return redirect()->to("{$scheme}://{$centralDomain}/login")
             ->with('status', 'Your account has been deleted.');

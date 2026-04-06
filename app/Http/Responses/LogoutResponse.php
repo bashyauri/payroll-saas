@@ -17,7 +17,8 @@ class LogoutResponse implements LogoutResponseContract
             ? 'payroll-saas.test'
             : ($centralDomains[0] ?? 'theniyiconsult.com.ng');
 
-        $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
+        // Use explicit https for production, http for local dev
+        $scheme = app()->isProduction() ? 'https' : 'http';
 
         return redirect()->to("{$scheme}://{$centralDomain}/login");
     }

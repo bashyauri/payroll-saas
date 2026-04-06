@@ -6,7 +6,6 @@ use App\Models\Organization;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserBelongsToTenantHost
@@ -57,7 +56,7 @@ class EnsureUserBelongsToTenantHost
             ? 'payroll-saas.test'
             : ($centralDomains[0] ?? 'theniyiconsult.com.ng');
 
-        $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
+        $scheme = app()->isProduction() ? 'https' : 'http';
 
         return redirect()->to("{$scheme}://{$centralDomain}/login")
             ->with('status', 'You do not have access to that organization.');
