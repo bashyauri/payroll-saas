@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Billing\PaystackCheckoutController::__invoke
- * @see app/Http/Controllers/Billing/PaystackCheckoutController.php:17
+ * @see app/Http/Controllers/Billing/PaystackCheckoutController.php:18
  * @route '/billing/checkout'
  */
 const PaystackCheckoutController = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ PaystackCheckoutController.definition = {
 
 /**
 * @see \App\Http\Controllers\Billing\PaystackCheckoutController::__invoke
- * @see app/Http/Controllers/Billing/PaystackCheckoutController.php:17
+ * @see app/Http/Controllers/Billing/PaystackCheckoutController.php:18
  * @route '/billing/checkout'
  */
 PaystackCheckoutController.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ PaystackCheckoutController.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Billing\PaystackCheckoutController::__invoke
- * @see app/Http/Controllers/Billing/PaystackCheckoutController.php:17
+ * @see app/Http/Controllers/Billing/PaystackCheckoutController.php:18
  * @route '/billing/checkout'
  */
 PaystackCheckoutController.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -35,7 +35,7 @@ PaystackCheckoutController.post = (options?: RouteQueryOptions): RouteDefinition
 
     /**
 * @see \App\Http\Controllers\Billing\PaystackCheckoutController::__invoke
- * @see app/Http/Controllers/Billing/PaystackCheckoutController.php:17
+ * @see app/Http/Controllers/Billing/PaystackCheckoutController.php:18
  * @route '/billing/checkout'
  */
     const PaystackCheckoutControllerForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -45,7 +45,7 @@ PaystackCheckoutController.post = (options?: RouteQueryOptions): RouteDefinition
 
             /**
 * @see \App\Http\Controllers\Billing\PaystackCheckoutController::__invoke
- * @see app/Http/Controllers/Billing/PaystackCheckoutController.php:17
+ * @see app/Http/Controllers/Billing/PaystackCheckoutController.php:18
  * @route '/billing/checkout'
  */
         PaystackCheckoutControllerForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

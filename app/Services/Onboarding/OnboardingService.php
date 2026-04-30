@@ -398,6 +398,14 @@ class OnboardingService
             return $organization;
         }
 
+        // Extract proration data if present
+        $prorataionData = Arr::get($paystackData, 'metadata.proration_data', []);
+        $nextBillingDate = $prorataionData['new_next_billing_date'] ?? (
+            $billingPeriod === 'monthly'
+                ? now()->addMonth()
+                : now()->addYear()
+        );
+
         $organization->forceFill([
             'billing_status' => Organization::BILLING_ACTIVE,
             'billing_status_updated_at' => now(),
@@ -408,9 +416,7 @@ class OnboardingService
         $subscription->forceFill([
             'plan_id' => $plan->id,
             'status' => Subscription::STATUS_ACTIVE,
-            'next_billing_date' => $billingPeriod === 'monthly'
-                ? now()->addMonth()
-                : now()->addYear(),
+            'next_billing_date' => $nextBillingDate,
             'grace_period_ends_at' => null,
             'canceled_at' => null,
             'paystack_reference' => $reference,
@@ -418,6 +424,20 @@ class OnboardingService
             'currency' => 'NGN',
             'employee_count' => $employeeCount,
         ])->save();
+
+        // Record proration event if applicable
+        if (! empty($prorataionData)) {
+            BillingEvent::query()->create([
+                'organization_id' => $organization->id,
+                'subscription_id' => $subscription->id,
+                'event_type' => 'subscription_upgraded_with_proration',
+                'provider' => 'paystack',
+                'provider_event_id' => null,
+                'reference' => $reference,
+                'payload_json' => $prorataionData,
+                'processed_at' => now(),
+            ]);
+        }
 
         $this->ensureDomainExists($organization);
 

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,7 +12,7 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 class Subscription extends Model
 {
-    use CentralConnection, HasUlids;
+    use CentralConnection, HasFactory, HasUlids;
 
     public $incrementing = false;
 

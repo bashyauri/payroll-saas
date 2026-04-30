@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Billing;
 use App\Http\Controllers\Controller;
 use App\Models\SubscriptionPlan;
 use App\Services\Billing\ActiveSubscriptionContextResolver;
+use App\Services\Billing\SubscriptionProrataionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -14,8 +15,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PaystackCheckoutController extends Controller
 {
-    public function __invoke(Request $request, ActiveSubscriptionContextResolver $resolver): Response|RedirectResponse
-    {
+    public function __invoke(
+        Request $request,
+        ActiveSubscriptionContextResolver $resolver,
+        SubscriptionProrataionService $prorataionService,
+    ): Response|RedirectResponse {
         $data = $request->validate([
             'plan' => ['required', 'string'],
             'employee_count' => ['nullable', 'integer', 'min:1'],
@@ -89,7 +93,21 @@ class PaystackCheckoutController extends Controller
         $annualDiscountRate = (float) config('billing.annual_discount_rate', 0.10);
         $discountRate = $selectedBillingCycle === 'annual' ? $annualDiscountRate : 0.0;
 
-        $baseSubtotalKobo = (int) round(((float) $plan->price_per_employee * $employeeCount * $billingCycleMonths) * 100);
+        // Calculate proration if upgrading
+        $prorataionData = null;
+        if ($isUpgrade && $currentSubscription) {
+            $prorataionData = $prorataionService->calculateUpgradeProration(
+                $currentSubscription,
+                $plan,
+                $employeeCount,
+                $selectedBillingCycle,
+            );
+            // Use prorated charge instead of full plan cost
+            $baseSubtotalKobo = (int) round($prorataionData['final_charge'] * 100);
+        } else {
+            $baseSubtotalKobo = (int) round(((float) $plan->price_per_employee * $employeeCount * $billingCycleMonths) * 100);
+        }
+
         $discountAmountKobo = (int) round($baseSubtotalKobo * $discountRate);
         $subtotalKobo = max(0, $baseSubtotalKobo - $discountAmountKobo);
         $vatAmountKobo = (int) round($subtotalKobo * $vatRate);
@@ -123,6 +141,7 @@ class PaystackCheckoutController extends Controller
                     'user_id' => (string) $request->user()->id,
                     'organization_id' => $currentSubscription?->organization_id,
                     'subscription_id' => $currentSubscription?->id,
+                    'proration_data' => $prorataionData,
                 ],
                 'channels' => ['card', 'bank', 'ussd', 'mobile_money'],
             ]);
