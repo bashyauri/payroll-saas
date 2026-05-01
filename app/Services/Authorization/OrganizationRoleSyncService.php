@@ -37,7 +37,6 @@ class OrganizationRoleSyncService
         $connection = $user->getConnectionName();
         $modelMorphKey = config('permission.column_names.model_morph_key', 'model_id');
         $tableNames = config('permission.table_names');
-        $rolesTable = $tableNames['roles'] ?? 'roles';
         $modelHasRolesTable = $tableNames['model_has_roles'] ?? 'model_has_roles';
 
         $roleModel = new Role;
@@ -48,15 +47,30 @@ class OrganizationRoleSyncService
             'guard_name' => 'web',
         ]);
 
-        DB::connection($connection)
+        $database = DB::connection($connection);
+
+        $existingRoleIds = $database
             ->table($modelHasRolesTable)
             ->where('model_type', User::class)
             ->where($modelMorphKey, $user->getKey())
+            ->pluck('role_id')
+            ->map(static fn ($roleId): string => (string) $roleId)
+            ->values();
+
+        if ($existingRoleIds->count() === 1 && $existingRoleIds->first() === (string) $role->getKey()) {
+            return;
+        }
+
+        $database
+            ->table($modelHasRolesTable)
+            ->where('model_type', User::class)
+            ->where($modelMorphKey, $user->getKey())
+            ->where('role_id', '!=', $role->getKey())
             ->delete();
 
-        DB::connection($connection)
+        $database
             ->table($modelHasRolesTable)
-            ->insert([
+            ->insertOrIgnore([
                 'role_id' => $role->getKey(),
                 'model_type' => User::class,
                 $modelMorphKey => $user->getKey(),
