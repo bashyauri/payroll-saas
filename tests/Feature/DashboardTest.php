@@ -20,7 +20,7 @@ test('guests are redirected to the login page', function () {
 
     $response = $this->get('http://guest-org.payrollsaas.test/dashboard');
 
-    $response->assertRedirect(route('login'));
+    $response->assertRedirectContains('/login');
 });
 
 test('authenticated users without onboarding are redirected to billing plans', function () {
@@ -91,6 +91,10 @@ test('authenticated users with active subscription can visit the dashboard', fun
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
         ->component('dashboard')
+        ->where('auth.can.viewDashboard', true)
+        ->where('auth.can.addEmployee', true)
+        ->where('auth.can.finalizePayroll', true)
+        ->where('auth.can.manageWorkspace', true)
         ->where('organization.name', 'Test Org')
         ->where('organization.type', 'organization')
         ->where('plan.name', 'Essential')
@@ -209,7 +213,7 @@ test('users with an unpaid org and a paid org are routed to dashboard using paid
     $response->assertOk();
 });
 
-test('non-member users without a paid organization are redirected to home from tenant dashboard', function () {
+test('non-member users without organization access are redirected to login from tenant dashboard', function () {
     $user = User::factory()->create();
 
     $foreignOrganization = Organization::create([
@@ -227,7 +231,7 @@ test('non-member users without a paid organization are redirected to home from t
 
     $response = $this->get('http://foreign-org.payrollsaas.test/dashboard');
 
-    $response->assertRedirect(route('home'));
+    $response->assertRedirectContains('/login');
 });
 
 test('tenant dashboard assets are not pinned to central domain', function () {
@@ -326,5 +330,9 @@ test('member dashboard guards disable privileged actions', function () {
         ->where('guards.canAddEmployee', false)
         ->where('guards.canFinalizePayroll', false)
         ->where('guards.canManageWorkspace', false)
+        ->where('auth.can.viewDashboard', true)
+        ->where('auth.can.addEmployee', false)
+        ->where('auth.can.finalizePayroll', false)
+        ->where('auth.can.manageWorkspace', false)
     );
 });

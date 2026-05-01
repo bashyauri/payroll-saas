@@ -11,7 +11,14 @@ export type User = {
 };
 
 export type Auth = {
-    user: User;
+    user: User | null;
+    organizationRole?: string | null;
+    can?: {
+        viewDashboard: boolean;
+        addEmployee: boolean;
+        finalizePayroll: boolean;
+        manageWorkspace: boolean;
+    };
 };
 
 export type TwoFactorSetupData = {
