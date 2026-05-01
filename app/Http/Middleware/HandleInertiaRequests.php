@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Organization;
+use App\Models\OrganizationUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
@@ -40,15 +41,55 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
 
         $organizationRole = null;
+        $resolvedOrganization = null;
 
-        if ($user && tenancy()->initialized && tenant()) {
-            /** @var Organization $organization */
-            $organization = tenant();
+        if ($user) {
+            $resolvedOrganization = $this->resolveOrganizationForRequest($request);
 
-            $organizationRole = $user->organizations()
-                ->whereKey($organization->id)
-                ->value('organization_users.role');
+            if ($resolvedOrganization) {
+                $organizationRole = $user->organizations()
+                    ->whereKey($resolvedOrganization->id)
+                    ->value('organization_users.role');
+            }
         }
+
+        $isOwnerOrAdmin = in_array((string) $organizationRole, [
+            OrganizationUser::ROLE_OWNER,
+            OrganizationUser::ROLE_ADMIN,
+        ], true);
+
+        $isOwnerAdminOrHr = in_array((string) $organizationRole, [
+            OrganizationUser::ROLE_OWNER,
+            OrganizationUser::ROLE_ADMIN,
+            OrganizationUser::ROLE_HR,
+        ], true);
+
+        $isReadOnly = $resolvedOrganization
+            ? in_array((string) $resolvedOrganization->billing_status, [
+                Organization::BILLING_CANCELED,
+                Organization::BILLING_SUSPENDED,
+            ], true)
+            : false;
+
+        $canViewDashboard = $user && $resolvedOrganization
+            ? $user->organizations()->whereKey($resolvedOrganization->id)->exists()
+            : false;
+
+        $canAddEmployee = $resolvedOrganization
+            ? $isOwnerAdminOrHr && ! $isReadOnly
+            : ($user ? Gate::forUser($user)->allows('tenant.add-employee') : false);
+
+        $canFinalizePayroll = $resolvedOrganization
+            ? $isOwnerOrAdmin && ! $isReadOnly
+            : ($user ? Gate::forUser($user)->allows('tenant.finalize-payroll') : false);
+
+        $canManageWorkspace = $resolvedOrganization
+            ? $isOwnerOrAdmin
+            : ($user ? Gate::forUser($user)->allows('tenant.manage-workspace') : false);
+
+        $canManagePayrollSettings = $resolvedOrganization
+            ? $isOwnerOrAdmin
+            : ($user ? Gate::forUser($user)->allows('tenant.manage-payroll-settings') : false);
 
         return [
             ...parent::share($request),
@@ -57,14 +98,42 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
                 'organizationRole' => $organizationRole,
                 'can' => [
-                    'viewDashboard' => $user ? Gate::forUser($user)->allows('tenant.view-dashboard') : false,
-                    'addEmployee' => $user ? Gate::forUser($user)->allows('tenant.add-employee') : false,
-                    'finalizePayroll' => $user ? Gate::forUser($user)->allows('tenant.finalize-payroll') : false,
-                    'manageWorkspace' => $user ? Gate::forUser($user)->allows('tenant.manage-workspace') : false,
-                    'managePayrollSettings' => $user ? Gate::forUser($user)->allows('tenant.manage-payroll-settings') : false,
+                    'viewDashboard' => $canViewDashboard,
+                    'addEmployee' => $canAddEmployee,
+                    'finalizePayroll' => $canFinalizePayroll,
+                    'manageWorkspace' => $canManageWorkspace,
+                    'managePayrollSettings' => $canManagePayrollSettings,
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    private function resolveOrganizationForRequest(Request $request): ?Organization
+    {
+        if (tenancy()->initialized && tenant()) {
+            /** @var Organization $organization */
+            $organization = tenant();
+
+            return $organization;
+        }
+
+        $host = (string) $request->getHost();
+
+        if ($host === '') {
+            return null;
+        }
+
+        $centralDomains = array_map('strtolower', (array) config('tenancy.central_domains', []));
+
+        if (in_array(strtolower($host), $centralDomains, true)) {
+            return null;
+        }
+
+        return Organization::query()
+            ->whereHas('domains', function ($query) use ($host): void {
+                $query->where('domain', $host);
+            })
+            ->first();
     }
 }
