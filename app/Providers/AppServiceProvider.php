@@ -86,6 +86,11 @@ class AppServiceProvider extends ServiceProvider
             OrganizationUser::ROLE_OWNER,
             OrganizationUser::ROLE_ADMIN,
         ]) && ! $this->isCurrentTenantReadOnly());
+
+        Gate::define('tenant.manage-payroll-settings', fn (User $user): bool => $this->hasCurrentTenantRole($user, [
+            OrganizationUser::ROLE_OWNER,
+            OrganizationUser::ROLE_ADMIN,
+        ]));
     }
 
     private function belongsToCurrentTenant(User $user): bool

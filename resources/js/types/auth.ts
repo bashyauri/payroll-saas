@@ -18,6 +18,7 @@ export type Auth = {
         addEmployee: boolean;
         finalizePayroll: boolean;
         manageWorkspace: boolean;
+        managePayrollSettings: boolean;
     };
 };
 

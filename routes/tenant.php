@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Settings\PayrollSettingsController;
 use App\Http\Controllers\Settings\WorkspaceController;
 use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\Tenant\EmployeeController;
@@ -44,6 +45,13 @@ Route::middleware([
         Route::patch('settings/workspace', [WorkspaceController::class, 'update'])
             ->middleware('organization.role:owner,admin')
             ->name('workspace.update');
+
+        Route::get('settings/payroll', [PayrollSettingsController::class, 'edit'])
+            ->middleware('organization.role:owner,admin')
+            ->name('payroll.settings.edit');
+        Route::patch('settings/payroll', [PayrollSettingsController::class, 'update'])
+            ->middleware('organization.role:owner,admin')
+            ->name('payroll.settings.update');
     });
 
     Route::post('/payroll/finalize', PayrollFinalizationController::class)

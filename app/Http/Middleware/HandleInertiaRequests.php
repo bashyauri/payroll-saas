@@ -61,6 +61,7 @@ class HandleInertiaRequests extends Middleware
                     'addEmployee' => $user ? Gate::forUser($user)->allows('tenant.add-employee') : false,
                     'finalizePayroll' => $user ? Gate::forUser($user)->allows('tenant.finalize-payroll') : false,
                     'manageWorkspace' => $user ? Gate::forUser($user)->allows('tenant.manage-workspace') : false,
+                    'managePayrollSettings' => $user ? Gate::forUser($user)->allows('tenant.manage-payroll-settings') : false,
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
