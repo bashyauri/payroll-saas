@@ -7,6 +7,7 @@ use App\Http\Requests\Tenant\StoreEmployeeRequest;
 use App\Models\Employee;
 use App\Models\Organization;
 use App\Services\Employee\EmployeeLimitService;
+use DateTimeInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -60,6 +61,40 @@ class EmployeeController extends Controller
             'remainingSlots' => $employeeUsage['remainingSlots'],
             'canCreateEmployee' => ! $employeeUsage['isAtEmployeeLimit'],
             'status' => session('status'),
+        ]);
+    }
+
+    public function show(Employee $employee): Response
+    {
+        return Inertia::render('employees/show', [
+            'employee' => [
+                'id' => $employee->id,
+                'employeeNumber' => $employee->employee_number,
+                'firstName' => $employee->first_name,
+                'lastName' => $employee->last_name,
+                'middleName' => $employee->middle_name,
+                'workEmail' => $employee->work_email,
+                'phone' => $employee->phone,
+                'nin' => $employee->nin,
+                'bvn' => $employee->bvn,
+                'taxIdentificationNumber' => $employee->tax_identification_number,
+                'pensionPin' => $employee->pension_pin,
+                'bankName' => $employee->bank_name,
+                'bankAccountName' => $employee->bank_account_name,
+                'bankAccountNumber' => str_repeat('*', 6).substr($employee->bank_account_number, -4),
+                'monthlyGrossSalary' => $employee->monthly_gross_salary,
+                'monthlyTaxDeduction' => $employee->monthly_tax_deduction,
+                'monthlyPensionDeduction' => $employee->monthly_pension_deduction,
+                'monthlyNhfDeduction' => $employee->monthly_nhf_deduction,
+                'otherMonthlyDeductions' => $employee->other_monthly_deductions,
+                'department' => $employee->department,
+                'jobTitle' => $employee->job_title,
+                'employmentType' => $employee->employment_type,
+                'hireDate' => $employee->hire_date instanceof DateTimeInterface
+                    ? $employee->hire_date->format('Y-m-d')
+                    : null,
+                'status' => $employee->status,
+            ],
         ]);
     }
 

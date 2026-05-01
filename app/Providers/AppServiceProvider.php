@@ -80,6 +80,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('tenant.add-employee', fn (User $user): bool => $this->hasCurrentTenantRole($user, [
             OrganizationUser::ROLE_OWNER,
             OrganizationUser::ROLE_ADMIN,
+            OrganizationUser::ROLE_HR,
         ]) && ! $this->isCurrentTenantReadOnly());
 
         Gate::define('tenant.finalize-payroll', fn (User $user): bool => $this->hasCurrentTenantRole($user, [

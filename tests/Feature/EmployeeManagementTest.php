@@ -251,6 +251,113 @@ test('organization member cannot create employees', function () {
     expect(Employee::query()->count())->toBe(0);
 });
 
+test('organization member cannot view employees listing', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContextWithRole('member');
+
+    $response = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/employees');
+
+    $response->assertForbidden();
+});
+
+test('organization hr can view the add employee form', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContextWithRole('hr');
+
+    $response = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/employees/create');
+
+    $response->assertOk();
+});
+
+test('organization hr can create employees', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContextWithRole('hr', 3);
+
+    $response = $this
+        ->actingAs($user)
+        ->post('http://'.$organization->slug.'.payrollsaas.test/employees', [
+            'employee_number' => 'EMP-0777',
+            'first_name' => 'Halima',
+            'last_name' => 'Ibrahim',
+            'bank_name' => 'Access Bank',
+            'bank_account_name' => 'Halima Ibrahim',
+            'bank_account_number' => '0123456789',
+            'monthly_gross_salary' => '350000',
+            'employment_type' => 'full_time',
+            'status' => 'active',
+        ]);
+
+    $response->assertRedirect('http://'.$organization->slug.'.payrollsaas.test/employees');
+
+    Tenancy::initialize($organization);
+    expect(Employee::query()->where('employee_number', 'EMP-0777')->exists())->toBeTrue();
+});
+
+test('owner can view employee detail page', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContext();
+
+    Tenancy::initialize($organization);
+    $employee = Employee::query()->create([
+        'employee_number' => 'EMP-0202',
+        'first_name' => 'Binta',
+        'last_name' => 'Okafor',
+        'bank_name' => 'GTBank',
+        'bank_account_name' => 'Binta Okafor',
+        'bank_account_number' => '1234567890',
+        'monthly_gross_salary' => 275000,
+        'employment_type' => 'full_time',
+        'status' => 'active',
+    ]);
+    Tenancy::end();
+
+    $response = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/employees/'.$employee->id);
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('employees/show')
+        ->where('employee.id', $employee->id)
+        ->where('employee.employeeNumber', 'EMP-0202')
+        ->where('employee.firstName', 'Binta')
+        ->where('employee.lastName', 'Okafor')
+    );
+});
+
+test('organization member cannot view employee detail page', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContext();
+
+    /** @var User $member */
+    $member = User::factory()->create();
+    $organization->users()->attach($member->id, ['role' => 'member']);
+
+    Tenancy::initialize($organization);
+    $employee = Employee::query()->create([
+        'employee_number' => 'EMP-0999',
+        'first_name' => 'Shola',
+        'last_name' => 'Adewale',
+        'bank_name' => 'UBA',
+        'bank_account_name' => 'Shola Adewale',
+        'bank_account_number' => '1234567890',
+        'monthly_gross_salary' => 180000,
+        'employment_type' => 'full_time',
+        'status' => 'active',
+    ]);
+    Tenancy::end();
+
+    $response = $this
+        ->actingAs($member)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/employees/'.$employee->id);
+
+    $response->assertForbidden();
+});
+
 test('owner role is synced to spatie admin role after hitting a protected route', function () {
     /** @var TestCase $this */
     [$user, $organization] = createTenantContextWithRole('owner');

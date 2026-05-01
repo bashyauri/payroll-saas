@@ -31,13 +31,18 @@ Route::middleware([
         Route::redirect('dashboardcheck', 'dashboard')->name('dashboard.check');
         Route::get('dashboard', DashboardController::class)->name('dashboard');
 
-        Route::get('employees', [EmployeeController::class, 'index'])->name('tenant.employees.index');
+        Route::get('employees', [EmployeeController::class, 'index'])
+            ->middleware('organization.role:owner,admin,hr')
+            ->name('tenant.employees.index');
         Route::get('employees/create', [EmployeeController::class, 'create'])
-            ->middleware('organization.role:owner,admin')
+            ->middleware('organization.role:owner,admin,hr')
             ->name('tenant.employees.create');
         Route::post('employees', [EmployeeController::class, 'store'])
-            ->middleware('organization.role:owner,admin')
+            ->middleware('organization.role:owner,admin,hr')
             ->name('tenant.employees.store');
+        Route::get('employees/{employee}', [EmployeeController::class, 'show'])
+            ->middleware('organization.role:owner,admin,hr')
+            ->name('tenant.employees.show');
 
         Route::get('settings/workspace', [WorkspaceController::class, 'edit'])
             ->middleware('organization.role:owner,admin')

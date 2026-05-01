@@ -27,6 +27,7 @@ class StoreEmployeeRequest extends FormRequest
             ->wherePivotIn('role', [
                 OrganizationUser::ROLE_OWNER,
                 OrganizationUser::ROLE_ADMIN,
+                OrganizationUser::ROLE_HR,
             ])
             ->exists();
     }

@@ -24,6 +24,8 @@ class OrganizationUser extends Model
 
     public const ROLE_ADMIN = 'admin';
 
+    public const ROLE_HR = 'hr';
+
     public const ROLE_MEMBER = 'member';
 
     public function user(): BelongsTo
