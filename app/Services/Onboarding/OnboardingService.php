@@ -5,10 +5,12 @@ namespace App\Services\Onboarding;
 use App\Exceptions\DomainConflictException;
 use App\Models\BillingEvent;
 use App\Models\Organization;
+use App\Models\OrganizationUser;
 use App\Models\PaymentAttempt;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use App\Services\Authorization\OrganizationRoleSyncService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +23,8 @@ use Stancl\Tenancy\Facades\Tenancy;
  */
 class OnboardingService
 {
+    public function __construct(private readonly OrganizationRoleSyncService $organizationRoleSyncService) {}
+
     /**
      * Apply a successful Paystack payment to either onboarding or subscription upgrade.
      */
@@ -274,7 +278,7 @@ class OnboardingService
 
         // Attach user to organization as owner
         $organization->users()->syncWithoutDetaching([
-            $user->id => ['role' => 'owner'],
+            $user->id => ['role' => OrganizationUser::ROLE_OWNER],
         ]);
 
         // Attach subdomain
@@ -283,6 +287,7 @@ class OnboardingService
         // Set current tenant in session so the user is immediately in tenant context
         session(['tenant_id' => $organization->id]);
         Tenancy::initialize($organization);
+        $this->organizationRoleSyncService->syncForOrganizationUser($user, $organization);
 
         return $organization;
     }

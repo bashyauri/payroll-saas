@@ -276,3 +276,55 @@ test('tenant dashboard assets are not pinned to central domain', function () {
     $response->assertOk();
     $response->assertDontSee('https://theniyiconsult.com.ng/tenancy/assets', false);
 });
+
+test('member dashboard guards disable privileged actions', function () {
+    $user = User::factory()->create();
+    $organization = Organization::create([
+        'name' => 'Member Guard Org',
+        'slug' => 'member-guard-org',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+    $organization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => 'member-guard-org.payrollsaas.test',
+    ]);
+
+    $plan = SubscriptionPlan::create([
+        'name' => 'Essential',
+        'slug' => 'essential-member-guard-test',
+        'currency' => 'NGN',
+        'price_per_employee' => 800,
+        'billing_period' => 'annual',
+        'min_employees' => 1,
+        'max_employees' => 50,
+        'features' => ['payroll'],
+        'is_active' => true,
+    ]);
+
+    $organization->users()->attach($user->id, ['role' => 'member']);
+
+    Subscription::create([
+        'organization_id' => $organization->id,
+        'plan_id' => $plan->id,
+        'status' => Subscription::STATUS_ACTIVE,
+        'trial_end_date' => now()->addDays(7),
+        'refund_eligible_until' => now()->addDays(7),
+        'next_billing_date' => now()->addYear(),
+        'paystack_reference' => 'test-ref-member-guard',
+        'amount_paid' => 80000,
+        'currency' => 'NGN',
+    ]);
+
+    $this->actingAs($user);
+
+    $response = $this->get('http://member-guard-org.payrollsaas.test/dashboard');
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->where('guards.organizationRole', 'member')
+        ->where('guards.canAddEmployee', false)
+        ->where('guards.canFinalizePayroll', false)
+        ->where('guards.canManageWorkspace', false)
+    );
+});

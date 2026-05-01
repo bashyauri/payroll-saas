@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Authorization\OrganizationRoleSyncService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,7 +20,12 @@ class RequireOrganizationRole
             abort(403, 'Unauthorized action.');
         }
 
-        $requiredRoles = array_values(array_filter(array_map('trim', $roles)));
+        $requiredRoles = collect($roles)
+            ->flatMap(static fn (string $role): array => explode(',', $role))
+            ->map(static fn (string $role): string => trim($role))
+            ->filter(static fn (string $role): bool => $role !== '')
+            ->values()
+            ->all();
 
         if ($requiredRoles === []) {
             return $next($request);
@@ -33,6 +39,8 @@ class RequireOrganizationRole
         if (! $hasRole) {
             abort(403, 'You do not have the required organization role for this action.');
         }
+
+        app(OrganizationRoleSyncService::class)->syncForOrganizationUser($user, tenant());
 
         return $next($request);
     }

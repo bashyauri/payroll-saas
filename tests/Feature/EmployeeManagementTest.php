@@ -5,7 +5,9 @@ use App\Models\Organization;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 use Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
@@ -65,6 +67,51 @@ function createTenantContext(int $employeeLimit = 3): array
         'refund_eligible_until' => now()->addDays(7),
         'next_billing_date' => now()->addYear(),
         'paystack_reference' => 'employee-ref-'.Str::lower(Str::random(10)),
+        'amount_paid' => 80000,
+        'currency' => 'NGN',
+        'employee_count' => $employeeLimit,
+    ]);
+
+    return [$user, $organization];
+}
+
+function createTenantContextWithRole(string $role, int $employeeLimit = 3): array
+{
+    $user = User::factory()->create();
+    $organization = Organization::create([
+        'name' => 'Acme Payroll Role '.Str::lower(Str::random(4)),
+        'slug' => 'acme-payroll-role-'.Str::lower(Str::random(8)),
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+
+    $organization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => $organization->slug.'.payrollsaas.test',
+    ]);
+
+    $organization->users()->attach($user->id, ['role' => $role]);
+
+    $plan = SubscriptionPlan::create([
+        'name' => 'Essential',
+        'slug' => 'essential-employee-role-'.Str::lower(Str::random(8)),
+        'currency' => 'NGN',
+        'price_per_employee' => 800,
+        'billing_period' => 'annual',
+        'min_employees' => 1,
+        'max_employees' => 50,
+        'features' => ['payroll'],
+        'is_active' => true,
+    ]);
+
+    Subscription::create([
+        'organization_id' => $organization->id,
+        'plan_id' => $plan->id,
+        'status' => Subscription::STATUS_ACTIVE,
+        'trial_end_date' => now()->addDays(7),
+        'refund_eligible_until' => now()->addDays(7),
+        'next_billing_date' => now()->addYear(),
+        'paystack_reference' => 'employee-role-ref-'.Str::lower(Str::random(10)),
         'amount_paid' => 80000,
         'currency' => 'NGN',
         'employee_count' => $employeeLimit,
@@ -167,4 +214,78 @@ test('employee creation is blocked when plan limit is reached', function () {
 
     Tenancy::initialize($organization);
     expect(Employee::query()->count())->toBe(1);
+});
+
+test('organization member cannot view the add employee form', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContextWithRole('member');
+
+    $response = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/employees/create');
+
+    $response->assertForbidden();
+});
+
+test('organization member cannot create employees', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContextWithRole('member');
+
+    $response = $this
+        ->actingAs($user)
+        ->post('http://'.$organization->slug.'.payrollsaas.test/employees', [
+            'employee_number' => 'EMP-0101',
+            'first_name' => 'Member',
+            'last_name' => 'Blocked',
+            'bank_name' => 'Access Bank',
+            'bank_account_name' => 'Member Blocked',
+            'bank_account_number' => '0123456789',
+            'monthly_gross_salary' => '250000',
+            'employment_type' => 'full_time',
+            'status' => 'active',
+        ]);
+
+    $response->assertForbidden();
+
+    Tenancy::initialize($organization);
+    expect(Employee::query()->count())->toBe(0);
+});
+
+test('owner role is synced to spatie admin role after hitting a protected route', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContextWithRole('owner');
+
+    Role::query()->firstOrCreate([
+        'name' => 'admin',
+        'guard_name' => 'web',
+    ]);
+
+    Tenancy::initialize($organization);
+    Role::query()->firstOrCreate([
+        'name' => 'admin',
+        'guard_name' => 'web',
+    ]);
+    Tenancy::end();
+
+    $response = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/employees/create');
+
+    $response->assertOk();
+
+    $centralCount = DB::connection((string) config('tenancy.database.central_connection'))
+        ->table('model_has_roles')
+        ->where('model_id', $user->id)
+        ->where('model_type', User::class)
+        ->count();
+
+    Tenancy::initialize($organization);
+    $tenantCount = DB::connection('tenant')
+        ->table('model_has_roles')
+        ->where('model_id', $user->id)
+        ->where('model_type', User::class)
+        ->count();
+    Tenancy::end();
+
+    expect($centralCount + $tenantCount)->toBeGreaterThan(0);
 });

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Settings;
 
+use App\Models\OrganizationUser;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +19,10 @@ class UpdateSubdomainRequest extends FormRequest
         if (tenancy()->initialized && tenancy()->tenant) {
             return $user->organizations()
                 ->whereKey(tenancy()->tenant->id)
-                ->wherePivot('role', 'owner')
+                ->wherePivotIn('role', [
+                    OrganizationUser::ROLE_OWNER,
+                    OrganizationUser::ROLE_ADMIN,
+                ])
                 ->exists();
         }
 
@@ -30,7 +34,10 @@ class UpdateSubdomainRequest extends FormRequest
 
         return $user->organizations()
             ->whereKey($sessionOrgId)
-            ->wherePivot('role', 'owner')
+            ->wherePivotIn('role', [
+                OrganizationUser::ROLE_OWNER,
+                OrganizationUser::ROLE_ADMIN,
+            ])
             ->exists();
     }
 

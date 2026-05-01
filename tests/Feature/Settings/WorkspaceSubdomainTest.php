@@ -56,11 +56,11 @@ test('organization owner can update workspace subdomain', function () {
             'subdomain' => 'alpha-updated',
         ]);
 
-    $response->assertRedirect('https://alpha-updated.payrollsaas.test/settings/workspace');
+    $response->assertRedirect('https://alpha-updated.payroll-saas.test/settings/workspace');
 
     $this->assertDatabaseHas('domains', [
         'tenant_id' => $organization->id,
-        'domain' => 'alpha-updated.payrollsaas.test',
+        'domain' => 'alpha-updated.payroll-saas.test',
     ]);
 });
 
@@ -118,5 +118,62 @@ test('non-owner cannot update workspace subdomain', function () {
     $this->assertDatabaseHas('domains', [
         'tenant_id' => $organization->id,
         'domain' => 'beta-org.payrollsaas.test',
+    ]);
+});
+
+test('organization admin can update workspace subdomain', function () {
+    /** @var TestCase $this */
+    /** @var User $admin */
+    $admin = User::factory()->create();
+
+    $organization = Organization::create([
+        'name' => 'Gamma Org',
+        'slug' => 'gamma-org',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+
+    $organization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => 'gamma-org.payrollsaas.test',
+    ]);
+
+    $organization->users()->attach($admin->id, ['role' => 'admin']);
+
+    $plan = SubscriptionPlan::create([
+        'name' => 'Essential',
+        'slug' => 'essential-workspace-admin-test-'.Str::lower(Str::random(8)),
+        'currency' => 'NGN',
+        'price_per_employee' => 800,
+        'billing_period' => 'annual',
+        'min_employees' => 1,
+        'max_employees' => 50,
+        'features' => ['payroll'],
+        'is_active' => true,
+    ]);
+
+    Subscription::create([
+        'organization_id' => $organization->id,
+        'plan_id' => $plan->id,
+        'status' => Subscription::STATUS_ACTIVE,
+        'trial_end_date' => now()->addDays(7),
+        'refund_eligible_until' => now()->addDays(7),
+        'next_billing_date' => now()->addYear(),
+        'paystack_reference' => 'workspace-admin-ref-'.Str::lower(Str::random(10)),
+        'amount_paid' => 80000,
+        'currency' => 'NGN',
+    ]);
+
+    $response = $this
+        ->actingAs($admin)
+        ->patch('http://gamma-org.payrollsaas.test/settings/workspace', [
+            'subdomain' => 'gamma-updated',
+        ]);
+
+    $response->assertRedirect('https://gamma-updated.payroll-saas.test/settings/workspace');
+
+    $this->assertDatabaseHas('domains', [
+        'tenant_id' => $organization->id,
+        'domain' => 'gamma-updated.payroll-saas.test',
     ]);
 });
