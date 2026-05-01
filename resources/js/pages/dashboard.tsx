@@ -48,8 +48,10 @@ type DashboardProps = {
         isTrial: boolean;
         accessMode: string;
         accessMessage: string;
+        organizationRole: string | null;
         canFinalizePayroll: boolean;
         canAddEmployee: boolean;
+        canManageWorkspace: boolean;
         employeeLimit: number | null;
         isNearEmployeeLimit: boolean;
         isAtEmployeeLimit: boolean;
@@ -216,10 +218,17 @@ export default function Dashboard({
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <Button asChild className="w-full justify-start">
-                                <Link href={createEmployee()}>
-                                    <Users className="mr-2 h-4 w-4" />
-                                    Add Employee
-                                </Link>
+                                {guards.canAddEmployee ? (
+                                    <Link href={createEmployee()}>
+                                        <Users className="mr-2 h-4 w-4" />
+                                        Add Employee
+                                    </Link>
+                                ) : (
+                                    <span className="inline-flex items-center text-muted-foreground">
+                                        <Users className="mr-2 h-4 w-4" />
+                                        Add Employee (owner/admin only)
+                                    </span>
+                                )}
                             </Button>
                             <Button
                                 asChild
@@ -240,10 +249,17 @@ export default function Dashboard({
                                 variant="outline"
                                 className="w-full justify-start"
                             >
-                                <Link href="#">
-                                    <FileText className="mr-2 h-4 w-4" />
-                                    Run Payroll
-                                </Link>
+                                {guards.canFinalizePayroll ? (
+                                    <Link href="#">
+                                        <FileText className="mr-2 h-4 w-4" />
+                                        Run Payroll
+                                    </Link>
+                                ) : (
+                                    <span className="inline-flex items-center text-muted-foreground">
+                                        <FileText className="mr-2 h-4 w-4" />
+                                        Run Payroll (owner/admin only)
+                                    </span>
+                                )}
                             </Button>
                             <Button
                                 asChild
@@ -270,6 +286,12 @@ export default function Dashboard({
                                     {organization.domain ?? 'N/A'}
                                 </span>
                             </p>
+                            <p className="text-muted-foreground">
+                                Your role:{' '}
+                                <span className="font-medium text-foreground capitalize">
+                                    {guards.organizationRole ?? 'member'}
+                                </span>
+                            </p>
                             <div className="flex flex-wrap gap-2">
                                 <Button
                                     asChild
@@ -277,9 +299,16 @@ export default function Dashboard({
                                     variant="outline"
                                     className="w-full sm:w-auto"
                                 >
-                                    <Link href={editWorkspace()}>
-                                        Change workspace URL
-                                    </Link>
+                                    {guards.canManageWorkspace ? (
+                                        <Link href={editWorkspace()}>
+                                            Change workspace URL
+                                        </Link>
+                                    ) : (
+                                        <span className="text-muted-foreground">
+                                            Change workspace URL (owner/admin
+                                            only)
+                                        </span>
+                                    )}
                                 </Button>
                                 <Button
                                     asChild

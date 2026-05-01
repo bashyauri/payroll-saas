@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Models\OrganizationUser;
 use App\Models\Subscription;
 use App\Services\Employee\EmployeeLimitService;
 use Illuminate\Http\Request;
@@ -51,6 +52,17 @@ class DashboardController extends Controller
                 : 'Full feature access is active.');
 
         $user = $request->user();
+        $organizationRole = $user
+            ? $user->organizations()
+                ->whereKey($organization->id)
+                ->value('organization_users.role')
+            : null;
+
+        $canManageOrganization = in_array((string) $organizationRole, [
+            OrganizationUser::ROLE_OWNER,
+            OrganizationUser::ROLE_ADMIN,
+        ], true);
+
         $organizationOptions = $user
             ? $user->organizations()
                 ->with('domains:id,tenant_id,domain')
@@ -101,8 +113,10 @@ class DashboardController extends Controller
                 'isTrial' => $isTrial,
                 'accessMode' => $accessMode,
                 'accessMessage' => $accessMessage,
-                'canFinalizePayroll' => ! $isReadOnly,
-                'canAddEmployee' => ! $isReadOnly,
+                'organizationRole' => $organizationRole,
+                'canFinalizePayroll' => ! $isReadOnly && $canManageOrganization,
+                'canAddEmployee' => ! $isReadOnly && $canManageOrganization,
+                'canManageWorkspace' => $canManageOrganization,
                 'employeeLimit' => $employeeUsage['employeeLimit'],
                 'isNearEmployeeLimit' => $employeeUsage['isNearEmployeeLimit'],
                 'isAtEmployeeLimit' => $employeeUsage['isAtEmployeeLimit'],

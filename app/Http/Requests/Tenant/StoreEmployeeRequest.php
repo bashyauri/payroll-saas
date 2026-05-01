@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Tenant;
 
+use App\Models\OrganizationUser;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreEmployeeRequest extends FormRequest
@@ -23,6 +24,10 @@ class StoreEmployeeRequest extends FormRequest
 
         return $user->organizations()
             ->whereKey(tenancy()->tenant->id)
+            ->wherePivotIn('role', [
+                OrganizationUser::ROLE_OWNER,
+                OrganizationUser::ROLE_ADMIN,
+            ])
             ->exists();
     }
 
