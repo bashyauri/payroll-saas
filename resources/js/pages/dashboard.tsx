@@ -1,5 +1,14 @@
 import { Head, Link } from '@inertiajs/react';
-import { Building2, Clock3, CreditCard, FileText, Users } from 'lucide-react';
+import {
+    Building2,
+    Clock3,
+    CreditCard,
+    FileText,
+    Landmark,
+    PiggyBank,
+    ShieldCheck,
+    Users,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +21,9 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { plans as billingPlans } from '@/routes/billing';
+import { edit as editPayrollSettings } from '@/routes/payroll/settings';
 import { edit as editProfile } from '@/routes/profile';
+import { index as employeesIndex } from '@/routes/tenant/employees';
 import { create as createEmployee } from '@/routes/tenant/employees';
 import { edit as editWorkspace } from '@/routes/workspace';
 import type { BreadcrumbItem } from '@/types';
@@ -103,6 +114,8 @@ export default function Dashboard({
     organizationOptions,
 }: DashboardProps) {
     const hasMultipleOrganizations = organizationOptions.length > 1;
+    const hasEmployeeCapacity = !guards.isAtEmployeeLimit;
+    const canOpenPayrollSettings = guards.canManageWorkspace;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -218,15 +231,21 @@ export default function Dashboard({
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <Button asChild className="w-full justify-start">
-                                {guards.canAddEmployee ? (
+                                {guards.canAddEmployee &&
+                                hasEmployeeCapacity ? (
                                     <Link href={createEmployee()}>
                                         <Users className="mr-2 h-4 w-4" />
                                         Add Employee
                                     </Link>
+                                ) : guards.canAddEmployee ? (
+                                    <span className="inline-flex items-center text-muted-foreground">
+                                        <Users className="mr-2 h-4 w-4" />
+                                        Add Employee (plan limit reached)
+                                    </span>
                                 ) : (
                                     <span className="inline-flex items-center text-muted-foreground">
                                         <Users className="mr-2 h-4 w-4" />
-                                        Add Employee (owner/admin only)
+                                        Add Employee (owner/admin/hr only)
                                     </span>
                                 )}
                             </Button>
@@ -266,9 +285,9 @@ export default function Dashboard({
                                 variant="ghost"
                                 className="w-full justify-start"
                             >
-                                <Link href="#">
+                                <Link href={employeesIndex()}>
                                     <FileText className="mr-2 h-4 w-4" />
-                                    View Payslips
+                                    View Employees
                                 </Link>
                             </Button>
                         </CardContent>
@@ -319,6 +338,135 @@ export default function Dashboard({
                                     <Link href={editProfile()}>
                                         Update organization profile
                                     </Link>
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardDescription>Payroll info</CardDescription>
+                            <CardTitle className="flex items-center gap-2 text-base">
+                                <PiggyBank className="h-4 w-4" />
+                                Payroll run status
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm text-muted-foreground">
+                            <p>
+                                Last run:{' '}
+                                <span className="font-medium text-foreground">
+                                    Not available yet
+                                </span>
+                            </p>
+                            <p>
+                                Next action:{' '}
+                                <span className="font-medium text-foreground">
+                                    Configure payroll settings and review
+                                    employee records.
+                                </span>
+                            </p>
+                            <Button
+                                asChild
+                                size="sm"
+                                variant="outline"
+                                className="w-full justify-start"
+                            >
+                                {guards.canFinalizePayroll ? (
+                                    <Link href="#">
+                                        <FileText className="mr-2 h-4 w-4" />
+                                        Open payroll run
+                                    </Link>
+                                ) : (
+                                    <span className="inline-flex items-center text-muted-foreground">
+                                        <FileText className="mr-2 h-4 w-4" />
+                                        Payroll run (owner/admin only)
+                                    </span>
+                                )}
+                            </Button>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardDescription>Payroll settings</CardDescription>
+                            <CardTitle className="flex items-center gap-2 text-base">
+                                <ShieldCheck className="h-4 w-4" />
+                                Statutory defaults
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm text-muted-foreground">
+                            <p>
+                                Pension, NHF, NHIS, and custom deductions are
+                                centrally managed per organization.
+                            </p>
+                            <Button
+                                asChild
+                                size="sm"
+                                variant="outline"
+                                className="w-full justify-start"
+                            >
+                                {canOpenPayrollSettings ? (
+                                    <Link href={editPayrollSettings()}>
+                                        <ShieldCheck className="mr-2 h-4 w-4" />
+                                        Open payroll settings
+                                    </Link>
+                                ) : (
+                                    <span className="inline-flex items-center text-muted-foreground">
+                                        <ShieldCheck className="mr-2 h-4 w-4" />
+                                        Payroll settings (owner/admin only)
+                                    </span>
+                                )}
+                            </Button>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardDescription>Reports shortcuts</CardDescription>
+                            <CardTitle className="flex items-center gap-2 text-base">
+                                <Landmark className="h-4 w-4" />
+                                Compliance exports
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm text-muted-foreground">
+                            <p>
+                                Pension schedule, PAYE, bank transfer, and NHF
+                                export shortcuts are staged for rollout.
+                            </p>
+                            <div className="grid gap-2">
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    variant="ghost"
+                                    className="justify-start"
+                                >
+                                    <Link href="#">Pension report</Link>
+                                </Button>
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    variant="ghost"
+                                    className="justify-start"
+                                >
+                                    <Link href="#">PAYE report</Link>
+                                </Button>
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    variant="ghost"
+                                    className="justify-start"
+                                >
+                                    <Link href="#">Bank schedule</Link>
+                                </Button>
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    variant="ghost"
+                                    className="justify-start"
+                                >
+                                    <Link href="#">NHF report</Link>
                                 </Button>
                             </div>
                         </CardContent>
