@@ -2,6 +2,7 @@
 
 use App\Models\Organization;
 use App\Models\PayrollSetting;
+use App\Models\PayrollSettingVersion;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
@@ -90,6 +91,8 @@ function validPayrollSettingsPayload(array $overrides = []): array
         'nhis_employee_rate' => 5,
         'nhis_employer_rate' => 10,
         'nsitf_rate' => 1,
+        'enabled_deductions' => ['paye', 'pension', 'nhf', 'nhis', 'nsitf'],
+        'effective_from' => now()->toDateString(),
         'other_items' => [
             ['label' => 'Union dues', 'rate' => 1.5],
         ],
@@ -109,7 +112,8 @@ test('owner can view payroll settings page with default values', function () {
         ->component('settings/payroll')
         ->where('settings.basic_salary_percentage', 50)
         ->where('settings.pension_employee_rate', 8)
-        ->where('settings.other_items', []),
+        ->where('settings.other_items', [])
+        ->where('settings.enabled_deductions', ['pension', 'nhf', 'nhis', 'nsitf', 'paye']),
     );
 });
 
@@ -144,6 +148,15 @@ test('admin can update payroll settings', function () {
     expect($settings->other_items)->toBe([
         ['label' => 'Cooperative', 'rate' => 2],
     ]);
+
+    $version = PayrollSettingVersion::query()
+        ->where('profile', 'default')
+        ->latest('created_at')
+        ->first();
+
+    expect($version)->not->toBeNull();
+    expect(str_starts_with((string) $version?->getRawOriginal('effective_from'), now()->toDateString()))->toBeTrue();
+    expect($version?->snapshot['basic_salary_percentage'] ?? null)->toBe(45);
 });
 
 test('member cannot view payroll settings page', function () {
@@ -194,5 +207,27 @@ test('payroll settings update validates rates and custom item limits', function 
     ]);
 
     Tenancy::initialize($organization);
-    expect(PayrollSetting::query()->count())->toBe(0);
+    expect(PayrollSetting::query()->count('id'))->toBe(0);
+});
+
+test('future effective date stores scheduled snapshot without changing active settings yet', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createPayrollSettingsContextWithRole('owner');
+
+    $this
+        ->actingAs($user)
+        ->patch('http://'.$organization->slug.'.payrollsaas.test/settings/payroll', validPayrollSettingsPayload([
+            'basic_salary_percentage' => 40,
+            'effective_from' => now()->addDays(7)->toDateString(),
+        ]))
+        ->assertSessionHasNoErrors();
+
+    Tenancy::initialize($organization);
+
+    $settings = PayrollSetting::query()->where('profile', 'default')->first();
+    expect($settings)->toBeNull();
+
+    $version = PayrollSettingVersion::query()->latest('effective_from')->first();
+    expect($version)->not->toBeNull();
+    expect(str_starts_with((string) $version?->getRawOriginal('effective_from'), now()->addDays(7)->toDateString()))->toBeTrue();
 });

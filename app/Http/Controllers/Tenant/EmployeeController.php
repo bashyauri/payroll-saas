@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\StoreEmployeeRequest;
 use App\Models\Employee;
 use App\Models\Organization;
-use App\Models\PayrollSetting;
 use App\Services\Employee\EmployeeLimitService;
+use App\Services\Payroll\EffectivePayrollSettingsResolver;
 use DateTimeInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +17,10 @@ use Inertia\Response;
 
 class EmployeeController extends Controller
 {
-    public function __construct(private readonly EmployeeLimitService $employeeLimitService) {}
+    public function __construct(
+        private readonly EmployeeLimitService $employeeLimitService,
+        private readonly EffectivePayrollSettingsResolver $settingsResolver,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -55,21 +58,21 @@ class EmployeeController extends Controller
     {
         $organization = $this->resolveOrganization();
         $employeeUsage = $this->employeeLimitService->usage($organization);
-        $settings = PayrollSetting::query()->where('profile', 'default')->first();
+        $settings = $this->settingsResolver->resolve(now(), 'default');
 
         return Inertia::render('employees/create', [
             'employeeCount' => $employeeUsage['employeeCount'],
             'employeeLimit' => $employeeUsage['employeeLimit'],
             'remainingSlots' => $employeeUsage['remainingSlots'],
             'canCreateEmployee' => ! $employeeUsage['isAtEmployeeLimit'],
-            'payrollCustomFields' => $this->configuredPayrollCustomFields($settings?->other_items),
+            'payrollCustomFields' => $this->configuredPayrollCustomFields($settings['other_items'] ?? null),
             'payrollRates' => [
-                'pensionEmployeeRate' => (float) ($settings?->pension_employee_rate ?? 8),
-                'nhfRate' => (float) ($settings?->nhf_rate ?? 2.5),
-                'nhisEmployeeRate' => (float) ($settings?->nhis_employee_rate ?? 1.75),
-                'nsitfRate' => (float) ($settings?->nsitf_rate ?? 1),
+                'pensionEmployeeRate' => (float) ($settings['pension_employee_rate'] ?? 8),
+                'nhfRate' => (float) ($settings['nhf_rate'] ?? 2.5),
+                'nhisEmployeeRate' => (float) ($settings['nhis_employee_rate'] ?? 1.75),
+                'nsitfRate' => (float) ($settings['nsitf_rate'] ?? 1),
             ],
-            'enabledDeductions' => $settings?->enabled_deductions ?? ['pension', 'nhf', 'nhis', 'nsitf', 'paye'],
+            'enabledDeductions' => $settings['enabled_deductions'] ?? ['pension', 'nhf', 'nhis', 'nsitf', 'paye'],
             'status' => session('status'),
         ]);
     }

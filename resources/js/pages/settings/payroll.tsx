@@ -66,7 +66,9 @@ type PayrollSettingsPageProps = {
         nsitf_rate: number;
         other_items: CustomItem[];
         enabled_deductions: DeductionKey[];
+        effective_from: string;
     };
+    nextScheduledEffectiveFrom?: string | null;
     status?: string;
 };
 
@@ -81,6 +83,7 @@ const MAX_CUSTOM_FIELDS = 5;
 
 export default function PayrollSettings({
     settings,
+    nextScheduledEffectiveFrom,
 }: PayrollSettingsPageProps) {
     const [customItems, setCustomItems] = useState<CustomItem[]>(
         settings.other_items.length > 0
@@ -146,6 +149,16 @@ export default function PayrollSettings({
                         </AlertDescription>
                     </Alert>
 
+                    {nextScheduledEffectiveFrom && (
+                        <Alert>
+                            <AlertTitle>Scheduled update pending</AlertTitle>
+                            <AlertDescription>
+                                A future payroll settings snapshot is scheduled
+                                for {nextScheduledEffectiveFrom}.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
                     <Form
                         {...PayrollSettingsController.update.form()}
                         options={{
@@ -155,6 +168,33 @@ export default function PayrollSettings({
                     >
                         {({ processing, recentlySuccessful, errors }) => (
                             <>
+                                <section className="space-y-4">
+                                    <Heading
+                                        variant="small"
+                                        title="When this takes effect"
+                                        description="Use today's date for immediate updates, or a future date to schedule the change."
+                                    />
+
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="effective_from">
+                                                Effective from
+                                            </Label>
+                                            <Input
+                                                id="effective_from"
+                                                name="effective_from"
+                                                type="date"
+                                                defaultValue={
+                                                    settings.effective_from
+                                                }
+                                            />
+                                            <InputError
+                                                message={errors.effective_from}
+                                            />
+                                        </div>
+                                    </div>
+                                </section>
+
                                 <section className="space-y-4">
                                     <Heading
                                         variant="small"

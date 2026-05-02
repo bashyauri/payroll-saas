@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Tenant\PayrollFinalizationController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:19
+ * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:17
  * @route '/payroll/finalize'
  */
 const PayrollFinalizationController = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ PayrollFinalizationController.definition = {
 
 /**
 * @see \App\Http\Controllers\Tenant\PayrollFinalizationController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:19
+ * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:17
  * @route '/payroll/finalize'
  */
 PayrollFinalizationController.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ PayrollFinalizationController.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Tenant\PayrollFinalizationController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:19
+ * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:17
  * @route '/payroll/finalize'
  */
 PayrollFinalizationController.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -35,7 +35,7 @@ PayrollFinalizationController.post = (options?: RouteQueryOptions): RouteDefinit
 
     /**
 * @see \App\Http\Controllers\Tenant\PayrollFinalizationController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:19
+ * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:17
  * @route '/payroll/finalize'
  */
     const PayrollFinalizationControllerForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -45,7 +45,7 @@ PayrollFinalizationController.post = (options?: RouteQueryOptions): RouteDefinit
 
             /**
 * @see \App\Http\Controllers\Tenant\PayrollFinalizationController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:19
+ * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:17
  * @route '/payroll/finalize'
  */
         PayrollFinalizationControllerForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

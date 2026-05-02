@@ -547,34 +547,6 @@ export default function CreateEmployee({
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="other_allowance_1">
-                                            Other allowance (specify 1)
-                                        </Label>
-                                        <Input
-                                            id="other_allowance_1"
-                                            name="other_allowance_1"
-                                            inputMode="decimal"
-                                            placeholder="Optional"
-                                        />
-                                        <InputError
-                                            message={errors.other_allowance_1}
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="other_allowance_2">
-                                            Other allowance (specify 2)
-                                        </Label>
-                                        <Input
-                                            id="other_allowance_2"
-                                            name="other_allowance_2"
-                                            inputMode="decimal"
-                                            placeholder="Optional"
-                                        />
-                                        <InputError
-                                            message={errors.other_allowance_2}
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
                                         <Label htmlFor="total_salary">
                                             Total salary
                                         </Label>

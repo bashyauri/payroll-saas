@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
 const PayrollController = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ PayrollController.definition = {
 
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
 PayrollController.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ PayrollController.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
 PayrollController.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ PayrollController.get = (options?: RouteQueryOptions): RouteDefinition<'get'> =>
 })
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
 PayrollController.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ PayrollController.head = (options?: RouteQueryOptions): RouteDefinition<'head'> 
 
     /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
     const PayrollControllerForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ PayrollController.head = (options?: RouteQueryOptions): RouteDefinition<'head'> 
 
             /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
         PayrollControllerForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ PayrollController.head = (options?: RouteQueryOptions): RouteDefinition<'head'> 
         })
             /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
         PayrollControllerForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

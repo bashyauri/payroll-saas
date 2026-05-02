@@ -255,22 +255,6 @@ export default function EmployeeShow({
                             </span>
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            Other allowance 1:{' '}
-                            <span className="font-medium text-foreground">
-                                {employee.otherAllowance1 === null
-                                    ? 'N/A'
-                                    : formatMoney(employee.otherAllowance1)}
-                            </span>
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                            Other allowance 2:{' '}
-                            <span className="font-medium text-foreground">
-                                {employee.otherAllowance2 === null
-                                    ? 'N/A'
-                                    : formatMoney(employee.otherAllowance2)}
-                            </span>
-                        </p>
-                        <p className="text-sm text-muted-foreground">
                             Total salary:{' '}
                             <span className="font-medium text-foreground">
                                 {employee.totalSalary === null

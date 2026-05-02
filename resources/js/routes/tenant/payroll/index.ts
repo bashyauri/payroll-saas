@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Tenant\PayrollController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollController.php:13
+ * @see app/Http/Controllers/Tenant/PayrollController.php:15
  * @route '/payroll'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Tenant\PayrollFinalizationController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:19
+ * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:17
  * @route '/payroll/finalize'
  */
 export const finalize = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +94,7 @@ finalize.definition = {
 
 /**
 * @see \App\Http\Controllers\Tenant\PayrollFinalizationController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:19
+ * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:17
  * @route '/payroll/finalize'
  */
 finalize.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ finalize.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Tenant\PayrollFinalizationController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:19
+ * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:17
  * @route '/payroll/finalize'
  */
 finalize.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +113,7 @@ finalize.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Tenant\PayrollFinalizationController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:19
+ * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:17
  * @route '/payroll/finalize'
  */
     const finalizeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +123,7 @@ finalize.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Tenant\PayrollFinalizationController::__invoke
- * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:19
+ * @see app/Http/Controllers/Tenant/PayrollFinalizationController.php:17
  * @route '/payroll/finalize'
  */
         finalizeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

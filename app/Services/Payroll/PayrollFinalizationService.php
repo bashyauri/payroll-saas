@@ -8,9 +8,10 @@ use App\Services\Billing\BillingAccessGuard;
 
 class PayrollFinalizationService
 {
-    public function __construct(private readonly BillingAccessGuard $billingAccessGuard)
-    {
-    }
+    public function __construct(
+        private readonly BillingAccessGuard $billingAccessGuard,
+        private readonly EffectivePayrollSettingsResolver $settingsResolver,
+    ) {}
 
     /**
      * Pre-finalization billing check for payroll finalization.
@@ -22,5 +23,13 @@ class PayrollFinalizationService
             ->first();
 
         return $this->billingAccessGuard->canFinalizePayroll($organization, $subscription);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function currentSettingsSnapshot(): array
+    {
+        return $this->settingsResolver->resolve(now(), 'default');
     }
 }

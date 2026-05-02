@@ -9,9 +9,7 @@ use Illuminate\Http\JsonResponse;
 
 class PayrollFinalizationController extends Controller
 {
-    public function __construct(private readonly PayrollFinalizationService $payrollFinalizationService)
-    {
-    }
+    public function __construct(private readonly PayrollFinalizationService $payrollFinalizationService) {}
 
     /**
      * Endpoint used by tenant payroll flows to validate billing before finalization.
@@ -30,6 +28,7 @@ class PayrollFinalizationController extends Controller
         }
 
         $decision = $this->payrollFinalizationService->evaluateBillingForFinalization($organization);
+        $snapshot = $this->payrollFinalizationService->currentSettingsSnapshot();
 
         return response()->json([
             'allowed' => $decision->allowed,
@@ -37,6 +36,8 @@ class PayrollFinalizationController extends Controller
             'message' => $decision->message,
             'billing_status' => $decision->billingStatus,
             'subscription_status' => $decision->subscriptionStatus,
+            'settings_snapshot' => $snapshot,
+            'settings_snapshot_effective_for' => now()->toDateString(),
         ], $decision->allowed ? 200 : 402);
     }
 }
