@@ -1,6 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     BriefcaseBusiness,
+    FileText,
+    Landmark,
     LayoutGrid,
     Settings,
     ShieldCheck,
@@ -46,6 +48,16 @@ export function AppSidebar() {
             : []),
         ...(can?.managePayrollSettings
             ? [
+                  {
+                      title: 'Payroll',
+                      href: '/payroll',
+                      icon: FileText,
+                  },
+                  {
+                      title: 'Reports',
+                      href: '/reports',
+                      icon: Landmark,
+                  },
                   {
                       title: 'Payroll Settings',
                       href: editPayrollSettings(),

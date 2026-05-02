@@ -106,3 +106,35 @@ test('member is forbidden from payroll finalization endpoint', function () {
 
     $response->assertForbidden();
 });
+
+test('owner can access payroll and reports pages', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createPayrollTenantContextWithRole('owner');
+
+    $payrollResponse = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/payroll');
+
+    $reportsResponse = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/reports');
+
+    $payrollResponse->assertOk();
+    $reportsResponse->assertOk();
+});
+
+test('member is forbidden from payroll and reports pages', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createPayrollTenantContextWithRole('member');
+
+    $payrollResponse = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/payroll');
+
+    $reportsResponse = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/reports');
+
+    $payrollResponse->assertForbidden();
+    $reportsResponse->assertForbidden();
+});

@@ -25,18 +25,35 @@ type EmployeeDetail = {
     bvn: string | null;
     taxIdentificationNumber: string | null;
     pensionPin: string | null;
+    pfaName: string | null;
+    nhisNumber: string | null;
+    nhfNumber: string | null;
     bankName: string;
     bankAccountName: string;
     bankAccountNumber: string;
     monthlyGrossSalary: string | number;
+    annualGrossSalary: string | number | null;
     monthlyTaxDeduction: string | number;
     monthlyPensionDeduction: string | number;
     monthlyNhfDeduction: string | number;
     otherMonthlyDeductions: string | number;
+    otherAllowance1: string | number | null;
+    otherAllowance2: string | number | null;
+    totalSalary: string | number | null;
+    personalLifeInsurance: string | number | null;
+    rentRelief: string | number | null;
+    customItems: Array<{
+        label: string;
+        rate: number;
+        value: number;
+    }>;
     department: string | null;
     jobTitle: string | null;
+    location: string | null;
+    dateOfBirth: string | null;
     employmentType: string;
     hireDate: string | null;
+    exitDate: string | null;
     status: string;
 };
 
@@ -147,6 +164,24 @@ export default function EmployeeShow({
                                 {employee.pensionPin ?? 'N/A'}
                             </span>
                         </p>
+                        <p className="text-sm text-muted-foreground">
+                            PFA:{' '}
+                            <span className="font-medium text-foreground">
+                                {employee.pfaName ?? 'N/A'}
+                            </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            NHIS number:{' '}
+                            <span className="font-medium text-foreground">
+                                {employee.nhisNumber ?? 'N/A'}
+                            </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            NHF number:{' '}
+                            <span className="font-medium text-foreground">
+                                {employee.nhfNumber ?? 'N/A'}
+                            </span>
+                        </p>
                     </CardContent>
                 </Card>
 
@@ -188,6 +223,14 @@ export default function EmployeeShow({
                             </span>
                         </p>
                         <p className="text-sm text-muted-foreground">
+                            Annual gross salary:{' '}
+                            <span className="font-medium text-foreground">
+                                {employee.annualGrossSalary === null
+                                    ? 'N/A'
+                                    : formatMoney(employee.annualGrossSalary)}
+                            </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
                             PAYE deduction:{' '}
                             <span className="font-medium text-foreground">
                                 {formatMoney(employee.monthlyTaxDeduction)}
@@ -211,6 +254,59 @@ export default function EmployeeShow({
                                 {formatMoney(employee.otherMonthlyDeductions)}
                             </span>
                         </p>
+                        <p className="text-sm text-muted-foreground">
+                            Other allowance 1:{' '}
+                            <span className="font-medium text-foreground">
+                                {employee.otherAllowance1 === null
+                                    ? 'N/A'
+                                    : formatMoney(employee.otherAllowance1)}
+                            </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            Other allowance 2:{' '}
+                            <span className="font-medium text-foreground">
+                                {employee.otherAllowance2 === null
+                                    ? 'N/A'
+                                    : formatMoney(employee.otherAllowance2)}
+                            </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            Total salary:{' '}
+                            <span className="font-medium text-foreground">
+                                {employee.totalSalary === null
+                                    ? 'N/A'
+                                    : formatMoney(employee.totalSalary)}
+                            </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            Personal life insurance:{' '}
+                            <span className="font-medium text-foreground">
+                                {employee.personalLifeInsurance === null
+                                    ? 'N/A'
+                                    : formatMoney(
+                                          employee.personalLifeInsurance,
+                                      )}
+                            </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground md:col-span-2">
+                            Rent relief:{' '}
+                            <span className="font-medium text-foreground">
+                                {employee.rentRelief === null
+                                    ? 'N/A'
+                                    : formatMoney(employee.rentRelief)}
+                            </span>
+                        </p>
+                        {employee.customItems.map((item, index) => (
+                            <p
+                                key={`${item.label}-${index}`}
+                                className="text-sm text-muted-foreground md:col-span-2"
+                            >
+                                {item.label} ({item.rate}%):{' '}
+                                <span className="font-medium text-foreground">
+                                    {formatMoney(item.value)}
+                                </span>
+                            </p>
+                        ))}
                     </CardContent>
                 </Card>
 
@@ -226,9 +322,21 @@ export default function EmployeeShow({
                             </span>
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            Job title:{' '}
+                            Designation:{' '}
                             <span className="font-medium text-foreground">
                                 {employee.jobTitle ?? 'N/A'}
+                            </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            Location:{' '}
+                            <span className="font-medium text-foreground">
+                                {employee.location ?? 'N/A'}
+                            </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            Date of birth:{' '}
+                            <span className="font-medium text-foreground">
+                                {employee.dateOfBirth ?? 'N/A'}
                             </span>
                         </p>
                         <p className="text-sm text-muted-foreground">
@@ -238,9 +346,15 @@ export default function EmployeeShow({
                             </span>
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            Hire date:{' '}
+                            Start date:{' '}
                             <span className="font-medium text-foreground">
                                 {employee.hireDate ?? 'N/A'}
+                            </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            Exit date:{' '}
+                            <span className="font-medium text-foreground">
+                                {employee.exitDate ?? 'N/A'}
                             </span>
                         </p>
                     </CardContent>

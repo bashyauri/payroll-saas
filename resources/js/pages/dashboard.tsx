@@ -21,7 +21,6 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { plans as billingPlans } from '@/routes/billing';
-import { edit as editPayrollSettings } from '@/routes/payroll/settings';
 import { edit as editProfile } from '@/routes/profile';
 import { index as employeesIndex } from '@/routes/tenant/employees';
 import { create as createEmployee } from '@/routes/tenant/employees';
@@ -73,7 +72,29 @@ type DashboardProps = {
         type: string;
         isCurrent: boolean;
         domain: string | null;
+        billingStatus: string;
+        switchUrl: string | null;
     }>;
+    payrollInfo: {
+        lastRunLabel: string;
+        lastRunDate: string | null;
+        runPayrollUrl: string;
+    };
+    payrollSettingsSummary: {
+        pensionEmployeeRate: number;
+        pensionEmployerRate: number;
+        nhfRate: number;
+        nhisEmployeeRate: number;
+        nhisEmployerRate: number;
+        customItemCount: number;
+        settingsUrl: string;
+    };
+    reportsLinks: {
+        pension: string;
+        paye: string;
+        bank: string;
+        nhf: string;
+    };
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -112,6 +133,9 @@ export default function Dashboard({
     quickStats,
     guards,
     organizationOptions,
+    payrollInfo,
+    payrollSettingsSummary,
+    reportsLinks,
 }: DashboardProps) {
     const hasMultipleOrganizations = organizationOptions.length > 1;
     const hasEmployeeCapacity = !guards.isAtEmployeeLimit;
@@ -269,7 +293,7 @@ export default function Dashboard({
                                 className="w-full justify-start"
                             >
                                 {guards.canFinalizePayroll ? (
-                                    <Link href="#">
+                                    <Link href={payrollInfo.runPayrollUrl}>
                                         <FileText className="mr-2 h-4 w-4" />
                                         Run Payroll
                                     </Link>
@@ -357,14 +381,13 @@ export default function Dashboard({
                             <p>
                                 Last run:{' '}
                                 <span className="font-medium text-foreground">
-                                    Not available yet
+                                    {payrollInfo.lastRunLabel}
                                 </span>
                             </p>
                             <p>
                                 Next action:{' '}
                                 <span className="font-medium text-foreground">
-                                    Configure payroll settings and review
-                                    employee records.
+                                    Review payroll settings, then run payroll.
                                 </span>
                             </p>
                             <Button
@@ -374,7 +397,7 @@ export default function Dashboard({
                                 className="w-full justify-start"
                             >
                                 {guards.canFinalizePayroll ? (
-                                    <Link href="#">
+                                    <Link href={payrollInfo.runPayrollUrl}>
                                         <FileText className="mr-2 h-4 w-4" />
                                         Open payroll run
                                     </Link>
@@ -398,8 +421,37 @@ export default function Dashboard({
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-muted-foreground">
                             <p>
-                                Pension, NHF, NHIS, and custom deductions are
-                                centrally managed per organization.
+                                Pension employee rate:{' '}
+                                <span className="font-medium text-foreground">
+                                    {payrollSettingsSummary.pensionEmployeeRate}
+                                    %
+                                </span>
+                            </p>
+                            <p>
+                                Pension employer rate:{' '}
+                                <span className="font-medium text-foreground">
+                                    {payrollSettingsSummary.pensionEmployerRate}
+                                    %
+                                </span>
+                            </p>
+                            <p>
+                                NHF rate:{' '}
+                                <span className="font-medium text-foreground">
+                                    {payrollSettingsSummary.nhfRate}%
+                                </span>
+                            </p>
+                            <p>
+                                NHIS employee/employer:{' '}
+                                <span className="font-medium text-foreground">
+                                    {payrollSettingsSummary.nhisEmployeeRate}% /{' '}
+                                    {payrollSettingsSummary.nhisEmployerRate}%
+                                </span>
+                            </p>
+                            <p>
+                                Custom payroll items:{' '}
+                                <span className="font-medium text-foreground">
+                                    {payrollSettingsSummary.customItemCount}
+                                </span>
                             </p>
                             <Button
                                 asChild
@@ -408,7 +460,11 @@ export default function Dashboard({
                                 className="w-full justify-start"
                             >
                                 {canOpenPayrollSettings ? (
-                                    <Link href={editPayrollSettings()}>
+                                    <Link
+                                        href={
+                                            payrollSettingsSummary.settingsUrl
+                                        }
+                                    >
                                         <ShieldCheck className="mr-2 h-4 w-4" />
                                         Open payroll settings
                                     </Link>
@@ -432,8 +488,8 @@ export default function Dashboard({
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-muted-foreground">
                             <p>
-                                Pension schedule, PAYE, bank transfer, and NHF
-                                export shortcuts are staged for rollout.
+                                Open report hubs now and replace these with
+                                export generation in Stage 5.
                             </p>
                             <div className="grid gap-2">
                                 <Button
@@ -442,7 +498,9 @@ export default function Dashboard({
                                     variant="ghost"
                                     className="justify-start"
                                 >
-                                    <Link href="#">Pension report</Link>
+                                    <Link href={reportsLinks.pension}>
+                                        Pension report
+                                    </Link>
                                 </Button>
                                 <Button
                                     asChild
@@ -450,7 +508,9 @@ export default function Dashboard({
                                     variant="ghost"
                                     className="justify-start"
                                 >
-                                    <Link href="#">PAYE report</Link>
+                                    <Link href={reportsLinks.paye}>
+                                        PAYE report
+                                    </Link>
                                 </Button>
                                 <Button
                                     asChild
@@ -458,7 +518,9 @@ export default function Dashboard({
                                     variant="ghost"
                                     className="justify-start"
                                 >
-                                    <Link href="#">Bank schedule</Link>
+                                    <Link href={reportsLinks.bank}>
+                                        Bank schedule
+                                    </Link>
                                 </Button>
                                 <Button
                                     asChild
@@ -466,7 +528,9 @@ export default function Dashboard({
                                     variant="ghost"
                                     className="justify-start"
                                 >
-                                    <Link href="#">NHF report</Link>
+                                    <Link href={reportsLinks.nhf}>
+                                        NHF report
+                                    </Link>
                                 </Button>
                             </div>
                         </CardContent>
@@ -519,8 +583,8 @@ export default function Dashboard({
                                 Your organizations
                             </CardTitle>
                             <CardDescription>
-                                You currently belong to multiple organizations.
-                                Workspace switcher is not enabled yet in MVP.
+                                Switch directly into another organization
+                                workspace from here.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-2 sm:grid-cols-2">
@@ -538,6 +602,9 @@ export default function Dashboard({
                                     <p className="text-xs text-muted-foreground">
                                         {item.domain ?? 'No domain yet'}
                                     </p>
+                                    <p className="text-xs text-muted-foreground capitalize">
+                                        {item.billingStatus}
+                                    </p>
                                     {item.isCurrent && (
                                         <Badge
                                             className="mt-2"
@@ -545,6 +612,18 @@ export default function Dashboard({
                                         >
                                             Current workspace
                                         </Badge>
+                                    )}
+                                    {!item.isCurrent && item.switchUrl && (
+                                        <Button
+                                            asChild
+                                            size="sm"
+                                            variant="outline"
+                                            className="mt-2 w-full"
+                                        >
+                                            <Link href={item.switchUrl}>
+                                                Switch workspace
+                                            </Link>
+                                        </Button>
                                     )}
                                 </div>
                             ))}

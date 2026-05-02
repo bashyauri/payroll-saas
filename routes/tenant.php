@@ -6,7 +6,9 @@ use App\Http\Controllers\Settings\PayrollSettingsController;
 use App\Http\Controllers\Settings\WorkspaceController;
 use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\Tenant\EmployeeController;
+use App\Http\Controllers\Tenant\PayrollController;
 use App\Http\Controllers\Tenant\PayrollFinalizationController;
+use App\Http\Controllers\Tenant\ReportsController;
 use App\Http\Middleware\EnsureBillingOnboardingComplete;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
@@ -57,6 +59,14 @@ Route::middleware([
         Route::patch('settings/payroll', [PayrollSettingsController::class, 'update'])
             ->middleware('organization.role:owner,admin')
             ->name('payroll.settings.update');
+
+        Route::get('payroll', PayrollController::class)
+            ->middleware('organization.role:owner,admin')
+            ->name('tenant.payroll.index');
+
+        Route::get('reports', ReportsController::class)
+            ->middleware('organization.role:owner,admin')
+            ->name('tenant.reports.index');
     });
 
     Route::post('/payroll/finalize', PayrollFinalizationController::class)

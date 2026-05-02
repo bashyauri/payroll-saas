@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import { useState } from 'react';
 import PayrollSettingsController from '@/actions/App/Http/Controllers/Settings/PayrollSettingsController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -40,13 +41,33 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const customItemIndexes = [0, 1, 2, 3, 4] as const;
+const MAX_CUSTOM_FIELDS = 5;
 
 export default function PayrollSettings({
     settings,
 }: PayrollSettingsPageProps) {
-    const getOtherItem = (index: number): CustomItem => {
-        return settings.other_items[index] ?? { label: '', rate: 0 };
+    const [customItems, setCustomItems] = useState<CustomItem[]>(
+        settings.other_items.length > 0
+            ? settings.other_items
+            : [{ label: '', rate: 0 }],
+    );
+
+    const addCustomItem = (): void => {
+        setCustomItems((current) => {
+            if (current.length >= MAX_CUSTOM_FIELDS) {
+                return current;
+            }
+
+            return [...current, { label: '', rate: 0 }];
+        });
+    };
+
+    const removeCustomItem = (index: number): void => {
+        setCustomItems((current) => {
+            const next = current.filter((_, itemIndex) => itemIndex !== index);
+
+            return next.length > 0 ? next : [{ label: '', rate: 0 }];
+        });
     };
 
     return (
@@ -327,14 +348,12 @@ export default function PayrollSettings({
                                 <section className="space-y-4">
                                     <Heading
                                         variant="small"
-                                        title="Custom deduction items"
-                                        description="Optional extra deductions (maximum 5)."
+                                        title="Custom percentage fields"
+                                        description="Add optional fields such as Others (Specify) with a percentage rate (maximum 5)."
                                     />
 
                                     <div className="space-y-4">
-                                        {customItemIndexes.map((index) => {
-                                            const item = getOtherItem(index);
-
+                                        {customItems.map((item, index) => {
                                             return (
                                                 <div
                                                     key={index}
@@ -388,10 +407,42 @@ export default function PayrollSettings({
                                                             }
                                                         />
                                                     </div>
+
+                                                    <div className="md:col-span-2">
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                removeCustomItem(
+                                                                    index,
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                customItems.length ===
+                                                                1
+                                                            }
+                                                        >
+                                                            Remove field
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             );
                                         })}
                                     </div>
+
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={addCustomItem}
+                                        disabled={
+                                            customItems.length >=
+                                            MAX_CUSTOM_FIELDS
+                                        }
+                                    >
+                                        Add custom field
+                                    </Button>
 
                                     <InputError message={errors.other_items} />
                                 </section>

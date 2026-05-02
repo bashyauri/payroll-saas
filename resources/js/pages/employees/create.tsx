@@ -33,11 +33,13 @@ export default function CreateEmployee({
     employeeLimit,
     remainingSlots,
     canCreateEmployee,
+    payrollCustomFields,
 }: {
     employeeCount: number;
     employeeLimit: number | null;
     remainingSlots: number | null;
     canCreateEmployee: boolean;
+    payrollCustomFields: Array<{ label: string; rate: number }>;
 }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -230,6 +232,41 @@ export default function CreateEmployee({
                                             message={errors.pension_pin}
                                         />
                                     </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="pfa_name">PFA</Label>
+                                        <Input
+                                            id="pfa_name"
+                                            name="pfa_name"
+                                            placeholder="Optional"
+                                        />
+                                        <InputError message={errors.pfa_name} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="nhis_number">
+                                            NHIS number
+                                        </Label>
+                                        <Input
+                                            id="nhis_number"
+                                            name="nhis_number"
+                                            placeholder="Optional"
+                                        />
+                                        <InputError
+                                            message={errors.nhis_number}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="nhf_number">
+                                            NHF number
+                                        </Label>
+                                        <Input
+                                            id="nhf_number"
+                                            name="nhf_number"
+                                            placeholder="Optional"
+                                        />
+                                        <InputError
+                                            message={errors.nhf_number}
+                                        />
+                                    </div>
                                 </CardContent>
                             </Card>
 
@@ -318,6 +355,20 @@ export default function CreateEmployee({
                                         />
                                     </div>
                                     <div className="grid gap-2">
+                                        <Label htmlFor="annual_gross_salary">
+                                            Annual gross salary
+                                        </Label>
+                                        <Input
+                                            id="annual_gross_salary"
+                                            name="annual_gross_salary"
+                                            inputMode="decimal"
+                                            placeholder="Optional"
+                                        />
+                                        <InputError
+                                            message={errors.annual_gross_salary}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
                                         <Label htmlFor="monthly_tax_deduction">
                                             Monthly PAYE deduction
                                         </Label>
@@ -381,6 +432,115 @@ export default function CreateEmployee({
                                             }
                                         />
                                     </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="other_allowance_1">
+                                            Other allowance (specify 1)
+                                        </Label>
+                                        <Input
+                                            id="other_allowance_1"
+                                            name="other_allowance_1"
+                                            inputMode="decimal"
+                                            placeholder="Optional"
+                                        />
+                                        <InputError
+                                            message={errors.other_allowance_1}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="other_allowance_2">
+                                            Other allowance (specify 2)
+                                        </Label>
+                                        <Input
+                                            id="other_allowance_2"
+                                            name="other_allowance_2"
+                                            inputMode="decimal"
+                                            placeholder="Optional"
+                                        />
+                                        <InputError
+                                            message={errors.other_allowance_2}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="total_salary">
+                                            Total salary
+                                        </Label>
+                                        <Input
+                                            id="total_salary"
+                                            name="total_salary"
+                                            inputMode="decimal"
+                                            placeholder="Optional"
+                                        />
+                                        <InputError
+                                            message={errors.total_salary}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="personal_life_insurance">
+                                            Personal life insurance
+                                        </Label>
+                                        <Input
+                                            id="personal_life_insurance"
+                                            name="personal_life_insurance"
+                                            inputMode="decimal"
+                                            placeholder="Optional"
+                                        />
+                                        <InputError
+                                            message={
+                                                errors.personal_life_insurance
+                                            }
+                                        />
+                                    </div>
+                                    <div className="grid gap-2 md:col-span-2">
+                                        <Label htmlFor="rent_relief">
+                                            Rent relief (tax purpose)
+                                        </Label>
+                                        <Input
+                                            id="rent_relief"
+                                            name="rent_relief"
+                                            inputMode="decimal"
+                                            placeholder="Optional"
+                                        />
+                                        <InputError
+                                            message={errors.rent_relief}
+                                        />
+                                    </div>
+
+                                    {payrollCustomFields.map((field, index) => (
+                                        <div
+                                            key={`${field.label}-${index}`}
+                                            className="grid gap-2 md:col-span-2"
+                                        >
+                                            <Label
+                                                htmlFor={`custom_items_${index}_value`}
+                                            >
+                                                {field.label} ({field.rate}%
+                                                default)
+                                            </Label>
+                                            <input
+                                                type="hidden"
+                                                name={`custom_items[${index}][label]`}
+                                                defaultValue={field.label}
+                                            />
+                                            <input
+                                                type="hidden"
+                                                name={`custom_items[${index}][rate]`}
+                                                defaultValue={field.rate}
+                                            />
+                                            <Input
+                                                id={`custom_items_${index}_value`}
+                                                name={`custom_items[${index}][value]`}
+                                                inputMode="decimal"
+                                                placeholder="Optional"
+                                            />
+                                            <InputError
+                                                message={
+                                                    errors[
+                                                        `custom_items.${index}.value`
+                                                    ]
+                                                }
+                                            />
+                                        </div>
+                                    ))}
                                 </CardContent>
                             </Card>
 
@@ -406,7 +566,7 @@ export default function CreateEmployee({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="job_title">
-                                            Job title
+                                            Designation
                                         </Label>
                                         <Input
                                             id="job_title"
@@ -415,6 +575,30 @@ export default function CreateEmployee({
                                         />
                                         <InputError
                                             message={errors.job_title}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="location">
+                                            Location
+                                        </Label>
+                                        <Input
+                                            id="location"
+                                            name="location"
+                                            placeholder="Optional"
+                                        />
+                                        <InputError message={errors.location} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="date_of_birth">
+                                            Date of birth
+                                        </Label>
+                                        <Input
+                                            id="date_of_birth"
+                                            name="date_of_birth"
+                                            type="date"
+                                        />
+                                        <InputError
+                                            message={errors.date_of_birth}
                                         />
                                     </div>
                                     <div className="grid gap-2">
@@ -466,7 +650,7 @@ export default function CreateEmployee({
                                     </div>
                                     <div className="grid gap-2 md:col-span-2">
                                         <Label htmlFor="hire_date">
-                                            Hire date
+                                            Start date
                                         </Label>
                                         <Input
                                             id="hire_date"
@@ -475,6 +659,19 @@ export default function CreateEmployee({
                                         />
                                         <InputError
                                             message={errors.hire_date}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2 md:col-span-2">
+                                        <Label htmlFor="exit_date">
+                                            Exit date
+                                        </Label>
+                                        <Input
+                                            id="exit_date"
+                                            name="exit_date"
+                                            type="date"
+                                        />
+                                        <InputError
+                                            message={errors.exit_date}
                                         />
                                     </div>
                                 </CardContent>

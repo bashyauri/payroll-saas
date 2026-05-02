@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Models\OrganizationUser;
+use App\Models\PayrollSetting;
 use App\Models\Subscription;
 use App\Services\Employee\EmployeeLimitService;
 use Illuminate\Http\Request;
@@ -66,19 +67,28 @@ class DashboardController extends Controller
         $organizationOptions = $user
             ? $user->organizations()
                 ->with('domains:id,tenant_id,domain')
-                ->get(['tenants.id', 'tenants.name', 'tenants.slug', 'tenants.type'])
-                ->map(function (Organization $memberOrganization) use ($organization): array {
+                ->get(['tenants.id', 'tenants.name', 'tenants.slug', 'tenants.type', 'tenants.billing_status'])
+                ->map(function (Organization $memberOrganization) use ($organization, $request): array {
+                    $domain = $memberOrganization->domains->first()?->domain;
+                    $switchUrl = $domain
+                        ? $request->getScheme().'://'.$domain.'/dashboard'
+                        : null;
+
                     return [
                         'id' => $memberOrganization->id,
                         'name' => $memberOrganization->name,
                         'type' => $memberOrganization->type,
                         'isCurrent' => $memberOrganization->id === $organization->id,
-                        'domain' => $memberOrganization->domains->first()?->domain,
+                        'domain' => $domain,
+                        'billingStatus' => $memberOrganization->billing_status,
+                        'switchUrl' => $switchUrl,
                     ];
                 })
                 ->values()
                 ->all()
             : [];
+
+        $payrollSettings = PayrollSetting::query()->where('profile', 'default')->first();
 
         return Inertia::render('dashboard', [
             'organization' => [
@@ -107,6 +117,26 @@ class DashboardController extends Controller
             ],
             'quickStats' => [
                 'employees' => $employeeUsage['employeeCount'],
+            ],
+            'payrollInfo' => [
+                'lastRunLabel' => 'Not available yet',
+                'lastRunDate' => null,
+                'runPayrollUrl' => '/payroll',
+            ],
+            'payrollSettingsSummary' => [
+                'pensionEmployeeRate' => (float) ($payrollSettings?->pension_employee_rate ?? 8),
+                'pensionEmployerRate' => (float) ($payrollSettings?->pension_employer_rate ?? 10),
+                'nhfRate' => (float) ($payrollSettings?->nhf_rate ?? 2.5),
+                'nhisEmployeeRate' => (float) ($payrollSettings?->nhis_employee_rate ?? 5),
+                'nhisEmployerRate' => (float) ($payrollSettings?->nhis_employer_rate ?? 10),
+                'customItemCount' => is_array($payrollSettings?->other_items) ? count($payrollSettings->other_items) : 0,
+                'settingsUrl' => '/settings/payroll',
+            ],
+            'reportsLinks' => [
+                'pension' => '/reports?type=pension',
+                'paye' => '/reports?type=paye',
+                'bank' => '/reports?type=bank',
+                'nhf' => '/reports?type=nhf',
             ],
             'guards' => [
                 'isReadOnly' => $isReadOnly,

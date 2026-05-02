@@ -2,6 +2,7 @@
 
 use App\Models\Employee;
 use App\Models\Organization;
+use App\Models\PayrollSetting;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
@@ -134,6 +135,32 @@ test('tenant users can view the add employee form', function () {
         ->where('employeeCount', 0)
         ->where('employeeLimit', 3)
         ->where('canCreateEmployee', true)
+        ->where('payrollCustomFields', [])
+    );
+});
+
+test('add employee form includes configured payroll custom fields', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContext();
+
+    Tenancy::initialize($organization);
+    PayrollSetting::query()->create([
+        'profile' => 'default',
+        'other_items' => [
+            ['label' => 'Union Dues', 'rate' => 3],
+        ],
+    ]);
+    Tenancy::end();
+
+    $response = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/employees/create');
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('employees/create')
+        ->where('payrollCustomFields.0.label', 'Union Dues')
+        ->where('payrollCustomFields.0.rate', 3)
     );
 });
 
@@ -154,18 +181,37 @@ test('tenant users can add employees within plan limit', function () {
             'bvn' => '10987654321',
             'tax_identification_number' => 'TIN-0001',
             'pension_pin' => 'PEN-0001',
+            'pfa_name' => 'Leadway Pensure',
+            'nhis_number' => 'NHIS-00231',
+            'nhf_number' => 'NHF-00510',
             'bank_name' => 'Access Bank',
             'bank_account_name' => 'Amina Yusuf',
             'bank_account_number' => '0123456789',
             'monthly_gross_salary' => '250000',
+            'annual_gross_salary' => '3000000',
             'monthly_tax_deduction' => '15000',
             'monthly_pension_deduction' => '20000',
             'monthly_nhf_deduction' => '2500',
             'other_monthly_deductions' => '1000',
+            'other_allowance_1' => '5000',
+            'other_allowance_2' => '2000',
+            'total_salary' => '278500',
+            'personal_life_insurance' => '1200',
+            'rent_relief' => '25000',
+            'custom_items' => [
+                [
+                    'label' => 'Union Dues',
+                    'rate' => '3',
+                    'value' => '3500',
+                ],
+            ],
             'department' => 'Finance',
             'job_title' => 'Payroll Officer',
+            'location' => 'Lagos',
+            'date_of_birth' => '1995-08-14',
             'employment_type' => 'full_time',
             'hire_date' => '2026-04-01',
+            'exit_date' => null,
             'status' => 'active',
         ]);
 
@@ -173,8 +219,15 @@ test('tenant users can add employees within plan limit', function () {
 
     Tenancy::initialize($organization);
 
-    expect(Employee::query()->count())->toBe(1);
+    expect(Employee::query()->count('*'))->toBe(1);
     expect(Employee::query()->firstOrFail()->nin)->toBe('12345678901');
+    expect(Employee::query()->firstOrFail()->custom_items)->toBe([
+        [
+            'label' => 'Union Dues',
+            'rate' => 3.0,
+            'value' => 3500.0,
+        ],
+    ]);
 });
 
 test('employee creation is blocked when plan limit is reached', function () {
@@ -213,7 +266,7 @@ test('employee creation is blocked when plan limit is reached', function () {
     $response->assertSessionHasErrors('employee_limit');
 
     Tenancy::initialize($organization);
-    expect(Employee::query()->count())->toBe(1);
+    expect(Employee::query()->count('*'))->toBe(1);
 });
 
 test('organization member cannot view the add employee form', function () {
@@ -248,8 +301,10 @@ test('organization member cannot create employees', function () {
     $response->assertForbidden();
 
     Tenancy::initialize($organization);
-    expect(Employee::query()->count())->toBe(0);
+    expect(Employee::query()->count('*'))->toBe(0);
 });
+expect(Employee::query()->firstOrFail()->pfa_name)->toBe('Leadway Pensure');
+expect((string) Employee::query()->firstOrFail()->annual_gross_salary)->toBe('3000000.00');
 
 test('organization member cannot view employees listing', function () {
     /** @var TestCase $this */

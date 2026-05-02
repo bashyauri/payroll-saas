@@ -103,6 +103,9 @@ test('authenticated users with active subscription can visit the dashboard', fun
         ->where('plan.maxEmployees', 50)
         ->where('quickStats.employees', 0)
         ->has('trial.countdownLabel')
+        ->where('payrollInfo.runPayrollUrl', '/payroll')
+        ->where('payrollSettingsSummary.settingsUrl', '/settings/payroll')
+        ->where('reportsLinks.pension', '/reports?type=pension')
         ->has('organizationOptions')
     );
 });
