@@ -86,9 +86,7 @@ export default function PayrollSettings({
     nextScheduledEffectiveFrom,
 }: PayrollSettingsPageProps) {
     const [customItems, setCustomItems] = useState<CustomItem[]>(
-        settings.other_items.length > 0
-            ? settings.other_items
-            : [{ label: '', rate: 0 }],
+        settings.other_items,
     );
 
     const [enabledDeductions, setEnabledDeductions] = useState<DeductionKey[]>(
@@ -121,9 +119,7 @@ export default function PayrollSettings({
 
     const removeCustomItem = (index: number): void => {
         setCustomItems((current) => {
-            const next = current.filter((_, itemIndex) => itemIndex !== index);
-
-            return next.length > 0 ? next : [{ label: '', rate: 0 }];
+            return current.filter((_, itemIndex) => itemIndex !== index);
         });
     };
 
@@ -497,6 +493,12 @@ export default function PayrollSettings({
                                     />
 
                                     <div className="space-y-4">
+                                        {customItems.length === 0 && (
+                                            <p className="text-sm text-muted-foreground">
+                                                No custom percentage fields
+                                                configured.
+                                            </p>
+                                        )}
                                         {customItems.map((item, index) => {
                                             return (
                                                 <div
@@ -561,10 +563,6 @@ export default function PayrollSettings({
                                                                 removeCustomItem(
                                                                     index,
                                                                 )
-                                                            }
-                                                            disabled={
-                                                                customItems.length ===
-                                                                1
                                                             }
                                                         >
                                                             Remove field
