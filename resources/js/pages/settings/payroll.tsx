@@ -5,6 +5,7 @@ import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
@@ -16,6 +17,40 @@ type CustomItem = {
     label: string;
     rate: number;
 };
+
+type DeductionKey = 'pension' | 'nhf' | 'nhis' | 'nsitf' | 'paye';
+
+const DEDUCTION_OPTIONS: Array<{
+    key: DeductionKey;
+    label: string;
+    description: string;
+}> = [
+    {
+        key: 'paye',
+        label: 'PAYE (Income Tax)',
+        description: 'Pay As You Earn — statutory income tax deduction',
+    },
+    {
+        key: 'pension',
+        label: 'Pension',
+        description: 'Employee & employer pension contributions (PFA)',
+    },
+    {
+        key: 'nhf',
+        label: 'NHF',
+        description: 'National Housing Fund — 2.5% of basic salary',
+    },
+    {
+        key: 'nhis',
+        label: 'NHIS',
+        description: 'National Health Insurance Scheme contributions',
+    },
+    {
+        key: 'nsitf',
+        label: 'NSITF',
+        description: 'Nigeria Social Insurance Trust Fund — employer levy',
+    },
+];
 
 type PayrollSettingsPageProps = {
     settings: {
@@ -30,6 +65,7 @@ type PayrollSettingsPageProps = {
         nhis_employer_rate: number;
         nsitf_rate: number;
         other_items: CustomItem[];
+        enabled_deductions: DeductionKey[];
     };
     status?: string;
 };
@@ -51,6 +87,24 @@ export default function PayrollSettings({
             ? settings.other_items
             : [{ label: '', rate: 0 }],
     );
+
+    const [enabledDeductions, setEnabledDeductions] = useState<DeductionKey[]>(
+        settings.enabled_deductions ?? [
+            'pension',
+            'nhf',
+            'nhis',
+            'nsitf',
+            'paye',
+        ],
+    );
+
+    const toggleDeduction = (key: DeductionKey): void => {
+        setEnabledDeductions((current) =>
+            current.includes(key)
+                ? current.filter((d) => d !== key)
+                : [...current, key],
+        );
+    };
 
     const addCustomItem = (): void => {
         setCustomItems((current) => {
@@ -200,6 +254,56 @@ export default function PayrollSettings({
                                                 }
                                             />
                                         </div>
+                                    </div>
+                                </section>
+
+                                <section className="space-y-4">
+                                    <Heading
+                                        variant="small"
+                                        title="Active deductions"
+                                        description="Select which deductions apply to your organization. Unchecked items will not appear on employee records or payroll calculations."
+                                    />
+
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                        {DEDUCTION_OPTIONS.map((option) => (
+                                            <div
+                                                key={option.key}
+                                                className="flex items-start gap-3 rounded-lg border p-3"
+                                            >
+                                                <Checkbox
+                                                    id={`deduction_${option.key}`}
+                                                    checked={enabledDeductions.includes(
+                                                        option.key,
+                                                    )}
+                                                    onCheckedChange={() =>
+                                                        toggleDeduction(
+                                                            option.key,
+                                                        )
+                                                    }
+                                                />
+                                                <input
+                                                    type="hidden"
+                                                    name={`enabled_deductions[]`}
+                                                    value={option.key}
+                                                    disabled={
+                                                        !enabledDeductions.includes(
+                                                            option.key,
+                                                        )
+                                                    }
+                                                />
+                                                <div className="grid gap-0.5">
+                                                    <Label
+                                                        htmlFor={`deduction_${option.key}`}
+                                                        className="cursor-pointer font-medium"
+                                                    >
+                                                        {option.label}
+                                                    </Label>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {option.description}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </section>
 

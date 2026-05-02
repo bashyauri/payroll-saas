@@ -11,6 +11,9 @@ use Inertia\Response;
 
 class PayrollSettingsController extends Controller
 {
+    /** @var list<string> */
+    private const DEFAULT_ENABLED_DEDUCTIONS = ['pension', 'nhf', 'nhis', 'nsitf', 'paye'];
+
     public function edit(): Response
     {
         $settings = PayrollSetting::query()->where('profile', 'default')->first();
@@ -28,6 +31,7 @@ class PayrollSettingsController extends Controller
                 'nhis_employer_rate' => (float) ($settings?->nhis_employer_rate ?? 10),
                 'nsitf_rate' => (float) ($settings?->nsitf_rate ?? 1),
                 'other_items' => $this->sanitizeOtherItems($settings?->other_items),
+                'enabled_deductions' => $settings?->enabled_deductions ?? self::DEFAULT_ENABLED_DEDUCTIONS,
             ],
             'status' => session('status'),
         ]);
@@ -49,6 +53,7 @@ class PayrollSettingsController extends Controller
             'nhis_employer_rate' => $validated['nhis_employer_rate'],
             'nsitf_rate' => $validated['nsitf_rate'],
             'other_items' => $this->sanitizeOtherItems($validated['other_items'] ?? null),
+            'enabled_deductions' => $validated['enabled_deductions'] ?? [],
         ];
 
         $settings = PayrollSetting::query()->firstOrNew(['profile' => 'default']);

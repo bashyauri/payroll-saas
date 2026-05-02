@@ -63,6 +63,13 @@ class EmployeeController extends Controller
             'remainingSlots' => $employeeUsage['remainingSlots'],
             'canCreateEmployee' => ! $employeeUsage['isAtEmployeeLimit'],
             'payrollCustomFields' => $this->configuredPayrollCustomFields($settings?->other_items),
+            'payrollRates' => [
+                'pensionEmployeeRate' => (float) ($settings?->pension_employee_rate ?? 8),
+                'nhfRate' => (float) ($settings?->nhf_rate ?? 2.5),
+                'nhisEmployeeRate' => (float) ($settings?->nhis_employee_rate ?? 1.75),
+                'nsitfRate' => (float) ($settings?->nsitf_rate ?? 1),
+            ],
+            'enabledDeductions' => $settings?->enabled_deductions ?? ['pension', 'nhf', 'nhis', 'nsitf', 'paye'],
             'status' => session('status'),
         ]);
     }

@@ -41,6 +41,8 @@ class UpdatePayrollSettingsRequest extends FormRequest
             'other_items' => ['nullable', 'array', 'max:5'],
             'other_items.*.label' => ['nullable', 'string', 'max:100'],
             'other_items.*.rate' => ['nullable', 'numeric', 'between:0,100'],
+            'enabled_deductions' => ['nullable', 'array'],
+            'enabled_deductions.*' => ['string', 'in:pension,nhf,nhis,nsitf,paye'],
         ];
     }
 

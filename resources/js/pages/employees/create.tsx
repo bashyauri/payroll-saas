@@ -1,4 +1,5 @@
 import { Form, Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -34,13 +35,56 @@ export default function CreateEmployee({
     remainingSlots,
     canCreateEmployee,
     payrollCustomFields,
+    payrollRates,
+    enabledDeductions,
 }: {
     employeeCount: number;
     employeeLimit: number | null;
     remainingSlots: number | null;
     canCreateEmployee: boolean;
     payrollCustomFields: Array<{ label: string; rate: number }>;
+    payrollRates: {
+        pensionEmployeeRate: number;
+        nhfRate: number;
+        nhisEmployeeRate: number;
+        nsitfRate: number;
+    };
+    enabledDeductions: string[];
 }) {
+    const hasPension = enabledDeductions.includes('pension');
+    const hasNhf = enabledDeductions.includes('nhf');
+    const hasNhis = enabledDeductions.includes('nhis');
+    const hasNsitf = enabledDeductions.includes('nsitf');
+    const hasPaye = enabledDeductions.includes('paye');
+    const [grossSalary, setGrossSalary] = useState('');
+    const [pensionDeduction, setPensionDeduction] = useState('');
+    const [nhfDeduction, setNhfDeduction] = useState('');
+    const [nhisDeduction, setNhisDeduction] = useState('');
+
+    function calcFromGross(gross: string) {
+        const value = parseFloat(gross);
+        if (!isNaN(value) && value > 0) {
+            if (hasPension)
+                setPensionDeduction(
+                    ((value * payrollRates.pensionEmployeeRate) / 100).toFixed(
+                        2,
+                    ),
+                );
+            if (hasNhf)
+                setNhfDeduction(
+                    ((value * payrollRates.nhfRate) / 100).toFixed(2),
+                );
+            if (hasNhis)
+                setNhisDeduction(
+                    ((value * payrollRates.nhisEmployeeRate) / 100).toFixed(2),
+                );
+        } else {
+            setPensionDeduction('');
+            setNhfDeduction('');
+            setNhisDeduction('');
+        }
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Add employee" />
@@ -347,6 +391,11 @@ export default function CreateEmployee({
                                             required
                                             inputMode="decimal"
                                             placeholder="250000"
+                                            value={grossSalary}
+                                            onChange={(e) => {
+                                                setGrossSalary(e.target.value);
+                                                calcFromGross(e.target.value);
+                                            }}
                                         />
                                         <InputError
                                             message={
@@ -368,54 +417,84 @@ export default function CreateEmployee({
                                             message={errors.annual_gross_salary}
                                         />
                                     </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="monthly_tax_deduction">
-                                            Monthly PAYE deduction
-                                        </Label>
-                                        <Input
-                                            id="monthly_tax_deduction"
-                                            name="monthly_tax_deduction"
-                                            inputMode="decimal"
-                                            defaultValue="0"
-                                        />
-                                        <InputError
-                                            message={
-                                                errors.monthly_tax_deduction
-                                            }
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="monthly_pension_deduction">
-                                            Monthly pension deduction
-                                        </Label>
-                                        <Input
-                                            id="monthly_pension_deduction"
-                                            name="monthly_pension_deduction"
-                                            inputMode="decimal"
-                                            defaultValue="0"
-                                        />
-                                        <InputError
-                                            message={
-                                                errors.monthly_pension_deduction
-                                            }
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="monthly_nhf_deduction">
-                                            Monthly NHF deduction
-                                        </Label>
-                                        <Input
-                                            id="monthly_nhf_deduction"
-                                            name="monthly_nhf_deduction"
-                                            inputMode="decimal"
-                                            defaultValue="0"
-                                        />
-                                        <InputError
-                                            message={
-                                                errors.monthly_nhf_deduction
-                                            }
-                                        />
-                                    </div>
+                                    {hasPaye && (
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="monthly_tax_deduction">
+                                                Monthly PAYE deduction
+                                            </Label>
+                                            <Input
+                                                id="monthly_tax_deduction"
+                                                name="monthly_tax_deduction"
+                                                inputMode="decimal"
+                                                defaultValue="0"
+                                            />
+                                            <InputError
+                                                message={
+                                                    errors.monthly_tax_deduction
+                                                }
+                                            />
+                                        </div>
+                                    )}
+                                    {hasPension && (
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="monthly_pension_deduction">
+                                                Monthly pension deduction
+                                            </Label>
+                                            <Input
+                                                id="monthly_pension_deduction"
+                                                name="monthly_pension_deduction"
+                                                inputMode="decimal"
+                                                value={pensionDeduction}
+                                                onChange={(e) =>
+                                                    setPensionDeduction(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder={`${payrollRates.pensionEmployeeRate}% of gross`}
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                Auto-calculated at{' '}
+                                                {
+                                                    payrollRates.pensionEmployeeRate
+                                                }
+                                                % of gross — override if needed
+                                            </p>
+                                            <InputError
+                                                message={
+                                                    errors.monthly_pension_deduction
+                                                }
+                                            />
+                                        </div>
+                                    )}
+                                    {hasNhf && (
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="monthly_nhf_deduction">
+                                                Monthly NHF deduction
+                                            </Label>
+                                            <Input
+                                                id="monthly_nhf_deduction"
+                                                name="monthly_nhf_deduction"
+                                                inputMode="decimal"
+                                                value={nhfDeduction}
+                                                onChange={(e) =>
+                                                    setNhfDeduction(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder={`${payrollRates.nhfRate}% of gross`}
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                Auto-calculated at{' '}
+                                                {payrollRates.nhfRate}% of gross
+                                                — override if needed
+                                            </p>
+                                            <InputError
+                                                message={
+                                                    errors.monthly_nhf_deduction
+                                                }
+                                            />
+                                        </div>
+                                    )}
                                     <div className="grid gap-2 md:col-span-2">
                                         <Label htmlFor="other_monthly_deductions">
                                             Other monthly deductions
@@ -426,6 +505,41 @@ export default function CreateEmployee({
                                             inputMode="decimal"
                                             defaultValue="0"
                                         />
+                                        {grossSalary &&
+                                            (hasNhis || hasNsitf) && (
+                                                <p className="text-xs text-muted-foreground">
+                                                    {hasNhis && (
+                                                        <>
+                                                            Estimated NHIS (
+                                                            {
+                                                                payrollRates.nhisEmployeeRate
+                                                            }
+                                                            %): {nhisDeduction}
+                                                        </>
+                                                    )}
+                                                    {hasNhis && hasNsitf && (
+                                                        <> &nbsp;|&nbsp; </>
+                                                    )}
+                                                    {hasNsitf && (
+                                                        <>
+                                                            NSITF (
+                                                            {
+                                                                payrollRates.nsitfRate
+                                                            }
+                                                            %):{' '}
+                                                            {(
+                                                                (parseFloat(
+                                                                    grossSalary,
+                                                                ) *
+                                                                    payrollRates.nsitfRate) /
+                                                                100
+                                                            ).toFixed(2)}
+                                                        </>
+                                                    )}{' '}
+                                                    — include these here if
+                                                    applicable
+                                                </p>
+                                            )}
                                         <InputError
                                             message={
                                                 errors.other_monthly_deductions

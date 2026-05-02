@@ -1,7 +1,8 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:14
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:17
  * @route '/settings/payroll'
  */
 export const edit = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +17,7 @@ edit.definition = {
 
 /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:14
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:17
  * @route '/settings/payroll'
  */
 edit.url = (options?: RouteQueryOptions) => {
@@ -25,7 +26,7 @@ edit.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:14
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:17
  * @route '/settings/payroll'
  */
 edit.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +35,7 @@ edit.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:14
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:17
  * @route '/settings/payroll'
  */
 edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +45,7 @@ edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:14
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:17
  * @route '/settings/payroll'
  */
     const editForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +55,7 @@ edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:14
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:17
  * @route '/settings/payroll'
  */
         editForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +64,7 @@ edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:14
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:17
  * @route '/settings/payroll'
  */
         editForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +80,7 @@ edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     edit.form = editForm
 /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:36
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:40
  * @route '/settings/payroll'
  */
 export const update = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -94,7 +95,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:36
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:40
  * @route '/settings/payroll'
  */
 update.url = (options?: RouteQueryOptions) => {
@@ -103,7 +104,7 @@ update.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:36
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:40
  * @route '/settings/payroll'
  */
 update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -113,7 +114,7 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
 
     /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:36
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:40
  * @route '/settings/payroll'
  */
     const updateForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -128,7 +129,7 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
 
             /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:36
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:40
  * @route '/settings/payroll'
  */
         updateForm.patch = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

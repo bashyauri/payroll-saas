@@ -26,6 +26,7 @@ class PayrollSetting extends Model
         'nhis_employer_rate',
         'nsitf_rate',
         'other_items',
+        'enabled_deductions',
     ];
 
     protected $casts = [
@@ -40,5 +41,6 @@ class PayrollSetting extends Model
         'nhis_employer_rate' => 'decimal:2',
         'nsitf_rate' => 'decimal:2',
         'other_items' => 'array',
+        'enabled_deductions' => 'array',
     ];
 }
