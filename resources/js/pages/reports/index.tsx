@@ -9,7 +9,6 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 
 type ReportsPageProps = {
@@ -22,13 +21,14 @@ type ReportsPageProps = {
         key: string;
         label: string;
         href: string;
+        exportHref: string;
     }>;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: '/dashboard',
     },
     {
         title: 'Reports',
@@ -52,8 +52,8 @@ export default function ReportsIndex({
                             Compliance reports
                         </CardTitle>
                         <CardDescription>
-                            Browse report hubs for {organization.name}. Full
-                            exports are scheduled for Stage 5.
+                            Open compliance report views and export CSV files
+                            for {organization.name}.
                         </CardDescription>
                     </CardHeader>
                 </Card>
@@ -81,6 +81,12 @@ export default function ReportsIndex({
                                     href={report.href}
                                 >
                                     Open
+                                </Link>
+                                <Link
+                                    className="text-primary underline underline-offset-4"
+                                    href={report.exportHref}
+                                >
+                                    Export CSV
                                 </Link>
                             </CardContent>
                         </Card>

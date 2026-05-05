@@ -46,6 +46,12 @@ class EffectivePayrollSettingsResolver
             'enabled_deductions' => is_array($settings?->enabled_deductions)
                 ? $settings->enabled_deductions
                 : self::DEFAULT_ENABLED_DEDUCTIONS,
+            'payroll_type' => $settings?->payroll_type ?? null,
+            'payroll_month' => $settings?->payroll_month ?? null,
+            'report_date' => $settings?->report_date?->toDateString() ?? null,
+            'project_name' => $settings?->project_name ?? null,
+            'employer_tax_id' => $settings?->employer_tax_id ?? null,
+            'employer_pension_id' => $settings?->employer_pension_id ?? null,
         ]);
     }
 
@@ -72,6 +78,12 @@ class EffectivePayrollSettingsResolver
             'enabled_deductions' => is_array($snapshot['enabled_deductions'] ?? null)
                 ? array_values($snapshot['enabled_deductions'])
                 : self::DEFAULT_ENABLED_DEDUCTIONS,
+            'payroll_type' => isset($snapshot['payroll_type']) ? (string) $snapshot['payroll_type'] : null,
+            'payroll_month' => isset($snapshot['payroll_month']) ? (string) $snapshot['payroll_month'] : null,
+            'report_date' => isset($snapshot['report_date']) ? (string) $snapshot['report_date'] : null,
+            'project_name' => isset($snapshot['project_name']) ? (string) $snapshot['project_name'] : null,
+            'employer_tax_id' => isset($snapshot['employer_tax_id']) ? (string) $snapshot['employer_tax_id'] : null,
+            'employer_pension_id' => isset($snapshot['employer_pension_id']) ? (string) $snapshot['employer_pension_id'] : null,
         ];
     }
 }

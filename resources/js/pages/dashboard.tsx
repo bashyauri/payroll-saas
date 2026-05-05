@@ -19,7 +19,6 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes';
 import { plans as billingPlans } from '@/routes/billing';
 import { edit as editProfile } from '@/routes/profile';
 import { index as employeesIndex } from '@/routes/tenant/employees';
@@ -100,7 +99,7 @@ type DashboardProps = {
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: '/dashboard',
     },
 ];
 
@@ -488,8 +487,8 @@ export default function Dashboard({
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-muted-foreground">
                             <p>
-                                Open report hubs now and replace these with
-                                export generation in Stage 5.
+                                Open report hubs and export compliance-ready CSV
+                                files.
                             </p>
                             <div className="grid gap-2">
                                 <Button

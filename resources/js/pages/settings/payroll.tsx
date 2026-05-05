@@ -66,6 +66,12 @@ type PayrollSettingsPageProps = {
         nsitf_rate: number;
         other_items: CustomItem[];
         enabled_deductions: DeductionKey[];
+        payroll_type: string | null;
+        payroll_month: string | null;
+        report_date: string | null;
+        project_name: string | null;
+        employer_tax_id: string | null;
+        employer_pension_id: string | null;
         effective_from: string;
     };
     nextScheduledEffectiveFrom?: string | null;
@@ -164,6 +170,126 @@ export default function PayrollSettings({
                     >
                         {({ processing, recentlySuccessful, errors }) => (
                             <>
+                                <section className="space-y-4">
+                                    <Heading
+                                        variant="small"
+                                        title="Payroll information"
+                                        description="Organisation-level details used on payroll reports and remittance schedules."
+                                    />
+
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="payroll_type">
+                                                Payroll type
+                                            </Label>
+                                            <Input
+                                                id="payroll_type"
+                                                name="payroll_type"
+                                                type="text"
+                                                placeholder="e.g. Monthly"
+                                                defaultValue={
+                                                    settings.payroll_type ?? ''
+                                                }
+                                            />
+                                            <InputError
+                                                message={errors.payroll_type}
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="payroll_month">
+                                                Payroll month
+                                            </Label>
+                                            <Input
+                                                id="payroll_month"
+                                                name="payroll_month"
+                                                type="month"
+                                                defaultValue={
+                                                    settings.payroll_month ?? ''
+                                                }
+                                            />
+                                            <InputError
+                                                message={errors.payroll_month}
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="report_date">
+                                                Report date
+                                            </Label>
+                                            <Input
+                                                id="report_date"
+                                                name="report_date"
+                                                type="date"
+                                                defaultValue={
+                                                    settings.report_date ?? ''
+                                                }
+                                            />
+                                            <InputError
+                                                message={errors.report_date}
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="project_name">
+                                                Project name
+                                            </Label>
+                                            <Input
+                                                id="project_name"
+                                                name="project_name"
+                                                type="text"
+                                                placeholder="e.g. Head Office Payroll"
+                                                defaultValue={
+                                                    settings.project_name ?? ''
+                                                }
+                                            />
+                                            <InputError
+                                                message={errors.project_name}
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="employer_tax_id">
+                                                Employer Tax ID (TIN)
+                                            </Label>
+                                            <Input
+                                                id="employer_tax_id"
+                                                name="employer_tax_id"
+                                                type="text"
+                                                placeholder="e.g. 1234567-0001"
+                                                defaultValue={
+                                                    settings.employer_tax_id ??
+                                                    ''
+                                                }
+                                            />
+                                            <InputError
+                                                message={errors.employer_tax_id}
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="employer_pension_id">
+                                                Employer Pension ID
+                                            </Label>
+                                            <Input
+                                                id="employer_pension_id"
+                                                name="employer_pension_id"
+                                                type="text"
+                                                placeholder="e.g. PEN-00123456"
+                                                defaultValue={
+                                                    settings.employer_pension_id ??
+                                                    ''
+                                                }
+                                            />
+                                            <InputError
+                                                message={
+                                                    errors.employer_pension_id
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                </section>
+
                                 <section className="space-y-4">
                                     <Heading
                                         variant="small"

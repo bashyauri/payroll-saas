@@ -27,6 +27,12 @@ class PayrollSetting extends Model
         'nsitf_rate',
         'other_items',
         'enabled_deductions',
+        'payroll_type',
+        'payroll_month',
+        'report_date',
+        'project_name',
+        'employer_tax_id',
+        'employer_pension_id',
     ];
 
     protected $casts = [
@@ -42,5 +48,6 @@ class PayrollSetting extends Model
         'nsitf_rate' => 'decimal:2',
         'other_items' => 'array',
         'enabled_deductions' => 'array',
+        'report_date' => 'date',
     ];
 }

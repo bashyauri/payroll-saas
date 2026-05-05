@@ -40,6 +40,12 @@ class PayrollSettingsController extends Controller
                 'nsitf_rate' => $settings['nsitf_rate'],
                 'other_items' => $this->sanitizeOtherItems($settings['other_items'] ?? null),
                 'enabled_deductions' => $settings['enabled_deductions'],
+                'payroll_type' => $settings['payroll_type'],
+                'payroll_month' => $settings['payroll_month'],
+                'report_date' => $settings['report_date'],
+                'project_name' => $settings['project_name'],
+                'employer_tax_id' => $settings['employer_tax_id'],
+                'employer_pension_id' => $settings['employer_pension_id'],
                 'effective_from' => now()->toDateString(),
             ],
             'nextScheduledEffectiveFrom' => $nextScheduledVersion
@@ -69,6 +75,12 @@ class PayrollSettingsController extends Controller
             'nsitf_rate' => $validated['nsitf_rate'],
             'other_items' => $this->sanitizeOtherItems($validated['other_items'] ?? null),
             'enabled_deductions' => $validated['enabled_deductions'] ?? [],
+            'payroll_type' => $validated['payroll_type'] ?? null,
+            'payroll_month' => $validated['payroll_month'] ?? null,
+            'report_date' => $validated['report_date'] ?? null,
+            'project_name' => $validated['project_name'] ?? null,
+            'employer_tax_id' => $validated['employer_tax_id'] ?? null,
+            'employer_pension_id' => $validated['employer_pension_id'] ?? null,
         ];
 
         DB::transaction(function () use ($request, $snapshot, $effectiveFrom): void {

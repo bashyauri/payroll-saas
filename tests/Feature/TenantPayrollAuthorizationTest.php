@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Employee;
 use App\Models\Organization;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
@@ -137,4 +138,60 @@ test('member is forbidden from payroll and reports pages', function () {
 
     $payrollResponse->assertForbidden();
     $reportsResponse->assertForbidden();
+});
+
+test('owner can export csv reports', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createPayrollTenantContextWithRole('owner');
+
+    Tenancy::initialize($organization);
+
+    Employee::query()->create([
+        'employee_number' => 'EMP-0001',
+        'first_name' => 'Amina',
+        'last_name' => 'Yusuf',
+        'bank_name' => 'Access Bank',
+        'bank_account_name' => 'Amina Yusuf',
+        'bank_account_number' => '0123456789',
+        'monthly_gross_salary' => 250000,
+        'monthly_tax_deduction' => 12000,
+        'monthly_pension_deduction' => 20000,
+        'monthly_nhf_deduction' => 5000,
+        'other_monthly_deductions' => 3000,
+        'tax_identification_number' => 'TIN-1001',
+        'pension_pin' => 'PEN-9001',
+        'pfa_name' => 'Premium PFA',
+        'nhf_number' => 'NHF-9010',
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/reports/export?type=pension');
+
+    $response->assertOk();
+    $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+    $response->assertSee('Employee Number', false);
+    $response->assertSee('EMP-0001', false);
+});
+
+test('member is forbidden from reports export endpoint', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createPayrollTenantContextWithRole('member');
+
+    $response = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/reports/export?type=pension');
+
+    $response->assertForbidden();
+});
+
+test('reports export rejects invalid type', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createPayrollTenantContextWithRole('owner');
+
+    $response = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/reports/export?type=invalid');
+
+    $response->assertStatus(422);
 });

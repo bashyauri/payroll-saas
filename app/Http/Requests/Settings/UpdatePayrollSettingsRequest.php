@@ -43,6 +43,12 @@ class UpdatePayrollSettingsRequest extends FormRequest
             'other_items.*.rate' => ['nullable', 'numeric', 'between:0,100'],
             'enabled_deductions' => ['nullable', 'array'],
             'enabled_deductions.*' => ['string', 'in:pension,nhf,nhis,nsitf,paye'],
+            'payroll_type' => ['nullable', 'string', 'max:100'],
+            'payroll_month' => ['nullable', 'string', 'max:20'],
+            'report_date' => ['nullable', 'date_format:Y-m-d'],
+            'project_name' => ['nullable', 'string', 'max:255'],
+            'employer_tax_id' => ['nullable', 'string', 'max:100'],
+            'employer_pension_id' => ['nullable', 'string', 'max:100'],
             'effective_from' => ['nullable', 'date_format:Y-m-d'],
         ];
     }

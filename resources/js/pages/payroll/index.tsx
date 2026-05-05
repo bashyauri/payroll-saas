@@ -9,7 +9,6 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes';
 import { edit as editPayrollSettings } from '@/routes/payroll/settings';
 import type { BreadcrumbItem } from '@/types';
 
@@ -30,7 +29,7 @@ type PayrollPageProps = {
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: '/dashboard',
     },
     {
         title: 'Payroll',
