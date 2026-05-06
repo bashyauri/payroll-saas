@@ -56,7 +56,7 @@ export default function WorkspaceSettings({
                         }}
                         className="space-y-6"
                     >
-                        {({ processing, recentlySuccessful, errors }) => (
+                        {({ processing, errors }) => (
                             <>
                                 <div className="grid gap-2">
                                     <Label htmlFor="subdomain">Subdomain</Label>
@@ -91,12 +91,6 @@ export default function WorkspaceSettings({
                                     <Button disabled={processing}>
                                         Save workspace URL
                                     </Button>
-
-                                    {recentlySuccessful && (
-                                        <p className="text-sm text-neutral-600">
-                                            Saved
-                                        </p>
-                                    )}
                                 </div>
                             </>
                         )}

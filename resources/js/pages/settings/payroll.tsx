@@ -75,7 +75,6 @@ type PayrollSettingsPageProps = {
         effective_from: string;
     };
     nextScheduledEffectiveFrom?: string | null;
-    status?: string;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -168,7 +167,7 @@ export default function PayrollSettings({
                         }}
                         className="space-y-8"
                     >
-                        {({ processing, recentlySuccessful, errors }) => (
+                        {({ processing, errors }) => (
                             <>
                                 <section className="space-y-4">
                                     <Heading
@@ -719,12 +718,6 @@ export default function PayrollSettings({
                                     <Button disabled={processing}>
                                         Save payroll settings
                                     </Button>
-
-                                    {recentlySuccessful && (
-                                        <p className="text-sm text-neutral-600">
-                                            Saved
-                                        </p>
-                                    )}
                                 </div>
                             </>
                         )}
