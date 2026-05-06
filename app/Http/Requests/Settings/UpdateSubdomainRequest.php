@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Settings;
 
+use App\Models\Organization;
 use App\Models\OrganizationUser;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -59,7 +60,7 @@ class UpdateSubdomainRequest extends FormRequest
                     'billing', 'dashboard', 'static', 'cdn', 'assets',
                     'test', 'dev', 'staging', 'sandbox', 'demo',
                 ]),
-                Rule::unique('tenants', 'slug')->ignore($this->resolveCurrentOrgId()),
+                Rule::unique(Organization::class, 'slug')->ignore($this->resolveCurrentOrgId()),
             ],
         ];
     }

@@ -5,7 +5,12 @@ use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Illuminate\Support\Str;
+use Stancl\Tenancy\Facades\Tenancy;
 use Tests\TestCase;
+
+afterEach(function () {
+    Tenancy::end();
+});
 
 test('organization owner can update workspace subdomain', function () {
     /** @var TestCase $this */
@@ -175,5 +180,65 @@ test('organization admin can update workspace subdomain', function () {
     $this->assertDatabaseHas('domains', [
         'tenant_id' => $organization->id,
         'domain' => 'gamma-updated.payroll-saas.test',
+    ]);
+});
+
+test('workspace subdomain update works while tenancy is initialized', function () {
+    /** @var TestCase $this */
+    /** @var User $owner */
+    $owner = User::factory()->create();
+
+    $organization = Organization::create([
+        'name' => 'Delta Org',
+        'slug' => 'delta-org',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+
+    $organization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => 'delta-org.payrollsaas.test',
+    ]);
+
+    $organization->users()->attach($owner->id, ['role' => 'owner']);
+
+    $plan = SubscriptionPlan::create([
+        'name' => 'Essential',
+        'slug' => 'essential-workspace-tenant-context-'.Str::lower(Str::random(8)),
+        'currency' => 'NGN',
+        'price_per_employee' => 800,
+        'billing_period' => 'annual',
+        'min_employees' => 1,
+        'max_employees' => 50,
+        'features' => ['payroll'],
+        'is_active' => true,
+    ]);
+
+    Subscription::create([
+        'organization_id' => $organization->id,
+        'plan_id' => $plan->id,
+        'status' => Subscription::STATUS_ACTIVE,
+        'trial_end_date' => now()->addDays(7),
+        'refund_eligible_until' => now()->addDays(7),
+        'next_billing_date' => now()->addYear(),
+        'paystack_reference' => 'workspace-tenant-context-ref-'.Str::lower(Str::random(10)),
+        'amount_paid' => 80000,
+        'currency' => 'NGN',
+    ]);
+
+    Tenancy::initialize($organization);
+
+    $response = $this
+        ->actingAs($owner)
+        ->patch('http://delta-org.payrollsaas.test/settings/workspace', [
+            'subdomain' => 'delta-updated',
+        ]);
+
+    $response->assertRedirect('https://delta-updated.payroll-saas.test/settings/workspace');
+    $response->assertSessionHasNoErrors();
+
+    $this->assertDatabaseHas('domains', [
+        'tenant_id' => $organization->id,
+        'domain' => 'delta-updated.payroll-saas.test',
     ]);
 });
