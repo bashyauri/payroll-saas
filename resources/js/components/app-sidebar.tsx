@@ -1,13 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import {
-    BriefcaseBusiness,
-    FileText,
-    Landmark,
-    LayoutGrid,
-    Settings,
-    ShieldCheck,
-    Users,
-} from 'lucide-react';
+import { FileText, Landmark, LayoutGrid, Settings, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -21,10 +13,8 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { edit as editPayrollSettings } from '@/routes/payroll/settings';
 import { edit as editProfile } from '@/routes/profile';
 import { index as employeesIndex } from '@/routes/tenant/employees';
-import { edit as editWorkspace } from '@/routes/workspace';
 import type { Auth, NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -57,20 +47,6 @@ export function AppSidebar() {
                       title: 'Reports',
                       href: '/reports',
                       icon: Landmark,
-                  },
-                  {
-                      title: 'Payroll Settings',
-                      href: editPayrollSettings(),
-                      icon: ShieldCheck,
-                  },
-              ]
-            : []),
-        ...(can?.manageWorkspace
-            ? [
-                  {
-                      title: 'Workspace',
-                      href: editWorkspace(),
-                      icon: BriefcaseBusiness,
                   },
               ]
             : []),
