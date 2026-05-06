@@ -2,6 +2,7 @@
 
 use App\Models\Employee;
 use App\Models\Organization;
+use App\Models\PayrollRun;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
@@ -170,8 +171,10 @@ test('owner can export csv reports', function () {
 
     $response->assertOk();
     $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
-    $response->assertSee('Employee Number', false);
-    $response->assertSee('EMP-0001', false);
+    $streamed = $response->streamedContent();
+
+    expect($streamed)->toContain('Employee Number');
+    expect($streamed)->toContain('EMP-0001');
 });
 
 test('member is forbidden from reports export endpoint', function () {
@@ -194,4 +197,63 @@ test('reports export rejects invalid type', function () {
         ->get('http://'.$organization->slug.'.payrollsaas.test/reports/export?type=invalid');
 
     $response->assertStatus(422);
+});
+
+test('owner can create a payroll run', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createPayrollTenantContextWithRole('owner');
+
+    $response = $this
+        ->actingAs($user)
+        ->post('http://'.$organization->slug.'.payrollsaas.test/payroll/runs', [
+            'period_month' => '2026-05',
+        ]);
+
+    $response->assertRedirect('http://'.$organization->slug.'.payrollsaas.test/payroll');
+
+    Tenancy::initialize($organization);
+
+    expect(PayrollRun::query()->where('period_month', '2026-05')->exists())->toBeTrue();
+});
+
+test('member is forbidden from creating payroll run', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createPayrollTenantContextWithRole('member');
+
+    $response = $this
+        ->actingAs($user)
+        ->post('http://'.$organization->slug.'.payrollsaas.test/payroll/runs', [
+            'period_month' => '2026-05',
+        ]);
+
+    $response->assertForbidden();
+});
+
+test('owner can finalize a payroll run', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createPayrollTenantContextWithRole('owner');
+
+    Tenancy::initialize($organization);
+
+    $run = PayrollRun::query()->create([
+        'period_month' => '2026-05',
+        'period_start' => '2026-05-01',
+        'period_end' => '2026-05-31',
+        'status' => PayrollRun::STATUS_DRAFT,
+        'employee_count' => 0,
+        'total_gross_salary' => 0,
+        'total_deductions' => 0,
+        'total_net_pay' => 0,
+        'settings_snapshot' => ['source' => 'test'],
+        'created_by_user_id' => (string) $user->id,
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->post('http://'.$organization->slug.'.payrollsaas.test/payroll/runs/'.$run->id.'/finalize');
+
+    $response->assertRedirect('http://'.$organization->slug.'.payrollsaas.test/payroll');
+    $response->assertSessionHas('status', 'payroll-run-finalized');
+
+    expect($run->fresh()->status)->toBe(PayrollRun::STATUS_FINALIZED);
 });

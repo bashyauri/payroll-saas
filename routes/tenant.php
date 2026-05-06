@@ -63,6 +63,12 @@ Route::middleware([
         Route::get('payroll', PayrollController::class)
             ->middleware('organization.role:owner,admin')
             ->name('tenant.payroll.index');
+        Route::post('payroll/runs', [PayrollController::class, 'store'])
+            ->middleware('organization.role:owner,admin')
+            ->name('tenant.payroll.runs.store');
+        Route::post('payroll/runs/{payrollRun}/finalize', [PayrollController::class, 'finalize'])
+            ->middleware('organization.role:owner,admin')
+            ->name('tenant.payroll.runs.finalize');
 
         Route::get('reports', ReportsController::class)
             ->middleware('organization.role:owner,admin')

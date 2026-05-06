@@ -2,7 +2,14 @@
     "agents": [
         "copilot"
     ],
-    "herd_mcp": false,
-    "mcp": true,
-    "sail": false
+    "packages": [
+        "spatie/laravel-permission"
+    ],
+    "skills": [
+        "wayfinder-development",
+        "pest-testing",
+        "inertia-react-development",
+        "tailwindcss-development",
+        "laravel-permission-development"
+    ]
 }
