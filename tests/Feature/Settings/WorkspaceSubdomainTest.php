@@ -67,6 +67,11 @@ test('organization owner can update workspace subdomain', function () {
         'tenant_id' => $organization->id,
         'domain' => 'alpha-updated.payroll-saas.test',
     ]);
+
+    $this->assertDatabaseHas('domains', [
+        'tenant_id' => $organization->id,
+        'domain' => 'alpha-org.payrollsaas.test',
+    ]);
 });
 
 test('non-owner cannot update workspace subdomain', function () {
@@ -241,4 +246,61 @@ test('workspace subdomain update works while tenancy is initialized', function (
         'tenant_id' => $organization->id,
         'domain' => 'delta-updated.payroll-saas.test',
     ]);
+});
+
+test('old tenant alias redirects to canonical domain after subdomain change', function () {
+    /** @var TestCase $this */
+    /** @var User $owner */
+    $owner = User::factory()->create();
+
+    $organization = Organization::create([
+        'name' => 'Epsilon Org',
+        'slug' => 'epsilon-org',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+
+    $organization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => 'epsilon-org.payrollsaas.test',
+    ]);
+
+    $organization->users()->attach($owner->id, ['role' => 'owner']);
+
+    $plan = SubscriptionPlan::create([
+        'name' => 'Essential',
+        'slug' => 'essential-workspace-alias-redirect-'.Str::lower(Str::random(8)),
+        'currency' => 'NGN',
+        'price_per_employee' => 800,
+        'billing_period' => 'annual',
+        'min_employees' => 1,
+        'max_employees' => 50,
+        'features' => ['payroll'],
+        'is_active' => true,
+    ]);
+
+    Subscription::create([
+        'organization_id' => $organization->id,
+        'plan_id' => $plan->id,
+        'status' => Subscription::STATUS_ACTIVE,
+        'trial_end_date' => now()->addDays(7),
+        'refund_eligible_until' => now()->addDays(7),
+        'next_billing_date' => now()->addYear(),
+        'paystack_reference' => 'workspace-alias-redirect-ref-'.Str::lower(Str::random(10)),
+        'amount_paid' => 80000,
+        'currency' => 'NGN',
+    ]);
+
+    $this
+        ->actingAs($owner)
+        ->patch('http://epsilon-org.payrollsaas.test/settings/workspace', [
+            'subdomain' => 'epsilon-renamed',
+        ])
+        ->assertRedirect('https://epsilon-renamed.payroll-saas.test/settings/workspace');
+
+    $aliasResponse = $this
+        ->actingAs($owner)
+        ->get('http://epsilon-org.payrollsaas.test/settings/workspace');
+
+    $aliasResponse->assertRedirect('http://epsilon-renamed.payroll-saas.test/settings/workspace');
 });

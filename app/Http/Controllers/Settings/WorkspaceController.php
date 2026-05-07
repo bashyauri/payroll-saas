@@ -52,11 +52,11 @@ class WorkspaceController extends Controller
 
         $organization->update(['slug' => $newSlug]);
 
-        $existingDomain = $organization->domains()->first();
+        $domainAlreadyLinkedToOrganization = $organization->domains()
+            ->where('domain', $newDomain)
+            ->exists();
 
-        if ($existingDomain) {
-            $existingDomain->update(['domain' => $newDomain]);
-        } else {
+        if (! $domainAlreadyLinkedToOrganization) {
             $organization->domains()->create([
                 'id' => (string) Str::ulid(),
                 'domain' => $newDomain,

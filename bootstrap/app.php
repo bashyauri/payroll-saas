@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureUserBelongsToTenantHost;
 use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RedirectTenantAliasToCanonicalDomain;
 use App\Http\Middleware\RequireOrganizationRole;
 use App\Http\Middleware\TrustProxies;
 use Illuminate\Foundation\Application;
@@ -36,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
             DynamicAppUrl::class,
         ], append: [
             EnsureUserBelongsToTenantHost::class,
+            RedirectTenantAliasToCanonicalDomain::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
