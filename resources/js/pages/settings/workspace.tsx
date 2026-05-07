@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import { useState } from 'react';
 import WorkspaceController from '@/actions/App/Http/Controllers/Settings/WorkspaceController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -27,6 +28,8 @@ export default function WorkspaceSettings({
     baseDomain: string;
     organizationName: string | null;
 }) {
+    const [isRedirecting, setIsRedirecting] = useState(false);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Workspace settings" />
@@ -54,10 +57,24 @@ export default function WorkspaceSettings({
                         options={{
                             preserveScroll: true,
                         }}
+                        onSuccess={() => setIsRedirecting(true)}
+                        onError={() => setIsRedirecting(false)}
                         className="space-y-6"
                     >
                         {({ processing, errors }) => (
                             <>
+                                {isRedirecting && (
+                                    <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-100">
+                                        <AlertTitle>
+                                            Workspace URL updated
+                                        </AlertTitle>
+                                        <AlertDescription className="text-emerald-800/90 dark:text-emerald-200/90">
+                                            Saved successfully. Redirecting to
+                                            your new subdomain...
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+
                                 <div className="grid gap-2">
                                     <Label htmlFor="subdomain">Subdomain</Label>
 

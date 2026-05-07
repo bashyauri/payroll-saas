@@ -12,6 +12,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
+use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedOnDomainException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -44,5 +46,25 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (TenantCouldNotBeIdentifiedOnDomainException $exception, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Tenant could not be identified on this domain.',
+                ], 404);
+            }
+
+            $centralDomains = (array) config('tenancy.central_domains', []);
+            $centralDomain = in_array('payroll-saas.test', $centralDomains, true)
+                ? 'payroll-saas.test'
+                : ($centralDomains[0] ?? null);
+
+            if (! is_string($centralDomain) || trim($centralDomain) === '') {
+                return response('Tenant could not be identified on this domain.', 404);
+            }
+
+            $scheme = app()->isProduction() ? 'https' : 'http';
+
+            return redirect()->to("{$scheme}://{$centralDomain}/onboarding/continue")
+                ->with('warning', 'We could not find that workspace URL. Please continue from your current workspace link.');
+        });
     })->create();

@@ -304,3 +304,60 @@ test('old tenant alias redirects to canonical domain after subdomain change', fu
 
     $aliasResponse->assertRedirect('http://epsilon-renamed.payroll-saas.test/settings/workspace');
 });
+
+test('workspace subdomain update returns inertia location redirect to new domain', function () {
+    /** @var TestCase $this */
+    /** @var User $owner */
+    $owner = User::factory()->create();
+
+    $organization = Organization::create([
+        'name' => 'Zeta Org',
+        'slug' => 'zeta-org',
+        'type' => 'organization',
+        'billing_status' => Organization::BILLING_ACTIVE,
+    ]);
+
+    $organization->domains()->create([
+        'id' => (string) Str::ulid(),
+        'domain' => 'zeta-org.payrollsaas.test',
+    ]);
+
+    $organization->users()->attach($owner->id, ['role' => 'owner']);
+
+    $plan = SubscriptionPlan::create([
+        'name' => 'Essential',
+        'slug' => 'essential-workspace-inertia-redirect-'.Str::lower(Str::random(8)),
+        'currency' => 'NGN',
+        'price_per_employee' => 800,
+        'billing_period' => 'annual',
+        'min_employees' => 1,
+        'max_employees' => 50,
+        'features' => ['payroll'],
+        'is_active' => true,
+    ]);
+
+    Subscription::create([
+        'organization_id' => $organization->id,
+        'plan_id' => $plan->id,
+        'status' => Subscription::STATUS_ACTIVE,
+        'trial_end_date' => now()->addDays(7),
+        'refund_eligible_until' => now()->addDays(7),
+        'next_billing_date' => now()->addYear(),
+        'paystack_reference' => 'workspace-inertia-redirect-ref-'.Str::lower(Str::random(10)),
+        'amount_paid' => 80000,
+        'currency' => 'NGN',
+    ]);
+
+    $response = $this
+        ->actingAs($owner)
+        ->withHeaders([
+            'X-Inertia' => 'true',
+            'X-Requested-With' => 'XMLHttpRequest',
+        ])
+        ->patch('http://zeta-org.payrollsaas.test/settings/workspace', [
+            'subdomain' => 'zeta-updated',
+        ]);
+
+    $response->assertStatus(409);
+    $response->assertHeader('X-Inertia-Location', 'https://zeta-updated.payroll-saas.test/settings/workspace');
+});

@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\UpdateSubdomainRequest;
 use App\Models\Organization;
 use App\Models\Subscription;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class WorkspaceController extends Controller
 {
@@ -26,7 +26,7 @@ class WorkspaceController extends Controller
         ]);
     }
 
-    public function update(UpdateSubdomainRequest $request): RedirectResponse
+    public function update(UpdateSubdomainRequest $request): HttpResponse
     {
         $organization = $this->resolveOrganization($request);
 
@@ -64,10 +64,15 @@ class WorkspaceController extends Controller
         }
 
         $scheme = app()->environment('local') ? 'http' : 'https';
+        $targetUrl = $scheme.'://'.$newDomain.'/settings/workspace';
 
         session()->flash('status', 'workspace-subdomain-updated');
 
-        return redirect()->away($scheme.'://'.$newDomain.'/settings/workspace');
+        if ($request->headers->has('X-Inertia')) {
+            return Inertia::location($targetUrl);
+        }
+
+        return redirect()->away($targetUrl);
     }
 
     private function resolveOrganization(Request $request): ?Organization
