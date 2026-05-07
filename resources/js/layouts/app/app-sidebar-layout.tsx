@@ -1,8 +1,8 @@
 import { AppContent } from '@/components/app-content';
-import { GlobalFeedbackBanner } from '@/components/global-feedback-banner';
 import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
+import { GlobalFeedbackBanner } from '@/components/global-feedback-banner';
 import type { AppLayoutProps } from '@/types';
 
 export default function AppSidebarLayout({

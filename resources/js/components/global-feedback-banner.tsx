@@ -90,16 +90,33 @@ export function GlobalFeedbackBanner() {
     return (
         <div className="space-y-3 px-4 pt-4 md:px-6">
             {flash?.success && (
-                <Alert>
+                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-100">
                     <AlertTitle>Success</AlertTitle>
-                    <AlertDescription>{flash.success}</AlertDescription>
+                    <AlertDescription className="text-emerald-800/90 dark:text-emerald-200/90">
+                        {flash.success}
+                    </AlertDescription>
                 </Alert>
             )}
 
             {statusPayload && (
-                <Alert variant={statusPayload.variant}>
+                <Alert
+                    variant={statusPayload.variant}
+                    className={
+                        statusPayload.variant === 'destructive'
+                            ? 'border-red-200 bg-red-50 text-red-900 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-100'
+                            : 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-100'
+                    }
+                >
                     <AlertTitle>{statusPayload.title}</AlertTitle>
-                    <AlertDescription>{statusPayload.message}</AlertDescription>
+                    <AlertDescription
+                        className={
+                            statusPayload.variant === 'destructive'
+                                ? 'text-red-800/90 dark:text-red-200/90'
+                                : 'text-emerald-800/90 dark:text-emerald-200/90'
+                        }
+                    >
+                        {statusPayload.message}
+                    </AlertDescription>
                 </Alert>
             )}
 
@@ -113,23 +130,35 @@ export function GlobalFeedbackBanner() {
             )}
 
             {flash?.warning && (
-                <Alert>
+                <Alert className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-100">
                     <AlertTitle>Warning</AlertTitle>
-                    <AlertDescription>{flash.warning}</AlertDescription>
+                    <AlertDescription className="text-amber-800/90 dark:text-amber-200/90">
+                        {flash.warning}
+                    </AlertDescription>
                 </Alert>
             )}
 
             {flash?.error && (
-                <Alert variant="destructive">
+                <Alert
+                    variant="destructive"
+                    className="border-red-200 bg-red-50 text-red-900 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-100"
+                >
                     <AlertTitle>Request failed</AlertTitle>
-                    <AlertDescription>{flash.error}</AlertDescription>
+                    <AlertDescription className="text-red-800/90 dark:text-red-200/90">
+                        {flash.error}
+                    </AlertDescription>
                 </Alert>
             )}
 
             {firstValidationError && (
-                <Alert variant="destructive">
+                <Alert
+                    variant="destructive"
+                    className="border-red-200 bg-red-50 text-red-900 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-100"
+                >
                     <AlertTitle>Validation failed</AlertTitle>
-                    <AlertDescription>{firstValidationError}</AlertDescription>
+                    <AlertDescription className="text-red-800/90 dark:text-red-200/90">
+                        {firstValidationError}
+                    </AlertDescription>
                 </Alert>
             )}
         </div>
