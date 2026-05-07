@@ -71,9 +71,7 @@ class HandleInertiaRequests extends Middleware
             ], true)
             : false;
 
-        $canViewDashboard = $user && $resolvedOrganization
-            ? $user->organizations()->whereKey($resolvedOrganization->id)->exists()
-            : false;
+        $canViewDashboard = $user !== null && $organizationRole !== null;
 
         $canAddEmployee = $resolvedOrganization
             ? $isOwnerAdminOrHr && ! $isReadOnly
