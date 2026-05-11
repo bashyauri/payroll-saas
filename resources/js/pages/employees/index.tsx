@@ -176,6 +176,12 @@ export default function EmployeesIndex({
                                             >
                                                 View details
                                             </Link>
+                                            <Link
+                                                href={`/employees/${employee.id}/edit`}
+                                                className="mt-1 ml-3 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
+                                            >
+                                                Edit
+                                            </Link>
                                         </div>
                                         <Badge
                                             variant="secondary"

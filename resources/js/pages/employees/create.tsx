@@ -1,4 +1,4 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -15,19 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { plans as billingPlans } from '@/routes/billing';
-import { create, index, store } from '@/routes/tenant/employees';
+import { create, index } from '@/routes/tenant/employees';
 import type { BreadcrumbItem } from '@/types';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Employees',
-        href: index(),
-    },
-    {
-        title: 'Add employee',
-        href: create(),
-    },
-];
 
 export default function CreateEmployee({
     employeeCount,
@@ -38,6 +27,7 @@ export default function CreateEmployee({
     payrollRates,
     salaryComputation,
     enabledDeductions,
+    employee,
 }: {
     employeeCount: number;
     employeeLimit: number | null;
@@ -63,7 +53,70 @@ export default function CreateEmployee({
         nhfContributionBase: 'basic' | 'gross';
     };
     enabledDeductions: string[];
+    employee: null | {
+        id: string;
+        employee_number: string;
+        first_name: string;
+        last_name: string;
+        middle_name: string | null;
+        work_email: string | null;
+        phone: string | null;
+        nin: string | null;
+        bvn: string | null;
+        tax_identification_number: string | null;
+        pension_pin: string | null;
+        pfa_name: string | null;
+        nhis_number: string | null;
+        nhf_number: string | null;
+        bank_name: string;
+        bank_account_name: string;
+        bank_account_number: string;
+        monthly_gross_salary: number;
+        annual_gross_salary: number | null;
+        monthly_tax_deduction: number;
+        apply_paye_deduction: boolean;
+        monthly_pension_deduction: number;
+        apply_pension_deduction: boolean;
+        monthly_nhf_deduction: number;
+        apply_nhf_deduction: boolean;
+        other_monthly_deductions: number;
+        other_allowance_1: number | null;
+        other_allowance_2: number | null;
+        total_salary: number | null;
+        personal_life_insurance: number | null;
+        rent_relief: number | null;
+        custom_items: Array<{
+            label: string;
+            category: 'allowance' | 'deduction';
+            rate: number;
+            value: number;
+        }>;
+        department: string | null;
+        job_title: string | null;
+        location: string | null;
+        date_of_birth: string | null;
+        employment_type:
+            | 'full_time'
+            | 'part_time'
+            | 'contract'
+            | 'temporary'
+            | 'intern';
+        hire_date: string | null;
+        exit_date: string | null;
+        status: 'active' | 'inactive';
+    };
 }) {
+    const isEditMode = employee !== null;
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: 'Employees',
+            href: index(),
+        },
+        {
+            title: isEditMode ? 'Edit employee' : 'Add employee',
+            href: isEditMode ? `/employees/${employee.id}/edit` : create(),
+        },
+    ];
     const hasPension = enabledDeductions.includes('pension');
     const hasNhf = enabledDeductions.includes('nhf');
     const hasNhis = enabledDeductions.includes('nhis');
@@ -76,18 +129,34 @@ export default function CreateEmployee({
     const [salaryEntryMode, setSalaryEntryMode] = useState<
         'gross' | 'salary_elements'
     >(salaryComputation.salaryInputMode ?? 'gross');
-    const [grossSalary, setGrossSalary] = useState('');
+    const [grossSalary, setGrossSalary] = useState(
+        employee?.monthly_gross_salary?.toString() ?? '',
+    );
     const [basicSalary, setBasicSalary] = useState('');
     const [housingAllowance, setHousingAllowance] = useState('');
     const [transportAllowance, setTransportAllowance] = useState('');
-    const [otherAllowanceOne, setOtherAllowanceOne] = useState('');
-    const [otherAllowanceTwo, setOtherAllowanceTwo] = useState('');
-    const [pensionDeduction, setPensionDeduction] = useState('');
-    const [nhfDeduction, setNhfDeduction] = useState('');
+    const [otherAllowanceOne, setOtherAllowanceOne] = useState(
+        employee?.other_allowance_1?.toString() ?? '',
+    );
+    const [otherAllowanceTwo, setOtherAllowanceTwo] = useState(
+        employee?.other_allowance_2?.toString() ?? '',
+    );
+    const [pensionDeduction, setPensionDeduction] = useState(
+        employee?.monthly_pension_deduction?.toString() ?? '',
+    );
+    const [nhfDeduction, setNhfDeduction] = useState(
+        employee?.monthly_nhf_deduction?.toString() ?? '',
+    );
     const [nhisDeduction, setNhisDeduction] = useState('');
-    const [applyPayeDeduction, setApplyPayeDeduction] = useState(true);
-    const [applyPensionDeduction, setApplyPensionDeduction] = useState(true);
-    const [applyNhfDeduction, setApplyNhfDeduction] = useState(true);
+    const [applyPayeDeduction, setApplyPayeDeduction] = useState(
+        employee?.apply_paye_deduction ?? true,
+    );
+    const [applyPensionDeduction, setApplyPensionDeduction] = useState(
+        employee?.apply_pension_deduction ?? true,
+    );
+    const [applyNhfDeduction, setApplyNhfDeduction] = useState(
+        employee?.apply_nhf_deduction ?? true,
+    );
 
     function calcFromGross(gross: string) {
         const value = parseFloat(gross);
@@ -150,13 +219,28 @@ export default function CreateEmployee({
         (field) => field.category !== 'allowance',
     );
 
+    const resolveCustomItemValue = (
+        label: string,
+        category: 'allowance' | 'deduction',
+    ): string => {
+        if (!employee) {
+            return '';
+        }
+
+        const matchedItem = employee.custom_items.find(
+            (item) => item.label === label && item.category === category,
+        );
+
+        return matchedItem ? String(matchedItem.value) : '';
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Add employee" />
+            <Head title={isEditMode ? 'Edit employee' : 'Add employee'} />
 
             <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 p-4 md:p-6">
                 <Heading
-                    title="Add employee"
+                    title={isEditMode ? 'Edit employee' : 'Add employee'}
                     description="Capture payroll-ready employee data including Nigerian identifiers, bank details, salary, and deductions."
                 />
 
@@ -196,7 +280,10 @@ export default function CreateEmployee({
                 )}
 
                 <Form
-                    {...store.form()}
+                    action={
+                        isEditMode ? `/employees/${employee.id}` : '/employees'
+                    }
+                    method={isEditMode ? 'patch' : 'post'}
                     options={{ preserveScroll: true }}
                     className="space-y-6"
                 >
@@ -224,6 +311,9 @@ export default function CreateEmployee({
                                             name="employee_number"
                                             required
                                             placeholder="EMP-0001"
+                                            defaultValue={
+                                                employee?.employee_number ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.employee_number}
@@ -238,6 +328,9 @@ export default function CreateEmployee({
                                             name="first_name"
                                             required
                                             placeholder="Amina"
+                                            defaultValue={
+                                                employee?.first_name ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.first_name}
@@ -252,6 +345,9 @@ export default function CreateEmployee({
                                             name="last_name"
                                             required
                                             placeholder="Yusuf"
+                                            defaultValue={
+                                                employee?.last_name ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.last_name}
@@ -265,6 +361,9 @@ export default function CreateEmployee({
                                             id="middle_name"
                                             name="middle_name"
                                             placeholder="Optional"
+                                            defaultValue={
+                                                employee?.middle_name ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.middle_name}
@@ -279,6 +378,9 @@ export default function CreateEmployee({
                                             name="work_email"
                                             type="email"
                                             placeholder="employee@company.com"
+                                            defaultValue={
+                                                employee?.work_email ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.work_email}
@@ -290,6 +392,7 @@ export default function CreateEmployee({
                                             id="phone"
                                             name="phone"
                                             placeholder="08012345678"
+                                            defaultValue={employee?.phone ?? ''}
                                         />
                                         <InputError message={errors.phone} />
                                     </div>
@@ -300,6 +403,7 @@ export default function CreateEmployee({
                                             name="nin"
                                             inputMode="numeric"
                                             placeholder="11 digits"
+                                            defaultValue={employee?.nin ?? ''}
                                         />
                                         <InputError message={errors.nin} />
                                     </div>
@@ -310,6 +414,7 @@ export default function CreateEmployee({
                                             name="bvn"
                                             inputMode="numeric"
                                             placeholder="11 digits"
+                                            defaultValue={employee?.bvn ?? ''}
                                         />
                                         <InputError message={errors.bvn} />
                                     </div>
@@ -321,6 +426,10 @@ export default function CreateEmployee({
                                             id="tax_identification_number"
                                             name="tax_identification_number"
                                             placeholder="Optional"
+                                            defaultValue={
+                                                employee?.tax_identification_number ??
+                                                ''
+                                            }
                                         />
                                         <InputError
                                             message={
@@ -336,6 +445,9 @@ export default function CreateEmployee({
                                             id="pension_pin"
                                             name="pension_pin"
                                             placeholder="Optional"
+                                            defaultValue={
+                                                employee?.pension_pin ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.pension_pin}
@@ -347,6 +459,9 @@ export default function CreateEmployee({
                                             id="pfa_name"
                                             name="pfa_name"
                                             placeholder="Optional"
+                                            defaultValue={
+                                                employee?.pfa_name ?? ''
+                                            }
                                         />
                                         <InputError message={errors.pfa_name} />
                                     </div>
@@ -358,6 +473,9 @@ export default function CreateEmployee({
                                             id="nhis_number"
                                             name="nhis_number"
                                             placeholder="Optional"
+                                            defaultValue={
+                                                employee?.nhis_number ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.nhis_number}
@@ -371,6 +489,9 @@ export default function CreateEmployee({
                                             id="nhf_number"
                                             name="nhf_number"
                                             placeholder="Optional"
+                                            defaultValue={
+                                                employee?.nhf_number ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.nhf_number}
@@ -398,6 +519,9 @@ export default function CreateEmployee({
                                             name="bank_name"
                                             required
                                             placeholder="Access Bank"
+                                            defaultValue={
+                                                employee?.bank_name ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.bank_name}
@@ -412,6 +536,10 @@ export default function CreateEmployee({
                                             name="bank_account_name"
                                             required
                                             placeholder="Amina Yusuf"
+                                            defaultValue={
+                                                employee?.bank_account_name ??
+                                                ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.bank_account_name}
@@ -427,6 +555,10 @@ export default function CreateEmployee({
                                             required
                                             inputMode="numeric"
                                             placeholder="10 digits"
+                                            defaultValue={
+                                                employee?.bank_account_number ??
+                                                ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.bank_account_number}
@@ -740,6 +872,10 @@ export default function CreateEmployee({
                                             name="annual_gross_salary"
                                             inputMode="decimal"
                                             placeholder="Optional"
+                                            defaultValue={
+                                                employee?.annual_gross_salary ??
+                                                ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.annual_gross_salary}
@@ -771,11 +907,19 @@ export default function CreateEmployee({
                                                 name="monthly_tax_deduction"
                                                 inputMode="decimal"
                                                 defaultValue={
-                                                    applyPayeDeduction
-                                                        ? '0'
-                                                        : '0'
+                                                    employee?.monthly_tax_deduction ??
+                                                    0
                                                 }
                                                 disabled={!applyPayeDeduction}
+                                            />
+                                            <input
+                                                type="hidden"
+                                                name="apply_paye_deduction"
+                                                value={
+                                                    applyPayeDeduction
+                                                        ? '1'
+                                                        : '0'
+                                                }
                                             />
                                             {!applyPayeDeduction && (
                                                 <input
@@ -856,6 +1000,15 @@ export default function CreateEmployee({
                                                     value="0"
                                                 />
                                             )}
+                                            <input
+                                                type="hidden"
+                                                name="apply_pension_deduction"
+                                                value={
+                                                    applyPensionDeduction
+                                                        ? '1'
+                                                        : '0'
+                                                }
+                                            />
                                             <InputError
                                                 message={
                                                     errors.monthly_pension_deduction
@@ -920,6 +1073,15 @@ export default function CreateEmployee({
                                                     value="0"
                                                 />
                                             )}
+                                            <input
+                                                type="hidden"
+                                                name="apply_nhf_deduction"
+                                                value={
+                                                    applyNhfDeduction
+                                                        ? '1'
+                                                        : '0'
+                                                }
+                                            />
                                             <InputError
                                                 message={
                                                     errors.monthly_nhf_deduction
@@ -955,7 +1117,10 @@ export default function CreateEmployee({
                                             id="other_monthly_deductions"
                                             name="other_monthly_deductions"
                                             inputMode="decimal"
-                                            defaultValue="0"
+                                            defaultValue={
+                                                employee?.other_monthly_deductions ??
+                                                0
+                                            }
                                         />
                                         {grossSalary &&
                                             (hasNhis || hasNsitf) && (
@@ -1007,6 +1172,9 @@ export default function CreateEmployee({
                                             name="total_salary"
                                             inputMode="decimal"
                                             placeholder="Optional"
+                                            defaultValue={
+                                                employee?.total_salary ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.total_salary}
@@ -1021,6 +1189,10 @@ export default function CreateEmployee({
                                             name="personal_life_insurance"
                                             inputMode="decimal"
                                             placeholder="Optional"
+                                            defaultValue={
+                                                employee?.personal_life_insurance ??
+                                                ''
+                                            }
                                         />
                                         <InputError
                                             message={
@@ -1037,6 +1209,9 @@ export default function CreateEmployee({
                                             name="rent_relief"
                                             inputMode="decimal"
                                             placeholder="Optional"
+                                            defaultValue={
+                                                employee?.rent_relief ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.rent_relief}
@@ -1075,6 +1250,10 @@ export default function CreateEmployee({
                                                     name={`custom_items[${index}][value]`}
                                                     inputMode="decimal"
                                                     placeholder="Optional"
+                                                    defaultValue={resolveCustomItemValue(
+                                                        field.label,
+                                                        'allowance',
+                                                    )}
                                                 />
                                                 <InputError
                                                     message={
@@ -1129,6 +1308,10 @@ export default function CreateEmployee({
                                                         name={`custom_items[${index}][value]`}
                                                         inputMode="decimal"
                                                         placeholder="Optional"
+                                                        defaultValue={resolveCustomItemValue(
+                                                            field.label,
+                                                            'deduction',
+                                                        )}
                                                     />
                                                     <InputError
                                                         message={
@@ -1159,6 +1342,9 @@ export default function CreateEmployee({
                                             id="department"
                                             name="department"
                                             placeholder="Finance"
+                                            defaultValue={
+                                                employee?.department ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.department}
@@ -1172,6 +1358,9 @@ export default function CreateEmployee({
                                             id="job_title"
                                             name="job_title"
                                             placeholder="Payroll Officer"
+                                            defaultValue={
+                                                employee?.job_title ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.job_title}
@@ -1185,6 +1374,9 @@ export default function CreateEmployee({
                                             id="location"
                                             name="location"
                                             placeholder="Optional"
+                                            defaultValue={
+                                                employee?.location ?? ''
+                                            }
                                         />
                                         <InputError message={errors.location} />
                                     </div>
@@ -1196,6 +1388,9 @@ export default function CreateEmployee({
                                             id="date_of_birth"
                                             name="date_of_birth"
                                             type="date"
+                                            defaultValue={
+                                                employee?.date_of_birth ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.date_of_birth}
@@ -1208,7 +1403,10 @@ export default function CreateEmployee({
                                         <select
                                             id="employment_type"
                                             name="employment_type"
-                                            defaultValue="full_time"
+                                            defaultValue={
+                                                employee?.employment_type ??
+                                                'full_time'
+                                            }
                                             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
                                         >
                                             <option value="full_time">
@@ -1236,7 +1434,9 @@ export default function CreateEmployee({
                                         <select
                                             id="status"
                                             name="status"
-                                            defaultValue="active"
+                                            defaultValue={
+                                                employee?.status ?? 'active'
+                                            }
                                             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
                                         >
                                             <option value="active">
@@ -1256,6 +1456,9 @@ export default function CreateEmployee({
                                             id="hire_date"
                                             name="hire_date"
                                             type="date"
+                                            defaultValue={
+                                                employee?.hire_date ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.hire_date}
@@ -1269,6 +1472,9 @@ export default function CreateEmployee({
                                             id="exit_date"
                                             name="exit_date"
                                             type="date"
+                                            defaultValue={
+                                                employee?.exit_date ?? ''
+                                            }
                                         />
                                         <InputError
                                             message={errors.exit_date}
@@ -1279,9 +1485,14 @@ export default function CreateEmployee({
 
                             <div className="flex items-center gap-3">
                                 <Button
-                                    disabled={processing || !canCreateEmployee}
+                                    disabled={
+                                        processing ||
+                                        (!isEditMode && !canCreateEmployee)
+                                    }
                                 >
-                                    Save employee
+                                    {isEditMode
+                                        ? 'Save changes'
+                                        : 'Save employee'}
                                 </Button>
                                 <Button asChild variant="outline">
                                     <Link href={index()}>Cancel</Link>

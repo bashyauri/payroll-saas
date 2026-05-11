@@ -227,10 +227,12 @@ test('tenant users can add employees within plan limit', function () {
         [
             'label' => 'Union Dues',
             'category' => 'deduction',
-            'rate' => 3.0,
-            'value' => 3500.0,
+            'rate' => 3,
+            'value' => 3500,
         ],
     ]);
+    expect(Employee::query()->firstOrFail()->pfa_name)->toBe('Leadway Pensure');
+    expect((string) Employee::query()->firstOrFail()->annual_gross_salary)->toBe('3000000.00');
 });
 
 test('employee creation is blocked when plan limit is reached', function () {
@@ -306,8 +308,98 @@ test('organization member cannot create employees', function () {
     Tenancy::initialize($organization);
     expect(Employee::query()->count('*'))->toBe(0);
 });
-expect(Employee::query()->firstOrFail()->pfa_name)->toBe('Leadway Pensure');
-expect((string) Employee::query()->firstOrFail()->annual_gross_salary)->toBe('3000000.00');
+
+test('owner can view employee edit page', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContext();
+
+    Tenancy::initialize($organization);
+    $employee = Employee::query()->create([
+        'employee_number' => 'EMP-0210',
+        'first_name' => 'Hauwa',
+        'last_name' => 'Garba',
+        'bank_name' => 'GTBank',
+        'bank_account_name' => 'Hauwa Garba',
+        'bank_account_number' => '1234567890',
+        'monthly_gross_salary' => 200000,
+        'apply_paye_deduction' => true,
+        'apply_pension_deduction' => true,
+        'apply_nhf_deduction' => true,
+        'employment_type' => 'full_time',
+        'status' => 'active',
+    ]);
+    Tenancy::end();
+
+    $response = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/employees/'.$employee->id.'/edit');
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('employees/create')
+        ->where('employee.id', $employee->id)
+        ->where('employee.employee_number', 'EMP-0210')
+        ->where('employee.apply_pension_deduction', true)
+    );
+});
+
+test('owner can update employee and deduction toggles persist with zeroed deductions when disabled', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContext();
+
+    Tenancy::initialize($organization);
+    $employee = Employee::query()->create([
+        'employee_number' => 'EMP-0211',
+        'first_name' => 'Bello',
+        'last_name' => 'Lawal',
+        'bank_name' => 'UBA',
+        'bank_account_name' => 'Bello Lawal',
+        'bank_account_number' => '1234567890',
+        'monthly_gross_salary' => 180000,
+        'monthly_tax_deduction' => 9000,
+        'monthly_pension_deduction' => 14400,
+        'monthly_nhf_deduction' => 4500,
+        'apply_paye_deduction' => true,
+        'apply_pension_deduction' => true,
+        'apply_nhf_deduction' => true,
+        'employment_type' => 'full_time',
+        'status' => 'active',
+    ]);
+    Tenancy::end();
+
+    $response = $this
+        ->actingAs($user)
+        ->patch('http://'.$organization->slug.'.payrollsaas.test/employees/'.$employee->id, [
+            'employee_number' => 'EMP-0211',
+            'first_name' => 'Bello',
+            'last_name' => 'Lawal',
+            'bank_name' => 'UBA',
+            'bank_account_name' => 'Bello Lawal',
+            'bank_account_number' => '1234567890',
+            'monthly_gross_salary' => '180000',
+            'monthly_tax_deduction' => '9000',
+            'apply_paye_deduction' => false,
+            'monthly_pension_deduction' => '14400',
+            'apply_pension_deduction' => true,
+            'monthly_nhf_deduction' => '4500',
+            'apply_nhf_deduction' => false,
+            'other_monthly_deductions' => '1000',
+            'employment_type' => 'full_time',
+            'status' => 'active',
+        ]);
+
+    $response->assertRedirect('http://'.$organization->slug.'.payrollsaas.test/employees/'.$employee->id);
+
+    Tenancy::initialize($organization);
+    $employee->refresh();
+
+    expect($employee->apply_paye_deduction)->toBeFalse();
+    expect($employee->apply_pension_deduction)->toBeTrue();
+    expect($employee->apply_nhf_deduction)->toBeFalse();
+    expect((float) $employee->monthly_tax_deduction)->toBe(0.0);
+    expect((float) $employee->monthly_pension_deduction)->toBe(14400.0);
+    expect((float) $employee->monthly_nhf_deduction)->toBe(0.0);
+});
 
 test('organization member cannot view employees listing', function () {
     /** @var TestCase $this */

@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests\Tenant;
 
+use App\Models\Employee;
 use App\Models\OrganizationUser;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class StoreEmployeeRequest extends FormRequest
+class UpdateEmployeeRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -39,15 +41,18 @@ class StoreEmployeeRequest extends FormRequest
      */
     public function rules(): array
     {
+        /** @var Employee $employee */
+        $employee = $this->route('employee');
+
         return [
-            'employee_number' => ['required', 'string', 'max:50', 'unique:employees,employee_number'],
+            'employee_number' => ['required', 'string', 'max:50', Rule::unique('employees', 'employee_number')->ignore($employee->id)],
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'middle_name' => ['nullable', 'string', 'max:100'],
-            'work_email' => ['nullable', 'email', 'max:150', 'unique:employees,work_email'],
+            'work_email' => ['nullable', 'email', 'max:150', Rule::unique('employees', 'work_email')->ignore($employee->id)],
             'phone' => ['nullable', 'string', 'max:20'],
-            'nin' => ['nullable', 'digits:11', 'unique:employees,nin'],
-            'bvn' => ['nullable', 'digits:11', 'unique:employees,bvn'],
+            'nin' => ['nullable', 'digits:11', Rule::unique('employees', 'nin')->ignore($employee->id)],
+            'bvn' => ['nullable', 'digits:11', Rule::unique('employees', 'bvn')->ignore($employee->id)],
             'tax_identification_number' => ['nullable', 'string', 'max:50'],
             'pension_pin' => ['nullable', 'string', 'max:50'],
             'pfa_name' => ['nullable', 'string', 'max:150'],

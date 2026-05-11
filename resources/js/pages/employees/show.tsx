@@ -70,8 +70,10 @@ function formatMoney(amount: string | number): string {
 
 export default function EmployeeShow({
     employee,
+    status,
 }: {
     employee: EmployeeDetail;
+    status: string | null;
 }) {
     const fullName = [
         employee.firstName,
@@ -112,13 +114,28 @@ export default function EmployeeShow({
                 </div>
 
                 <div>
-                    <Button asChild variant="outline" size="sm">
-                        <Link href={index()}>
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to employees
-                        </Link>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button asChild variant="outline" size="sm">
+                            <Link href={index()}>
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Back to employees
+                            </Link>
+                        </Button>
+                        <Button asChild size="sm">
+                            <Link href={`/employees/${employee.id}/edit`}>
+                                Edit employee
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
+
+                {status === 'employee-updated' && (
+                    <Card className="border-emerald-200 bg-emerald-50/40 dark:border-emerald-700 dark:bg-emerald-950/20">
+                        <CardContent className="pt-6 text-sm text-emerald-900 dark:text-emerald-100">
+                            Employee record updated successfully.
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card>
                     <CardHeader>

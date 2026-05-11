@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\StoreEmployeeRequest;
+use App\Http\Requests\Tenant\UpdateEmployeeRequest;
 use App\Models\Employee;
 use App\Models\Organization;
 use App\Services\Employee\EmployeeLimitService;
@@ -61,27 +62,67 @@ class EmployeeController extends Controller
         $settings = $this->settingsResolver->resolve(now(), 'default');
 
         return Inertia::render('employees/create', [
-            'employeeCount' => $employeeUsage['employeeCount'],
-            'employeeLimit' => $employeeUsage['employeeLimit'],
-            'remainingSlots' => $employeeUsage['remainingSlots'],
-            'canCreateEmployee' => ! $employeeUsage['isAtEmployeeLimit'],
-            'payrollCustomFields' => $this->configuredPayrollCustomFields($settings['other_items'] ?? null),
-            'payrollRates' => [
-                'pensionEmployeeRate' => (float) ($settings['pension_employee_rate'] ?? 8),
-                'nhfRate' => (float) ($settings['nhf_rate'] ?? 2.5),
-                'nhisEmployeeRate' => (float) ($settings['nhis_employee_rate'] ?? 1.75),
-                'nsitfRate' => (float) ($settings['nsitf_rate'] ?? 1),
+            ...$this->employeeFormProps($employeeUsage, $settings),
+            'employee' => null,
+        ]);
+    }
+
+    public function edit(Employee $employee): Response
+    {
+        $organization = $this->resolveOrganization();
+        $employeeUsage = $this->employeeLimitService->usage($organization);
+        $settings = $this->settingsResolver->resolve(now(), 'default');
+
+        return Inertia::render('employees/create', [
+            ...$this->employeeFormProps($employeeUsage, $settings),
+            'employee' => [
+                'id' => $employee->id,
+                'employee_number' => $employee->employee_number,
+                'first_name' => $employee->first_name,
+                'last_name' => $employee->last_name,
+                'middle_name' => $employee->middle_name,
+                'work_email' => $employee->work_email,
+                'phone' => $employee->phone,
+                'nin' => $employee->nin,
+                'bvn' => $employee->bvn,
+                'tax_identification_number' => $employee->tax_identification_number,
+                'pension_pin' => $employee->pension_pin,
+                'pfa_name' => $employee->pfa_name,
+                'nhis_number' => $employee->nhis_number,
+                'nhf_number' => $employee->nhf_number,
+                'bank_name' => $employee->bank_name,
+                'bank_account_name' => $employee->bank_account_name,
+                'bank_account_number' => $employee->bank_account_number,
+                'monthly_gross_salary' => (float) $employee->monthly_gross_salary,
+                'annual_gross_salary' => $employee->annual_gross_salary !== null ? (float) $employee->annual_gross_salary : null,
+                'monthly_tax_deduction' => (float) $employee->monthly_tax_deduction,
+                'apply_paye_deduction' => (bool) ($employee->apply_paye_deduction ?? true),
+                'monthly_pension_deduction' => (float) $employee->monthly_pension_deduction,
+                'apply_pension_deduction' => (bool) ($employee->apply_pension_deduction ?? true),
+                'monthly_nhf_deduction' => (float) $employee->monthly_nhf_deduction,
+                'apply_nhf_deduction' => (bool) ($employee->apply_nhf_deduction ?? true),
+                'other_monthly_deductions' => (float) $employee->other_monthly_deductions,
+                'other_allowance_1' => $employee->other_allowance_1 !== null ? (float) $employee->other_allowance_1 : null,
+                'other_allowance_2' => $employee->other_allowance_2 !== null ? (float) $employee->other_allowance_2 : null,
+                'total_salary' => $employee->total_salary !== null ? (float) $employee->total_salary : null,
+                'personal_life_insurance' => $employee->personal_life_insurance !== null ? (float) $employee->personal_life_insurance : null,
+                'rent_relief' => $employee->rent_relief !== null ? (float) $employee->rent_relief : null,
+                'custom_items' => $this->storedEmployeeCustomItems($employee->custom_items),
+                'department' => $employee->department,
+                'job_title' => $employee->job_title,
+                'location' => $employee->location,
+                'date_of_birth' => $employee->date_of_birth instanceof DateTimeInterface
+                    ? $employee->date_of_birth->format('Y-m-d')
+                    : null,
+                'employment_type' => $employee->employment_type,
+                'hire_date' => $employee->hire_date instanceof DateTimeInterface
+                    ? $employee->hire_date->format('Y-m-d')
+                    : null,
+                'exit_date' => $employee->exit_date instanceof DateTimeInterface
+                    ? $employee->exit_date->format('Y-m-d')
+                    : null,
+                'status' => $employee->status,
             ],
-            'salaryComputation' => [
-                'salaryInputMode' => (string) ($settings['salary_input_mode'] ?? EffectivePayrollSettingsResolver::DEFAULT_SALARY_INPUT_MODE),
-                'basicSalaryPercentage' => (float) ($settings['basic_salary_percentage'] ?? 50),
-                'housingAllowancePercentage' => (float) ($settings['housing_allowance_percentage'] ?? 20),
-                'transportAllowancePercentage' => (float) ($settings['transport_allowance_percentage'] ?? 10),
-                'pensionContributionBase' => (string) ($settings['pension_contribution_base'] ?? EffectivePayrollSettingsResolver::DEFAULT_PENSION_CONTRIBUTION_BASE),
-                'nhfContributionBase' => (string) ($settings['nhf_contribution_base'] ?? EffectivePayrollSettingsResolver::DEFAULT_NHF_CONTRIBUTION_BASE),
-            ],
-            'enabledDeductions' => $settings['enabled_deductions'] ?? ['pension', 'nhf', 'nhis', 'nsitf', 'paye'],
-            'status' => session('status'),
         ]);
     }
 
@@ -133,6 +174,7 @@ class EmployeeController extends Controller
                     : null,
                 'status' => $employee->status,
             ],
+            'status' => session('status'),
         ]);
     }
 
@@ -148,6 +190,7 @@ class EmployeeController extends Controller
         }
 
         $validated = $request->validated();
+        $validated = $this->applyDeductionToggleOverrides($validated);
         $validated['custom_items'] = $this->storedEmployeeCustomItems($validated['custom_items'] ?? null);
 
         Employee::query()->create($validated);
@@ -157,12 +200,82 @@ class EmployeeController extends Controller
             ->with('status', 'employee-created');
     }
 
+    public function update(UpdateEmployeeRequest $request, Employee $employee): RedirectResponse
+    {
+        $validated = $request->validated();
+        $validated = $this->applyDeductionToggleOverrides($validated);
+        $validated['custom_items'] = $this->storedEmployeeCustomItems($validated['custom_items'] ?? null);
+
+        $employee->update($validated);
+
+        return redirect()
+            ->route('tenant.employees.show', $employee)
+            ->with('status', 'employee-updated');
+    }
+
     private function resolveOrganization(): Organization
     {
         /** @var Organization $organization */
         $organization = tenant();
 
         return $organization;
+    }
+
+    /**
+     * @param  array<string, mixed>  $employeeUsage
+     * @param  array<string, mixed>  $settings
+     * @return array<string, mixed>
+     */
+    private function employeeFormProps(array $employeeUsage, array $settings): array
+    {
+        return [
+            'employeeCount' => $employeeUsage['employeeCount'],
+            'employeeLimit' => $employeeUsage['employeeLimit'],
+            'remainingSlots' => $employeeUsage['remainingSlots'],
+            'canCreateEmployee' => ! $employeeUsage['isAtEmployeeLimit'],
+            'payrollCustomFields' => $this->configuredPayrollCustomFields($settings['other_items'] ?? null),
+            'payrollRates' => [
+                'pensionEmployeeRate' => (float) ($settings['pension_employee_rate'] ?? 8),
+                'nhfRate' => (float) ($settings['nhf_rate'] ?? 2.5),
+                'nhisEmployeeRate' => (float) ($settings['nhis_employee_rate'] ?? 1.75),
+                'nsitfRate' => (float) ($settings['nsitf_rate'] ?? 1),
+            ],
+            'salaryComputation' => [
+                'salaryInputMode' => (string) ($settings['salary_input_mode'] ?? EffectivePayrollSettingsResolver::DEFAULT_SALARY_INPUT_MODE),
+                'basicSalaryPercentage' => (float) ($settings['basic_salary_percentage'] ?? 50),
+                'housingAllowancePercentage' => (float) ($settings['housing_allowance_percentage'] ?? 20),
+                'transportAllowancePercentage' => (float) ($settings['transport_allowance_percentage'] ?? 10),
+                'pensionContributionBase' => (string) ($settings['pension_contribution_base'] ?? EffectivePayrollSettingsResolver::DEFAULT_PENSION_CONTRIBUTION_BASE),
+                'nhfContributionBase' => (string) ($settings['nhf_contribution_base'] ?? EffectivePayrollSettingsResolver::DEFAULT_NHF_CONTRIBUTION_BASE),
+            ],
+            'enabledDeductions' => $settings['enabled_deductions'] ?? ['pension', 'nhf', 'nhis', 'nsitf', 'paye'],
+            'status' => session('status'),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function applyDeductionToggleOverrides(array $payload): array
+    {
+        $payload['apply_paye_deduction'] = (bool) ($payload['apply_paye_deduction'] ?? true);
+        $payload['apply_pension_deduction'] = (bool) ($payload['apply_pension_deduction'] ?? true);
+        $payload['apply_nhf_deduction'] = (bool) ($payload['apply_nhf_deduction'] ?? true);
+
+        if (! $payload['apply_paye_deduction']) {
+            $payload['monthly_tax_deduction'] = 0;
+        }
+
+        if (! $payload['apply_pension_deduction']) {
+            $payload['monthly_pension_deduction'] = 0;
+        }
+
+        if (! $payload['apply_nhf_deduction']) {
+            $payload['monthly_nhf_deduction'] = 0;
+        }
+
+        return $payload;
     }
 
     /**

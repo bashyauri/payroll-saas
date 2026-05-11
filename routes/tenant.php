@@ -45,6 +45,12 @@ Route::middleware([
         Route::get('employees/{employee}', [EmployeeController::class, 'show'])
             ->middleware('organization.role:owner,admin,hr')
             ->name('tenant.employees.show');
+        Route::get('employees/{employee}/edit', [EmployeeController::class, 'edit'])
+            ->middleware('organization.role:owner,admin,hr')
+            ->name('tenant.employees.edit');
+        Route::patch('employees/{employee}', [EmployeeController::class, 'update'])
+            ->middleware('organization.role:owner,admin,hr')
+            ->name('tenant.employees.update');
 
         Route::get('settings/workspace', [WorkspaceController::class, 'edit'])
             ->middleware('organization.role:owner,admin')
