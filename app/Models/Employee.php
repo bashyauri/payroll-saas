@@ -32,6 +32,7 @@ class Employee extends Model
         'bank_account_number',
         'monthly_gross_salary',
         'annual_gross_salary',
+        'salary_input_mode',
         'monthly_tax_deduction',
         'apply_paye_deduction',
         'monthly_pension_deduction',
@@ -58,6 +59,7 @@ class Employee extends Model
     protected $casts = [
         'monthly_gross_salary' => 'decimal:2',
         'annual_gross_salary' => 'decimal:2',
+        'salary_input_mode' => 'string',
         'monthly_tax_deduction' => 'decimal:2',
         'apply_paye_deduction' => 'boolean',
         'monthly_pension_deduction' => 'decimal:2',

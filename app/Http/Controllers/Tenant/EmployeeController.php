@@ -95,6 +95,7 @@ class EmployeeController extends Controller
                 'bank_account_number' => $employee->bank_account_number,
                 'monthly_gross_salary' => (float) $employee->monthly_gross_salary,
                 'annual_gross_salary' => $employee->annual_gross_salary !== null ? (float) $employee->annual_gross_salary : null,
+                'salary_input_mode' => $employee->salary_input_mode,
                 'monthly_tax_deduction' => (float) $employee->monthly_tax_deduction,
                 'apply_paye_deduction' => (bool) ($employee->apply_paye_deduction ?? true),
                 'monthly_pension_deduction' => (float) $employee->monthly_pension_deduction,

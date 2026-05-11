@@ -73,6 +73,7 @@ export default function CreateEmployee({
         bank_account_number: string;
         monthly_gross_salary: number;
         annual_gross_salary: number | null;
+        salary_input_mode: string | null;
         monthly_tax_deduction: number;
         apply_paye_deduction: boolean;
         monthly_pension_deduction: number;
@@ -128,7 +129,14 @@ export default function CreateEmployee({
     const isOrganizationAdmin = auth?.organizationRole === 'admin';
     const [salaryEntryMode, setSalaryEntryMode] = useState<
         'gross' | 'salary_elements'
-    >(salaryComputation.salaryInputMode ?? 'gross');
+    >(
+        (employee?.salary_input_mode as 'gross' | 'salary_elements') ??
+            salaryComputation.salaryInputMode ??
+            'gross',
+    );
+    const [overrideSalaryMode, setOverrideSalaryMode] = useState(
+        isEditMode && employee?.salary_input_mode ? true : false,
+    );
     const [grossSalary, setGrossSalary] = useState(
         employee?.monthly_gross_salary?.toString() ?? '',
     );
@@ -580,17 +588,57 @@ export default function CreateEmployee({
                                 </CardHeader>
                                 <CardContent className="grid gap-4 md:grid-cols-2">
                                     <div className="grid gap-2 md:col-span-2">
-                                        <Label>Salary entry mode</Label>
+                                        <div className="flex items-center justify-between">
+                                            <Label>Salary entry mode</Label>
+                                            {isEditMode && (
+                                                <label className="flex items-center gap-2 text-sm">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={
+                                                            overrideSalaryMode
+                                                        }
+                                                        onChange={(e) =>
+                                                            setOverrideSalaryMode(
+                                                                e.target
+                                                                    .checked,
+                                                            )
+                                                        }
+                                                        className="rounded"
+                                                    />
+                                                    <span>
+                                                        Override org setting
+                                                    </span>
+                                                </label>
+                                            )}
+                                        </div>
+                                        {!overrideSalaryMode && isEditMode && (
+                                            <p className="text-sm text-muted-foreground">
+                                                Using org-wide setting:{' '}
+                                                {salaryComputation.salaryInputMode ===
+                                                'salary_elements'
+                                                    ? 'Salary elements'
+                                                    : 'Monthly/annual gross'}
+                                            </p>
+                                        )}
                                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                             <button
                                                 type="button"
                                                 onClick={() =>
                                                     setSalaryEntryMode('gross')
                                                 }
-                                                className={`rounded-lg border p-3 text-left ${
+                                                disabled={
+                                                    !overrideSalaryMode &&
+                                                    isEditMode
+                                                }
+                                                className={`rounded-lg border p-3 text-left transition-colors ${
                                                     salaryEntryMode === 'gross'
                                                         ? 'border-primary bg-primary/5'
                                                         : 'border-border'
+                                                } ${
+                                                    !overrideSalaryMode &&
+                                                    isEditMode
+                                                        ? 'opacity-50'
+                                                        : ''
                                                 }`}
                                             >
                                                 <p className="text-sm font-medium">
@@ -604,11 +652,20 @@ export default function CreateEmployee({
                                                         'salary_elements',
                                                     )
                                                 }
-                                                className={`rounded-lg border p-3 text-left ${
+                                                disabled={
+                                                    !overrideSalaryMode &&
+                                                    isEditMode
+                                                }
+                                                className={`rounded-lg border p-3 text-left transition-colors ${
                                                     salaryEntryMode ===
                                                     'salary_elements'
                                                         ? 'border-primary bg-primary/5'
                                                         : 'border-border'
+                                                } ${
+                                                    !overrideSalaryMode &&
+                                                    isEditMode
+                                                        ? 'opacity-50'
+                                                        : ''
                                                 }`}
                                             >
                                                 <p className="text-sm font-medium">
@@ -616,6 +673,13 @@ export default function CreateEmployee({
                                                 </p>
                                             </button>
                                         </div>
+                                        {overrideSalaryMode && (
+                                            <input
+                                                type="hidden"
+                                                name="salary_input_mode"
+                                                value={salaryEntryMode}
+                                            />
+                                        )}
                                     </div>
 
                                     {salaryEntryMode === 'salary_elements' && (

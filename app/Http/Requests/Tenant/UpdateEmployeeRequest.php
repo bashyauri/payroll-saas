@@ -63,6 +63,7 @@ class UpdateEmployeeRequest extends FormRequest
             'bank_account_number' => ['required', 'digits:10'],
             'monthly_gross_salary' => ['required', 'numeric', 'min:0'],
             'annual_gross_salary' => ['nullable', 'numeric', 'min:0'],
+            'salary_input_mode' => ['nullable', 'string', 'in:gross,salary_elements'],
             'monthly_tax_deduction' => ['nullable', 'numeric', 'min:0'],
             'apply_paye_deduction' => ['nullable', 'boolean'],
             'monthly_pension_deduction' => ['nullable', 'numeric', 'min:0'],
