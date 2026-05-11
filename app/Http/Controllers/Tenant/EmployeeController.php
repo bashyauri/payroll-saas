@@ -72,6 +72,14 @@ class EmployeeController extends Controller
                 'nhisEmployeeRate' => (float) ($settings['nhis_employee_rate'] ?? 1.75),
                 'nsitfRate' => (float) ($settings['nsitf_rate'] ?? 1),
             ],
+            'salaryComputation' => [
+                'salaryInputMode' => (string) ($settings['salary_input_mode'] ?? EffectivePayrollSettingsResolver::DEFAULT_SALARY_INPUT_MODE),
+                'basicSalaryPercentage' => (float) ($settings['basic_salary_percentage'] ?? 50),
+                'housingAllowancePercentage' => (float) ($settings['housing_allowance_percentage'] ?? 20),
+                'transportAllowancePercentage' => (float) ($settings['transport_allowance_percentage'] ?? 10),
+                'pensionContributionBase' => (string) ($settings['pension_contribution_base'] ?? EffectivePayrollSettingsResolver::DEFAULT_PENSION_CONTRIBUTION_BASE),
+                'nhfContributionBase' => (string) ($settings['nhf_contribution_base'] ?? EffectivePayrollSettingsResolver::DEFAULT_NHF_CONTRIBUTION_BASE),
+            ],
             'enabledDeductions' => $settings['enabled_deductions'] ?? ['pension', 'nhf', 'nhis', 'nsitf', 'paye'],
             'status' => session('status'),
         ]);
@@ -158,7 +166,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * @return array<int, array{label: string, rate: float}>
+     * @return array<int, array{label: string, category: string, rate: float}>
      */
     private function configuredPayrollCustomFields(mixed $otherItems): array
     {
@@ -169,8 +177,11 @@ class EmployeeController extends Controller
         return collect($otherItems)
             ->filter(fn (mixed $item): bool => is_array($item))
             ->map(function (array $item): array {
+                $category = (string) ($item['category'] ?? 'deduction');
+
                 return [
                     'label' => trim((string) ($item['label'] ?? '')),
+                    'category' => in_array($category, ['allowance', 'deduction'], true) ? $category : 'deduction',
                     'rate' => (float) ($item['rate'] ?? 0),
                 ];
             })
@@ -180,7 +191,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * @return array<int, array{label: string, rate: float, value: float}>
+     * @return array<int, array{label: string, category: string, rate: float, value: float}>
      */
     private function storedEmployeeCustomItems(mixed $customItems): array
     {
@@ -191,8 +202,11 @@ class EmployeeController extends Controller
         return collect($customItems)
             ->filter(fn (mixed $item): bool => is_array($item))
             ->map(function (array $item): array {
+                $category = (string) ($item['category'] ?? 'deduction');
+
                 return [
                     'label' => trim((string) ($item['label'] ?? '')),
+                    'category' => in_array($category, ['allowance', 'deduction'], true) ? $category : 'deduction',
                     'rate' => (float) ($item['rate'] ?? 0),
                     'value' => (float) ($item['value'] ?? 0),
                 ];

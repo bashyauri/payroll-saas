@@ -11,6 +11,26 @@ class EffectivePayrollSettingsResolver
     /** @var list<string> */
     private const DEFAULT_ENABLED_DEDUCTIONS = ['pension', 'nhf', 'nhis', 'nsitf', 'paye'];
 
+    public const DEFAULT_SALARY_INPUT_MODE = 'gross';
+
+    public const DEFAULT_PENSION_EMPLOYEE_RATE = 8.0;
+
+    public const DEFAULT_PENSION_EMPLOYER_RATE = 10.0;
+
+    public const DEFAULT_NHF_RATE = 2.5;
+
+    public const DEFAULT_NHIS_EMPLOYEE_RATE = 5.0;
+
+    public const DEFAULT_NHIS_EMPLOYER_RATE = 10.0;
+
+    public const DEFAULT_NSITF_RATE = 1.0;
+
+    public const DEFAULT_USE_STATUTORY_DEFAULT_RATES = true;
+
+    public const DEFAULT_PENSION_CONTRIBUTION_BASE = 'basic_transport_housing';
+
+    public const DEFAULT_NHF_CONTRIBUTION_BASE = 'basic';
+
     /**
      * @return array<string, mixed>
      */
@@ -36,19 +56,25 @@ class EffectivePayrollSettingsResolver
             'housing_allowance_percentage' => (float) ($settings?->housing_allowance_percentage ?? 20),
             'transport_allowance_percentage' => (float) ($settings?->transport_allowance_percentage ?? 10),
             'other_allowance_percentage' => (float) ($settings?->other_allowance_percentage ?? 20),
-            'pension_employee_rate' => (float) ($settings?->pension_employee_rate ?? 8),
-            'pension_employer_rate' => (float) ($settings?->pension_employer_rate ?? 10),
-            'nhf_rate' => (float) ($settings?->nhf_rate ?? 2.5),
-            'nhis_employee_rate' => (float) ($settings?->nhis_employee_rate ?? 5),
-            'nhis_employer_rate' => (float) ($settings?->nhis_employer_rate ?? 10),
-            'nsitf_rate' => (float) ($settings?->nsitf_rate ?? 1),
+            'salary_input_mode' => (string) ($settings?->salary_input_mode ?? self::DEFAULT_SALARY_INPUT_MODE),
+            'pension_employee_rate' => (float) ($settings?->pension_employee_rate ?? self::DEFAULT_PENSION_EMPLOYEE_RATE),
+            'pension_employer_rate' => (float) ($settings?->pension_employer_rate ?? self::DEFAULT_PENSION_EMPLOYER_RATE),
+            'pension_contribution_base' => (string) ($settings?->pension_contribution_base ?? self::DEFAULT_PENSION_CONTRIBUTION_BASE),
+            'nhf_rate' => (float) ($settings?->nhf_rate ?? self::DEFAULT_NHF_RATE),
+            'nhf_contribution_base' => (string) ($settings?->nhf_contribution_base ?? self::DEFAULT_NHF_CONTRIBUTION_BASE),
+            'nhis_employee_rate' => (float) ($settings?->nhis_employee_rate ?? self::DEFAULT_NHIS_EMPLOYEE_RATE),
+            'nhis_employer_rate' => (float) ($settings?->nhis_employer_rate ?? self::DEFAULT_NHIS_EMPLOYER_RATE),
+            'nsitf_rate' => (float) ($settings?->nsitf_rate ?? self::DEFAULT_NSITF_RATE),
+            'use_statutory_default_rates' => (bool) ($settings?->use_statutory_default_rates ?? self::DEFAULT_USE_STATUTORY_DEFAULT_RATES),
             'other_items' => is_array($settings?->other_items) ? $settings->other_items : [],
             'enabled_deductions' => is_array($settings?->enabled_deductions)
                 ? $settings->enabled_deductions
                 : self::DEFAULT_ENABLED_DEDUCTIONS,
             'payroll_type' => $settings?->payroll_type ?? null,
             'payroll_month' => $settings?->payroll_month ?? null,
-            'report_date' => $settings?->report_date?->toDateString() ?? null,
+            'report_date' => $settings?->report_date !== null
+                ? substr((string) $settings->getRawOriginal('report_date'), 0, 10)
+                : null,
             'project_name' => $settings?->project_name ?? null,
             'employer_tax_id' => $settings?->employer_tax_id ?? null,
             'employer_pension_id' => $settings?->employer_pension_id ?? null,
@@ -66,12 +92,16 @@ class EffectivePayrollSettingsResolver
             'housing_allowance_percentage' => (float) ($snapshot['housing_allowance_percentage'] ?? 20),
             'transport_allowance_percentage' => (float) ($snapshot['transport_allowance_percentage'] ?? 10),
             'other_allowance_percentage' => (float) ($snapshot['other_allowance_percentage'] ?? 20),
-            'pension_employee_rate' => (float) ($snapshot['pension_employee_rate'] ?? 8),
-            'pension_employer_rate' => (float) ($snapshot['pension_employer_rate'] ?? 10),
-            'nhf_rate' => (float) ($snapshot['nhf_rate'] ?? 2.5),
-            'nhis_employee_rate' => (float) ($snapshot['nhis_employee_rate'] ?? 5),
-            'nhis_employer_rate' => (float) ($snapshot['nhis_employer_rate'] ?? 10),
-            'nsitf_rate' => (float) ($snapshot['nsitf_rate'] ?? 1),
+            'salary_input_mode' => (string) ($snapshot['salary_input_mode'] ?? self::DEFAULT_SALARY_INPUT_MODE),
+            'pension_employee_rate' => (float) ($snapshot['pension_employee_rate'] ?? self::DEFAULT_PENSION_EMPLOYEE_RATE),
+            'pension_employer_rate' => (float) ($snapshot['pension_employer_rate'] ?? self::DEFAULT_PENSION_EMPLOYER_RATE),
+            'pension_contribution_base' => (string) ($snapshot['pension_contribution_base'] ?? self::DEFAULT_PENSION_CONTRIBUTION_BASE),
+            'nhf_rate' => (float) ($snapshot['nhf_rate'] ?? self::DEFAULT_NHF_RATE),
+            'nhf_contribution_base' => (string) ($snapshot['nhf_contribution_base'] ?? self::DEFAULT_NHF_CONTRIBUTION_BASE),
+            'nhis_employee_rate' => (float) ($snapshot['nhis_employee_rate'] ?? self::DEFAULT_NHIS_EMPLOYEE_RATE),
+            'nhis_employer_rate' => (float) ($snapshot['nhis_employer_rate'] ?? self::DEFAULT_NHIS_EMPLOYER_RATE),
+            'nsitf_rate' => (float) ($snapshot['nsitf_rate'] ?? self::DEFAULT_NSITF_RATE),
+            'use_statutory_default_rates' => (bool) ($snapshot['use_statutory_default_rates'] ?? self::DEFAULT_USE_STATUTORY_DEFAULT_RATES),
             'other_items' => is_array($snapshot['other_items'] ?? null)
                 ? $snapshot['other_items']
                 : [],

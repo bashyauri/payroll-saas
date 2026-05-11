@@ -36,18 +36,31 @@ export default function CreateEmployee({
     canCreateEmployee,
     payrollCustomFields,
     payrollRates,
+    salaryComputation,
     enabledDeductions,
 }: {
     employeeCount: number;
     employeeLimit: number | null;
     remainingSlots: number | null;
     canCreateEmployee: boolean;
-    payrollCustomFields: Array<{ label: string; rate: number }>;
+    payrollCustomFields: Array<{
+        label: string;
+        category: 'allowance' | 'deduction';
+        rate: number;
+    }>;
     payrollRates: {
         pensionEmployeeRate: number;
         nhfRate: number;
         nhisEmployeeRate: number;
         nsitfRate: number;
+    };
+    salaryComputation: {
+        salaryInputMode: 'gross' | 'salary_elements';
+        basicSalaryPercentage: number;
+        housingAllowancePercentage: number;
+        transportAllowancePercentage: number;
+        pensionContributionBase: 'basic' | 'basic_transport_housing';
+        nhfContributionBase: 'basic' | 'gross';
     };
     enabledDeductions: string[];
 }) {
@@ -56,23 +69,67 @@ export default function CreateEmployee({
     const hasNhis = enabledDeductions.includes('nhis');
     const hasNsitf = enabledDeductions.includes('nsitf');
     const hasPaye = enabledDeductions.includes('paye');
+    const { auth } = usePage().props as {
+        auth?: { organizationRole?: string | null };
+    };
+    const isOrganizationAdmin = auth?.organizationRole === 'admin';
+    const [salaryEntryMode, setSalaryEntryMode] = useState<
+        'gross' | 'salary_elements'
+    >(salaryComputation.salaryInputMode ?? 'gross');
     const [grossSalary, setGrossSalary] = useState('');
+    const [basicSalary, setBasicSalary] = useState('');
+    const [housingAllowance, setHousingAllowance] = useState('');
+    const [transportAllowance, setTransportAllowance] = useState('');
+    const [otherAllowanceOne, setOtherAllowanceOne] = useState('');
+    const [otherAllowanceTwo, setOtherAllowanceTwo] = useState('');
     const [pensionDeduction, setPensionDeduction] = useState('');
     const [nhfDeduction, setNhfDeduction] = useState('');
     const [nhisDeduction, setNhisDeduction] = useState('');
+    const [applyPayeDeduction, setApplyPayeDeduction] = useState(true);
+    const [applyPensionDeduction, setApplyPensionDeduction] = useState(true);
+    const [applyNhfDeduction, setApplyNhfDeduction] = useState(true);
 
     function calcFromGross(gross: string) {
         const value = parseFloat(gross);
         if (!isNaN(value) && value > 0) {
+            const basic =
+                salaryEntryMode === 'salary_elements'
+                    ? parseFloat(basicSalary || '0')
+                    : (value * salaryComputation.basicSalaryPercentage) / 100;
+
+            const transport =
+                salaryEntryMode === 'salary_elements'
+                    ? parseFloat(transportAllowance || '0')
+                    : (value * salaryComputation.transportAllowancePercentage) /
+                      100;
+
+            const housing =
+                salaryEntryMode === 'salary_elements'
+                    ? parseFloat(housingAllowance || '0')
+                    : (value * salaryComputation.housingAllowancePercentage) /
+                      100;
+
+            const pensionBase =
+                salaryComputation.pensionContributionBase ===
+                'basic_transport_housing'
+                    ? basic + transport + housing
+                    : basic;
+
+            const nhfBase =
+                salaryComputation.nhfContributionBase === 'gross'
+                    ? value
+                    : basic;
+
             if (hasPension)
                 setPensionDeduction(
-                    ((value * payrollRates.pensionEmployeeRate) / 100).toFixed(
-                        2,
-                    ),
+                    (
+                        (pensionBase * payrollRates.pensionEmployeeRate) /
+                        100
+                    ).toFixed(2),
                 );
             if (hasNhf)
                 setNhfDeduction(
-                    ((value * payrollRates.nhfRate) / 100).toFixed(2),
+                    ((nhfBase * payrollRates.nhfRate) / 100).toFixed(2),
                 );
             if (hasNhis)
                 setNhisDeduction(
@@ -84,6 +141,14 @@ export default function CreateEmployee({
             setNhisDeduction('');
         }
     }
+
+    const allowanceCustomFields = payrollCustomFields.filter(
+        (field) => field.category === 'allowance',
+    );
+
+    const deductionCustomFields = payrollCustomFields.filter(
+        (field) => field.category !== 'allowance',
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -376,11 +441,263 @@ export default function CreateEmployee({
                                         Salary and deductions
                                     </CardTitle>
                                     <CardDescription>
-                                        Gross salary plus recurring monthly
+                                        Capture salary as gross or salary
+                                        elements, then apply recurring monthly
                                         deductions.
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="grid gap-4 md:grid-cols-2">
+                                    <div className="grid gap-2 md:col-span-2">
+                                        <Label>Salary entry mode</Label>
+                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setSalaryEntryMode('gross')
+                                                }
+                                                className={`rounded-lg border p-3 text-left ${
+                                                    salaryEntryMode === 'gross'
+                                                        ? 'border-primary bg-primary/5'
+                                                        : 'border-border'
+                                                }`}
+                                            >
+                                                <p className="text-sm font-medium">
+                                                    Monthly/annual gross
+                                                </p>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setSalaryEntryMode(
+                                                        'salary_elements',
+                                                    )
+                                                }
+                                                className={`rounded-lg border p-3 text-left ${
+                                                    salaryEntryMode ===
+                                                    'salary_elements'
+                                                        ? 'border-primary bg-primary/5'
+                                                        : 'border-border'
+                                                }`}
+                                            >
+                                                <p className="text-sm font-medium">
+                                                    Salary elements
+                                                </p>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {salaryEntryMode === 'salary_elements' && (
+                                        <>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="salary_element_basic">
+                                                    Basic salary
+                                                </Label>
+                                                <Input
+                                                    id="salary_element_basic"
+                                                    inputMode="decimal"
+                                                    value={basicSalary}
+                                                    onChange={(e) => {
+                                                        setBasicSalary(
+                                                            e.target.value,
+                                                        );
+                                                        calcFromGross(
+                                                            (
+                                                                (parseFloat(
+                                                                    e.target
+                                                                        .value ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    housingAllowance ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    transportAllowance ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    otherAllowanceOne ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    otherAllowanceTwo ||
+                                                                        '0',
+                                                                ) || 0)
+                                                            ).toString(),
+                                                        );
+                                                    }}
+                                                    placeholder="150000"
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="salary_element_housing">
+                                                    Housing allowance
+                                                </Label>
+                                                <Input
+                                                    id="salary_element_housing"
+                                                    inputMode="decimal"
+                                                    value={housingAllowance}
+                                                    onChange={(e) => {
+                                                        setHousingAllowance(
+                                                            e.target.value,
+                                                        );
+                                                        calcFromGross(
+                                                            (
+                                                                (parseFloat(
+                                                                    basicSalary ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    e.target
+                                                                        .value ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    transportAllowance ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    otherAllowanceOne ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    otherAllowanceTwo ||
+                                                                        '0',
+                                                                ) || 0)
+                                                            ).toString(),
+                                                        );
+                                                    }}
+                                                    placeholder="50000"
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="salary_element_transport">
+                                                    Transport allowance
+                                                </Label>
+                                                <Input
+                                                    id="salary_element_transport"
+                                                    inputMode="decimal"
+                                                    value={transportAllowance}
+                                                    onChange={(e) => {
+                                                        setTransportAllowance(
+                                                            e.target.value,
+                                                        );
+                                                        calcFromGross(
+                                                            (
+                                                                (parseFloat(
+                                                                    basicSalary ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    housingAllowance ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    e.target
+                                                                        .value ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    otherAllowanceOne ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    otherAllowanceTwo ||
+                                                                        '0',
+                                                                ) || 0)
+                                                            ).toString(),
+                                                        );
+                                                    }}
+                                                    placeholder="30000"
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="other_allowance_1">
+                                                    Additional income 1
+                                                </Label>
+                                                <Input
+                                                    id="other_allowance_1"
+                                                    name="other_allowance_1"
+                                                    inputMode="decimal"
+                                                    value={otherAllowanceOne}
+                                                    onChange={(e) => {
+                                                        setOtherAllowanceOne(
+                                                            e.target.value,
+                                                        );
+                                                        calcFromGross(
+                                                            (
+                                                                (parseFloat(
+                                                                    basicSalary ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    housingAllowance ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    transportAllowance ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    e.target
+                                                                        .value ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    otherAllowanceTwo ||
+                                                                        '0',
+                                                                ) || 0)
+                                                            ).toString(),
+                                                        );
+                                                    }}
+                                                    placeholder="Optional"
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="other_allowance_2">
+                                                    Additional income 2
+                                                </Label>
+                                                <Input
+                                                    id="other_allowance_2"
+                                                    name="other_allowance_2"
+                                                    inputMode="decimal"
+                                                    value={otherAllowanceTwo}
+                                                    onChange={(e) => {
+                                                        setOtherAllowanceTwo(
+                                                            e.target.value,
+                                                        );
+                                                        calcFromGross(
+                                                            (
+                                                                (parseFloat(
+                                                                    basicSalary ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    housingAllowance ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    transportAllowance ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    otherAllowanceOne ||
+                                                                        '0',
+                                                                ) || 0) +
+                                                                (parseFloat(
+                                                                    e.target
+                                                                        .value ||
+                                                                        '0',
+                                                                ) || 0)
+                                                            ).toString(),
+                                                        );
+                                                    }}
+                                                    placeholder="Optional"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
                                     <div className="grid gap-2">
                                         <Label htmlFor="monthly_gross_salary">
                                             Monthly gross salary
@@ -392,11 +709,22 @@ export default function CreateEmployee({
                                             inputMode="decimal"
                                             placeholder="250000"
                                             value={grossSalary}
+                                            readOnly={
+                                                salaryEntryMode ===
+                                                'salary_elements'
+                                            }
                                             onChange={(e) => {
                                                 setGrossSalary(e.target.value);
                                                 calcFromGross(e.target.value);
                                             }}
                                         />
+                                        {salaryEntryMode ===
+                                            'salary_elements' && (
+                                            <p className="text-xs text-muted-foreground">
+                                                Auto-calculated from salary
+                                                elements.
+                                            </p>
+                                        )}
                                         <InputError
                                             message={
                                                 errors.monthly_gross_salary
@@ -419,6 +747,22 @@ export default function CreateEmployee({
                                     </div>
                                     {hasPaye && (
                                         <div className="grid gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <Checkbox
+                                                    id="apply_paye_deduction"
+                                                    checked={applyPayeDeduction}
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) =>
+                                                        setApplyPayeDeduction(
+                                                            checked === true,
+                                                        )
+                                                    }
+                                                />
+                                                <Label htmlFor="apply_paye_deduction">
+                                                    Apply PAYE for this employee
+                                                </Label>
+                                            </div>
                                             <Label htmlFor="monthly_tax_deduction">
                                                 Monthly PAYE deduction
                                             </Label>
@@ -426,8 +770,20 @@ export default function CreateEmployee({
                                                 id="monthly_tax_deduction"
                                                 name="monthly_tax_deduction"
                                                 inputMode="decimal"
-                                                defaultValue="0"
+                                                defaultValue={
+                                                    applyPayeDeduction
+                                                        ? '0'
+                                                        : '0'
+                                                }
+                                                disabled={!applyPayeDeduction}
                                             />
+                                            {!applyPayeDeduction && (
+                                                <input
+                                                    type="hidden"
+                                                    name="monthly_tax_deduction"
+                                                    value="0"
+                                                />
+                                            )}
                                             <InputError
                                                 message={
                                                     errors.monthly_tax_deduction
@@ -437,6 +793,32 @@ export default function CreateEmployee({
                                     )}
                                     {hasPension && (
                                         <div className="grid gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <Checkbox
+                                                    id="apply_pension_deduction"
+                                                    checked={
+                                                        applyPensionDeduction
+                                                    }
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) => {
+                                                        const shouldApply =
+                                                            checked === true;
+                                                        setApplyPensionDeduction(
+                                                            shouldApply,
+                                                        );
+                                                        if (!shouldApply) {
+                                                            setPensionDeduction(
+                                                                '0',
+                                                            );
+                                                        }
+                                                    }}
+                                                />
+                                                <Label htmlFor="apply_pension_deduction">
+                                                    Apply pension for this
+                                                    employee
+                                                </Label>
+                                            </div>
                                             <Label htmlFor="monthly_pension_deduction">
                                                 Monthly pension deduction
                                             </Label>
@@ -445,20 +827,35 @@ export default function CreateEmployee({
                                                 name="monthly_pension_deduction"
                                                 inputMode="decimal"
                                                 value={pensionDeduction}
+                                                disabled={
+                                                    !applyPensionDeduction
+                                                }
                                                 onChange={(e) =>
                                                     setPensionDeduction(
                                                         e.target.value,
                                                     )
                                                 }
-                                                placeholder={`${payrollRates.pensionEmployeeRate}% of gross`}
+                                                placeholder={`${payrollRates.pensionEmployeeRate}% by selected base`}
                                             />
                                             <p className="text-xs text-muted-foreground">
                                                 Auto-calculated at{' '}
                                                 {
                                                     payrollRates.pensionEmployeeRate
                                                 }
-                                                % of gross — override if needed
+                                                % of{' '}
+                                                {salaryComputation.pensionContributionBase ===
+                                                'basic_transport_housing'
+                                                    ? 'basic + transport + housing'
+                                                    : 'basic salary'}{' '}
+                                                — override if needed
                                             </p>
+                                            {!applyPensionDeduction && (
+                                                <input
+                                                    type="hidden"
+                                                    name="monthly_pension_deduction"
+                                                    value="0"
+                                                />
+                                            )}
                                             <InputError
                                                 message={
                                                     errors.monthly_pension_deduction
@@ -468,6 +865,29 @@ export default function CreateEmployee({
                                     )}
                                     {hasNhf && (
                                         <div className="grid gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <Checkbox
+                                                    id="apply_nhf_deduction"
+                                                    checked={applyNhfDeduction}
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) => {
+                                                        const shouldApply =
+                                                            checked === true;
+                                                        setApplyNhfDeduction(
+                                                            shouldApply,
+                                                        );
+                                                        if (!shouldApply) {
+                                                            setNhfDeduction(
+                                                                '0',
+                                                            );
+                                                        }
+                                                    }}
+                                                />
+                                                <Label htmlFor="apply_nhf_deduction">
+                                                    Apply NHF for this employee
+                                                </Label>
+                                            </div>
                                             <Label htmlFor="monthly_nhf_deduction">
                                                 Monthly NHF deduction
                                             </Label>
@@ -476,18 +896,30 @@ export default function CreateEmployee({
                                                 name="monthly_nhf_deduction"
                                                 inputMode="decimal"
                                                 value={nhfDeduction}
+                                                disabled={!applyNhfDeduction}
                                                 onChange={(e) =>
                                                     setNhfDeduction(
                                                         e.target.value,
                                                     )
                                                 }
-                                                placeholder={`${payrollRates.nhfRate}% of gross`}
+                                                placeholder={`${payrollRates.nhfRate}% by selected base`}
                                             />
                                             <p className="text-xs text-muted-foreground">
                                                 Auto-calculated at{' '}
-                                                {payrollRates.nhfRate}% of gross
+                                                {payrollRates.nhfRate}% of{' '}
+                                                {salaryComputation.nhfContributionBase ===
+                                                'gross'
+                                                    ? 'gross salary'
+                                                    : 'basic salary'}{' '}
                                                 — override if needed
                                             </p>
+                                            {!applyNhfDeduction && (
+                                                <input
+                                                    type="hidden"
+                                                    name="monthly_nhf_deduction"
+                                                    value="0"
+                                                />
+                                            )}
                                             <InputError
                                                 message={
                                                     errors.monthly_nhf_deduction
@@ -495,6 +927,26 @@ export default function CreateEmployee({
                                             />
                                         </div>
                                     )}
+                                    {isOrganizationAdmin &&
+                                        (!applyPayeDeduction ||
+                                            !applyPensionDeduction ||
+                                            !applyNhfDeduction) && (
+                                            <div className="md:col-span-2">
+                                                <Alert className="border-amber-200 bg-amber-50 text-amber-900">
+                                                    <AlertTitle>
+                                                        Admin warning
+                                                    </AlertTitle>
+                                                    <AlertDescription>
+                                                        You disabled one or more
+                                                        statutory deductions for
+                                                        this employee. Confirm
+                                                        this override complies
+                                                        with your organization
+                                                        policy.
+                                                    </AlertDescription>
+                                                </Alert>
+                                            </div>
+                                        )}
                                     <div className="grid gap-2 md:col-span-2">
                                         <Label htmlFor="other_monthly_deductions">
                                             Other monthly deductions
@@ -591,42 +1043,104 @@ export default function CreateEmployee({
                                         />
                                     </div>
 
-                                    {payrollCustomFields.map((field, index) => (
-                                        <div
-                                            key={`${field.label}-${index}`}
-                                            className="grid gap-2 md:col-span-2"
-                                        >
-                                            <Label
-                                                htmlFor={`custom_items_${index}_value`}
+                                    {allowanceCustomFields.map(
+                                        (field, index) => (
+                                            <div
+                                                key={`allowance-${field.label}-${index}`}
+                                                className="grid gap-2 md:col-span-2"
                                             >
-                                                {field.label} ({field.rate}%
-                                                default)
-                                            </Label>
-                                            <input
-                                                type="hidden"
-                                                name={`custom_items[${index}][label]`}
-                                                defaultValue={field.label}
-                                            />
-                                            <input
-                                                type="hidden"
-                                                name={`custom_items[${index}][rate]`}
-                                                defaultValue={field.rate}
-                                            />
-                                            <Input
-                                                id={`custom_items_${index}_value`}
-                                                name={`custom_items[${index}][value]`}
-                                                inputMode="decimal"
-                                                placeholder="Optional"
-                                            />
-                                            <InputError
-                                                message={
-                                                    errors[
-                                                        `custom_items.${index}.value`
-                                                    ]
-                                                }
-                                            />
-                                        </div>
-                                    ))}
+                                                <Label
+                                                    htmlFor={`allowance_custom_items_${index}_value`}
+                                                >
+                                                    {field.label} (allowance,{' '}
+                                                    {field.rate}% default)
+                                                </Label>
+                                                <input
+                                                    type="hidden"
+                                                    name={`custom_items[${index}][label]`}
+                                                    defaultValue={field.label}
+                                                />
+                                                <input
+                                                    type="hidden"
+                                                    name={`custom_items[${index}][category]`}
+                                                    defaultValue="allowance"
+                                                />
+                                                <input
+                                                    type="hidden"
+                                                    name={`custom_items[${index}][rate]`}
+                                                    defaultValue={field.rate}
+                                                />
+                                                <Input
+                                                    id={`allowance_custom_items_${index}_value`}
+                                                    name={`custom_items[${index}][value]`}
+                                                    inputMode="decimal"
+                                                    placeholder="Optional"
+                                                />
+                                                <InputError
+                                                    message={
+                                                        errors[
+                                                            `custom_items.${index}.value`
+                                                        ]
+                                                    }
+                                                />
+                                            </div>
+                                        ),
+                                    )}
+
+                                    {deductionCustomFields.map(
+                                        (field, fieldIndex) => {
+                                            const index =
+                                                allowanceCustomFields.length +
+                                                fieldIndex;
+
+                                            return (
+                                                <div
+                                                    key={`deduction-${field.label}-${fieldIndex}`}
+                                                    className="grid gap-2 md:col-span-2"
+                                                >
+                                                    <Label
+                                                        htmlFor={`deduction_custom_items_${fieldIndex}_value`}
+                                                    >
+                                                        {field.label}{' '}
+                                                        (deduction, {field.rate}
+                                                        % default)
+                                                    </Label>
+                                                    <input
+                                                        type="hidden"
+                                                        name={`custom_items[${index}][label]`}
+                                                        defaultValue={
+                                                            field.label
+                                                        }
+                                                    />
+                                                    <input
+                                                        type="hidden"
+                                                        name={`custom_items[${index}][category]`}
+                                                        defaultValue="deduction"
+                                                    />
+                                                    <input
+                                                        type="hidden"
+                                                        name={`custom_items[${index}][rate]`}
+                                                        defaultValue={
+                                                            field.rate
+                                                        }
+                                                    />
+                                                    <Input
+                                                        id={`deduction_custom_items_${fieldIndex}_value`}
+                                                        name={`custom_items[${index}][value]`}
+                                                        inputMode="decimal"
+                                                        placeholder="Optional"
+                                                    />
+                                                    <InputError
+                                                        message={
+                                                            errors[
+                                                                `custom_items.${index}.value`
+                                                            ]
+                                                        }
+                                                    />
+                                                </div>
+                                            );
+                                        },
+                                    )}
                                 </CardContent>
                             </Card>
 

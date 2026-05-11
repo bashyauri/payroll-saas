@@ -85,16 +85,20 @@ function validPayrollSettingsPayload(array $overrides = []): array
         'housing_allowance_percentage' => 20,
         'transport_allowance_percentage' => 10,
         'other_allowance_percentage' => 20,
+        'salary_input_mode' => 'gross',
         'pension_employee_rate' => 8,
         'pension_employer_rate' => 10,
+        'pension_contribution_base' => 'basic_transport_housing',
         'nhf_rate' => 2.5,
+        'nhf_contribution_base' => 'basic',
         'nhis_employee_rate' => 5,
         'nhis_employer_rate' => 10,
         'nsitf_rate' => 1,
+        'use_statutory_default_rates' => true,
         'enabled_deductions' => ['paye', 'pension', 'nhf', 'nhis', 'nsitf'],
         'effective_from' => now()->toDateString(),
         'other_items' => [
-            ['label' => 'Union dues', 'rate' => 1.5],
+            ['label' => 'Union dues', 'category' => 'deduction', 'rate' => 1.5],
         ],
     ], $overrides);
 }
@@ -112,6 +116,9 @@ test('owner can view payroll settings page with default values', function () {
         ->component('settings/payroll')
         ->where('settings.basic_salary_percentage', 50)
         ->where('settings.pension_employee_rate', 8)
+        ->where('settings.salary_input_mode', 'gross')
+        ->where('settings.pension_contribution_base', 'basic_transport_housing')
+        ->where('settings.nhf_contribution_base', 'basic')
         ->where('settings.other_items', [])
         ->where('settings.enabled_deductions', ['pension', 'nhf', 'nhis', 'nsitf', 'paye']),
     );
@@ -126,12 +133,14 @@ test('admin can update payroll settings', function () {
         ->from('http://'.$organization->slug.'.payrollsaas.test/settings/payroll')
         ->patch('http://'.$organization->slug.'.payrollsaas.test/settings/payroll', validPayrollSettingsPayload([
             'basic_salary_percentage' => 45,
+            'salary_input_mode' => 'salary_elements',
             'housing_allowance_percentage' => 25,
             'transport_allowance_percentage' => 15,
             'other_allowance_percentage' => 15,
             'nhf_rate' => 3,
+            'use_statutory_default_rates' => false,
             'other_items' => [
-                ['label' => 'Cooperative', 'rate' => 2],
+                ['label' => 'Transport stipend', 'category' => 'allowance', 'rate' => 2],
             ],
         ]));
 
@@ -144,9 +153,10 @@ test('admin can update payroll settings', function () {
 
     expect($settings)->not->toBeNull();
     expect((float) $settings->basic_salary_percentage)->toBe(45.0);
+    expect((string) $settings->salary_input_mode)->toBe('salary_elements');
     expect((float) $settings->nhf_rate)->toBe(3.0);
     expect($settings->other_items)->toBe([
-        ['label' => 'Cooperative', 'rate' => 2],
+        ['label' => 'Transport stipend', 'category' => 'allowance', 'rate' => 2],
     ]);
 
     $version = PayrollSettingVersion::query()
@@ -208,6 +218,35 @@ test('payroll settings update validates rates and custom item limits', function 
 
     Tenancy::initialize($organization);
     expect(PayrollSetting::query()->count('id'))->toBe(0);
+});
+
+test('statutory default toggle resets customized rates to defaults', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createPayrollSettingsContextWithRole('owner');
+
+    $this
+        ->actingAs($user)
+        ->patch('http://'.$organization->slug.'.payrollsaas.test/settings/payroll', validPayrollSettingsPayload([
+            'use_statutory_default_rates' => true,
+            'pension_employee_rate' => 14,
+            'pension_employer_rate' => 20,
+            'nhf_rate' => 5,
+            'nhis_employee_rate' => 7,
+            'nhis_employer_rate' => 15,
+            'nsitf_rate' => 3,
+        ]))
+        ->assertSessionHasNoErrors();
+
+    Tenancy::initialize($organization);
+
+    $settings = PayrollSetting::query()->where('profile', 'default')->firstOrFail();
+
+    expect((float) $settings->pension_employee_rate)->toBe(8.0);
+    expect((float) $settings->pension_employer_rate)->toBe(10.0);
+    expect((float) $settings->nhf_rate)->toBe(2.5);
+    expect((float) $settings->nhis_employee_rate)->toBe(5.0);
+    expect((float) $settings->nhis_employer_rate)->toBe(10.0);
+    expect((float) $settings->nsitf_rate)->toBe(1.0);
 });
 
 test('future effective date stores scheduled snapshot without changing active settings yet', function () {

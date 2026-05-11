@@ -69,6 +69,7 @@ class StoreEmployeeRequest extends FormRequest
             'rent_relief' => ['nullable', 'numeric', 'min:0'],
             'custom_items' => ['nullable', 'array', 'max:5'],
             'custom_items.*.label' => ['nullable', 'string', 'max:100'],
+            'custom_items.*.category' => ['nullable', 'string', 'in:allowance,deduction'],
             'custom_items.*.rate' => ['nullable', 'numeric', 'between:0,100'],
             'custom_items.*.value' => ['nullable', 'numeric', 'min:0'],
             'department' => ['nullable', 'string', 'max:100'],

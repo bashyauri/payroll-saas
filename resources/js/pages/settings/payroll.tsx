@@ -15,6 +15,7 @@ import type { BreadcrumbItem } from '@/types';
 
 type CustomItem = {
     label: string;
+    category: 'allowance' | 'deduction';
     rate: number;
 };
 
@@ -38,7 +39,7 @@ const DEDUCTION_OPTIONS: Array<{
     {
         key: 'nhf',
         label: 'NHF',
-        description: 'National Housing Fund — 2.5% of basic salary',
+        description: 'National Housing Fund contribution',
     },
     {
         key: 'nhis',
@@ -58,12 +59,16 @@ type PayrollSettingsPageProps = {
         housing_allowance_percentage: number;
         transport_allowance_percentage: number;
         other_allowance_percentage: number;
+        salary_input_mode: 'gross' | 'salary_elements';
         pension_employee_rate: number;
         pension_employer_rate: number;
+        pension_contribution_base: 'basic' | 'basic_transport_housing';
         nhf_rate: number;
+        nhf_contribution_base: 'basic' | 'gross';
         nhis_employee_rate: number;
         nhis_employer_rate: number;
         nsitf_rate: number;
+        use_statutory_default_rates: boolean;
         other_items: CustomItem[];
         enabled_deductions: DeductionKey[];
         payroll_type: string | null;
@@ -86,12 +91,32 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const MAX_CUSTOM_FIELDS = 5;
 
+const STATUTORY_DEFAULTS = {
+    pensionEmployeeRate: 8,
+    pensionEmployerRate: 10,
+    nhfRate: 2.5,
+    nhisEmployeeRate: 5,
+    nhisEmployerRate: 10,
+    nsitfRate: 1,
+} as const;
+
 export default function PayrollSettings({
     settings,
     nextScheduledEffectiveFrom,
 }: PayrollSettingsPageProps) {
     const [customItems, setCustomItems] = useState<CustomItem[]>(
-        settings.other_items,
+        (settings.other_items ?? []).map((item) => ({
+            ...item,
+            category: item.category ?? 'deduction',
+        })),
+    );
+
+    const [salaryInputMode, setSalaryInputMode] = useState<'gross' | 'salary_elements'>(
+        settings.salary_input_mode ?? 'gross',
+    );
+
+    const [useStatutoryDefaultRates, setUseStatutoryDefaultRates] = useState<boolean>(
+        settings.use_statutory_default_rates ?? true,
     );
 
     const [enabledDeductions, setEnabledDeductions] = useState<DeductionKey[]>(
@@ -118,7 +143,10 @@ export default function PayrollSettings({
                 return current;
             }
 
-            return [...current, { label: '', rate: 0 }];
+            return [
+                ...current,
+                { label: '', category: 'deduction', rate: 0 },
+            ];
         });
     };
 
@@ -320,8 +348,65 @@ export default function PayrollSettings({
                                     <Heading
                                         variant="small"
                                         title="Salary structure"
-                                        description="Percentage split for gross-to-allowance structure."
+                                        description="Set how salaries are captured and the percentage split for gross-to-allowance structure."
                                     />
+
+                                    <div className="space-y-2">
+                                        <Label>Salary entry mode</Label>
+                                        <div className="grid gap-3 md:grid-cols-2">
+                                            <button
+                                                type="button"
+                                                className={`rounded-lg border p-3 text-left ${
+                                                    salaryInputMode === 'gross'
+                                                        ? 'border-primary bg-primary/5'
+                                                        : 'border-border'
+                                                }`}
+                                                onClick={() =>
+                                                    setSalaryInputMode('gross')
+                                                }
+                                            >
+                                                <p className="text-sm font-medium">
+                                                    Monthly/annual gross
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Users enter gross salary,
+                                                    and deductions can be
+                                                    auto-calculated.
+                                                </p>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`rounded-lg border p-3 text-left ${
+                                                    salaryInputMode ===
+                                                    'salary_elements'
+                                                        ? 'border-primary bg-primary/5'
+                                                        : 'border-border'
+                                                }`}
+                                                onClick={() =>
+                                                    setSalaryInputMode(
+                                                        'salary_elements',
+                                                    )
+                                                }
+                                            >
+                                                <p className="text-sm font-medium">
+                                                    Salary elements
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Users enter basic,
+                                                    transport, housing and extra
+                                                    income values.
+                                                </p>
+                                            </button>
+                                        </div>
+                                        <input
+                                            type="hidden"
+                                            name="salary_input_mode"
+                                            value={salaryInputMode}
+                                        />
+                                        <InputError
+                                            message={errors.salary_input_mode}
+                                        />
+                                    </div>
 
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div className="grid gap-2">
@@ -472,8 +557,100 @@ export default function PayrollSettings({
                                     <Heading
                                         variant="small"
                                         title="Statutory deductions"
-                                        description="Default rates for pension, NHF, NHIS, and NSITF."
+                                        description="Configure deduction rates and the salary base used for pension/NHF calculations."
                                     />
+
+                                    <div className="rounded-lg border p-4">
+                                        <div className="flex items-start gap-3">
+                                            <Checkbox
+                                                id="use_statutory_default_rates"
+                                                checked={
+                                                    useStatutoryDefaultRates
+                                                }
+                                                onCheckedChange={(checked) =>
+                                                    setUseStatutoryDefaultRates(
+                                                        checked === true,
+                                                    )
+                                                }
+                                            />
+                                            <div className="grid gap-0.5">
+                                                <Label
+                                                    htmlFor="use_statutory_default_rates"
+                                                    className="cursor-pointer font-medium"
+                                                >
+                                                    Use statutory default rates
+                                                </Label>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Keeps rates at Pension 8% /
+                                                    10%, NHF 2.5%, NHIS 5% /
+                                                    10%, and NSITF 1%.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="hidden"
+                                            name="use_statutory_default_rates"
+                                            value={
+                                                useStatutoryDefaultRates
+                                                    ? '1'
+                                                    : '0'
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="pension_contribution_base">
+                                                Pension contribution base
+                                            </Label>
+                                            <select
+                                                id="pension_contribution_base"
+                                                name="pension_contribution_base"
+                                                defaultValue={
+                                                    settings.pension_contribution_base
+                                                }
+                                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
+                                            >
+                                                <option value="basic_transport_housing">
+                                                    Basic + transport + housing
+                                                </option>
+                                                <option value="basic">
+                                                    Basic only
+                                                </option>
+                                            </select>
+                                            <InputError
+                                                message={
+                                                    errors.pension_contribution_base
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="nhf_contribution_base">
+                                                NHF contribution base
+                                            </Label>
+                                            <select
+                                                id="nhf_contribution_base"
+                                                name="nhf_contribution_base"
+                                                defaultValue={
+                                                    settings.nhf_contribution_base
+                                                }
+                                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
+                                            >
+                                                <option value="basic">
+                                                    Basic only
+                                                </option>
+                                                <option value="gross">
+                                                    Gross salary
+                                                </option>
+                                            </select>
+                                            <InputError
+                                                message={
+                                                    errors.nhf_contribution_base
+                                                }
+                                            />
+                                        </div>
+                                    </div>
 
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div className="grid gap-2">
@@ -488,10 +665,24 @@ export default function PayrollSettings({
                                                 min="0"
                                                 max="100"
                                                 required
+                                                disabled={
+                                                    useStatutoryDefaultRates
+                                                }
                                                 defaultValue={
-                                                    settings.pension_employee_rate
+                                                    useStatutoryDefaultRates
+                                                        ? STATUTORY_DEFAULTS.pensionEmployeeRate
+                                                        : settings.pension_employee_rate
                                                 }
                                             />
+                                            {useStatutoryDefaultRates && (
+                                                <input
+                                                    type="hidden"
+                                                    name="pension_employee_rate"
+                                                    value={
+                                                        STATUTORY_DEFAULTS.pensionEmployeeRate
+                                                    }
+                                                />
+                                            )}
                                             <InputError
                                                 message={
                                                     errors.pension_employee_rate
@@ -511,10 +702,24 @@ export default function PayrollSettings({
                                                 min="0"
                                                 max="100"
                                                 required
+                                                disabled={
+                                                    useStatutoryDefaultRates
+                                                }
                                                 defaultValue={
-                                                    settings.pension_employer_rate
+                                                    useStatutoryDefaultRates
+                                                        ? STATUTORY_DEFAULTS.pensionEmployerRate
+                                                        : settings.pension_employer_rate
                                                 }
                                             />
+                                            {useStatutoryDefaultRates && (
+                                                <input
+                                                    type="hidden"
+                                                    name="pension_employer_rate"
+                                                    value={
+                                                        STATUTORY_DEFAULTS.pensionEmployerRate
+                                                    }
+                                                />
+                                            )}
                                             <InputError
                                                 message={
                                                     errors.pension_employer_rate
@@ -534,8 +739,24 @@ export default function PayrollSettings({
                                                 min="0"
                                                 max="100"
                                                 required
-                                                defaultValue={settings.nhf_rate}
+                                                disabled={
+                                                    useStatutoryDefaultRates
+                                                }
+                                                defaultValue={
+                                                    useStatutoryDefaultRates
+                                                        ? STATUTORY_DEFAULTS.nhfRate
+                                                        : settings.nhf_rate
+                                                }
                                             />
+                                            {useStatutoryDefaultRates && (
+                                                <input
+                                                    type="hidden"
+                                                    name="nhf_rate"
+                                                    value={
+                                                        STATUTORY_DEFAULTS.nhfRate
+                                                    }
+                                                />
+                                            )}
                                             <InputError
                                                 message={errors.nhf_rate}
                                             />
@@ -553,10 +774,24 @@ export default function PayrollSettings({
                                                 min="0"
                                                 max="100"
                                                 required
+                                                disabled={
+                                                    useStatutoryDefaultRates
+                                                }
                                                 defaultValue={
-                                                    settings.nhis_employee_rate
+                                                    useStatutoryDefaultRates
+                                                        ? STATUTORY_DEFAULTS.nhisEmployeeRate
+                                                        : settings.nhis_employee_rate
                                                 }
                                             />
+                                            {useStatutoryDefaultRates && (
+                                                <input
+                                                    type="hidden"
+                                                    name="nhis_employee_rate"
+                                                    value={
+                                                        STATUTORY_DEFAULTS.nhisEmployeeRate
+                                                    }
+                                                />
+                                            )}
                                             <InputError
                                                 message={
                                                     errors.nhis_employee_rate
@@ -576,10 +811,24 @@ export default function PayrollSettings({
                                                 min="0"
                                                 max="100"
                                                 required
+                                                disabled={
+                                                    useStatutoryDefaultRates
+                                                }
                                                 defaultValue={
-                                                    settings.nhis_employer_rate
+                                                    useStatutoryDefaultRates
+                                                        ? STATUTORY_DEFAULTS.nhisEmployerRate
+                                                        : settings.nhis_employer_rate
                                                 }
                                             />
+                                            {useStatutoryDefaultRates && (
+                                                <input
+                                                    type="hidden"
+                                                    name="nhis_employer_rate"
+                                                    value={
+                                                        STATUTORY_DEFAULTS.nhisEmployerRate
+                                                    }
+                                                />
+                                            )}
                                             <InputError
                                                 message={
                                                     errors.nhis_employer_rate
@@ -599,10 +848,24 @@ export default function PayrollSettings({
                                                 min="0"
                                                 max="100"
                                                 required
+                                                disabled={
+                                                    useStatutoryDefaultRates
+                                                }
                                                 defaultValue={
-                                                    settings.nsitf_rate
+                                                    useStatutoryDefaultRates
+                                                        ? STATUTORY_DEFAULTS.nsitfRate
+                                                        : settings.nsitf_rate
                                                 }
                                             />
+                                            {useStatutoryDefaultRates && (
+                                                <input
+                                                    type="hidden"
+                                                    name="nsitf_rate"
+                                                    value={
+                                                        STATUTORY_DEFAULTS.nsitfRate
+                                                    }
+                                                />
+                                            )}
                                             <InputError
                                                 message={errors.nsitf_rate}
                                             />
@@ -613,8 +876,8 @@ export default function PayrollSettings({
                                 <section className="space-y-4">
                                     <Heading
                                         variant="small"
-                                        title="Custom percentage fields"
-                                        description="Add optional fields such as Others (Specify) with a percentage rate (maximum 5)."
+                                        title="Optional payroll fields"
+                                        description="Add optional allowance/income or deduction fields with percentage rates (maximum 5)."
                                     />
 
                                     <div className="space-y-4">
@@ -628,7 +891,7 @@ export default function PayrollSettings({
                                             return (
                                                 <div
                                                     key={index}
-                                                    className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-[1fr_160px]"
+                                                    className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-[1fr_180px_160px]"
                                                 >
                                                     <div className="grid gap-2">
                                                         <Label
@@ -648,6 +911,36 @@ export default function PayrollSettings({
                                                             message={
                                                                 errors[
                                                                     `other_items.${index}.label`
+                                                                ]
+                                                            }
+                                                        />
+                                                    </div>
+
+                                                    <div className="grid gap-2">
+                                                        <Label
+                                                            htmlFor={`other_items_${index}_category`}
+                                                        >
+                                                            Type
+                                                        </Label>
+                                                        <select
+                                                            id={`other_items_${index}_category`}
+                                                            name={`other_items[${index}][category]`}
+                                                            defaultValue={
+                                                                item.category
+                                                            }
+                                                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
+                                                        >
+                                                            <option value="allowance">
+                                                                Allowance/Income
+                                                            </option>
+                                                            <option value="deduction">
+                                                                Deduction
+                                                            </option>
+                                                        </select>
+                                                        <InputError
+                                                            message={
+                                                                errors[
+                                                                    `other_items.${index}.category`
                                                                 ]
                                                             }
                                                         />

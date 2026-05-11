@@ -147,7 +147,7 @@ test('add employee form includes configured payroll custom fields', function () 
     PayrollSetting::query()->create([
         'profile' => 'default',
         'other_items' => [
-            ['label' => 'Union Dues', 'rate' => 3],
+            ['label' => 'Union Dues', 'category' => 'deduction', 'rate' => 3],
         ],
     ]);
     Tenancy::end();
@@ -160,6 +160,7 @@ test('add employee form includes configured payroll custom fields', function () 
     $response->assertInertia(fn ($page) => $page
         ->component('employees/create')
         ->where('payrollCustomFields.0.label', 'Union Dues')
+        ->where('payrollCustomFields.0.category', 'deduction')
         ->where('payrollCustomFields.0.rate', 3)
     );
 });
@@ -201,6 +202,7 @@ test('tenant users can add employees within plan limit', function () {
             'custom_items' => [
                 [
                     'label' => 'Union Dues',
+                    'category' => 'deduction',
                     'rate' => '3',
                     'value' => '3500',
                 ],
@@ -224,6 +226,7 @@ test('tenant users can add employees within plan limit', function () {
     expect(Employee::query()->firstOrFail()->custom_items)->toBe([
         [
             'label' => 'Union Dues',
+            'category' => 'deduction',
             'rate' => 3.0,
             'value' => 3500.0,
         ],
