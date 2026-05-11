@@ -79,7 +79,7 @@ edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     edit.form = editForm
 /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:62
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:63
  * @route '/settings/payroll'
  */
 export const update = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -94,7 +94,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:62
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:63
  * @route '/settings/payroll'
  */
 update.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ update.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:62
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:63
  * @route '/settings/payroll'
  */
 update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -113,7 +113,7 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
 
     /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:62
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:63
  * @route '/settings/payroll'
  */
     const updateForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -128,7 +128,7 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
 
             /**
 * @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:62
+ * @see app/Http/Controllers/Settings/PayrollSettingsController.php:63
  * @route '/settings/payroll'
  */
         updateForm.patch = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

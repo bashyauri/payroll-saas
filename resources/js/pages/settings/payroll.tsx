@@ -60,6 +60,7 @@ type PayrollSettingsPageProps = {
         transport_allowance_percentage: number;
         other_allowance_percentage: number;
         salary_input_mode: 'gross' | 'salary_elements';
+        salary_amount_period: 'monthly' | 'annual';
         pension_employee_rate: number;
         pension_employer_rate: number;
         pension_contribution_base: 'basic' | 'basic_transport_housing';
@@ -111,13 +112,16 @@ export default function PayrollSettings({
         })),
     );
 
-    const [salaryInputMode, setSalaryInputMode] = useState<'gross' | 'salary_elements'>(
-        settings.salary_input_mode ?? 'gross',
-    );
+    const [salaryInputMode, setSalaryInputMode] = useState<
+        'gross' | 'salary_elements'
+    >(settings.salary_input_mode ?? 'gross');
 
-    const [useStatutoryDefaultRates, setUseStatutoryDefaultRates] = useState<boolean>(
-        settings.use_statutory_default_rates ?? true,
-    );
+    const [salaryAmountPeriod, setSalaryAmountPeriod] = useState<
+        'monthly' | 'annual'
+    >(settings.salary_amount_period ?? 'monthly');
+
+    const [useStatutoryDefaultRates, setUseStatutoryDefaultRates] =
+        useState<boolean>(settings.use_statutory_default_rates ?? true);
 
     const [enabledDeductions, setEnabledDeductions] = useState<DeductionKey[]>(
         settings.enabled_deductions ?? [
@@ -143,10 +147,7 @@ export default function PayrollSettings({
                 return current;
             }
 
-            return [
-                ...current,
-                { label: '', category: 'deduction', rate: 0 },
-            ];
+            return [...current, { label: '', category: 'deduction', rate: 0 }];
         });
     };
 
@@ -408,6 +409,71 @@ export default function PayrollSettings({
                                         />
                                     </div>
 
+                                    <div className="space-y-2">
+                                        <Label>
+                                            Default salary amount period
+                                        </Label>
+                                        <div className="grid gap-3 md:grid-cols-2">
+                                            <button
+                                                type="button"
+                                                className={`rounded-lg border p-3 text-left ${
+                                                    salaryAmountPeriod ===
+                                                    'monthly'
+                                                        ? 'border-primary bg-primary/5'
+                                                        : 'border-border'
+                                                }`}
+                                                onClick={() =>
+                                                    setSalaryAmountPeriod(
+                                                        'monthly',
+                                                    )
+                                                }
+                                            >
+                                                <p className="text-sm font-medium">
+                                                    Monthly amounts
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Employee monthly inputs are
+                                                    multiplied by 12 for annual
+                                                    gross and remittance
+                                                    calculations.
+                                                </p>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`rounded-lg border p-3 text-left ${
+                                                    salaryAmountPeriod ===
+                                                    'annual'
+                                                        ? 'border-primary bg-primary/5'
+                                                        : 'border-border'
+                                                }`}
+                                                onClick={() =>
+                                                    setSalaryAmountPeriod(
+                                                        'annual',
+                                                    )
+                                                }
+                                            >
+                                                <p className="text-sm font-medium">
+                                                    Annual amounts
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Employee annual inputs are
+                                                    divided by 12 for monthly
+                                                    payroll processing.
+                                                </p>
+                                            </button>
+                                        </div>
+                                        <input
+                                            type="hidden"
+                                            name="salary_amount_period"
+                                            value={salaryAmountPeriod}
+                                        />
+                                        <InputError
+                                            message={
+                                                errors.salary_amount_period
+                                            }
+                                        />
+                                    </div>
+
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div className="grid gap-2">
                                             <Label htmlFor="basic_salary_percentage">
@@ -507,7 +573,7 @@ export default function PayrollSettings({
                                     <Heading
                                         variant="small"
                                         title="Active deductions"
-                                        description="Select which deductions apply to your organization. Unchecked items will not appear on employee records or payroll calculations."
+                                        description="Set the organization default deduction policy. Individual employees can still be changed where policy exceptions are needed."
                                     />
 
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

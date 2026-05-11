@@ -86,6 +86,7 @@ function validPayrollSettingsPayload(array $overrides = []): array
         'transport_allowance_percentage' => 10,
         'other_allowance_percentage' => 20,
         'salary_input_mode' => 'gross',
+        'salary_amount_period' => 'monthly',
         'pension_employee_rate' => 8,
         'pension_employer_rate' => 10,
         'pension_contribution_base' => 'basic_transport_housing',
@@ -117,6 +118,7 @@ test('owner can view payroll settings page with default values', function () {
         ->where('settings.basic_salary_percentage', 50)
         ->where('settings.pension_employee_rate', 8)
         ->where('settings.salary_input_mode', 'gross')
+        ->where('settings.salary_amount_period', 'monthly')
         ->where('settings.pension_contribution_base', 'basic_transport_housing')
         ->where('settings.nhf_contribution_base', 'basic')
         ->where('settings.other_items', [])
@@ -154,6 +156,7 @@ test('admin can update payroll settings', function () {
     expect($settings)->not->toBeNull();
     expect((float) $settings->basic_salary_percentage)->toBe(45.0);
     expect((string) $settings->salary_input_mode)->toBe('salary_elements');
+    expect((string) $settings->salary_amount_period)->toBe('monthly');
     expect((float) $settings->nhf_rate)->toBe(3.0);
     expect($settings->other_items)->toBe([
         ['label' => 'Transport stipend', 'category' => 'allowance', 'rate' => 2],

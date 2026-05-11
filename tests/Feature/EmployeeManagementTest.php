@@ -121,6 +121,27 @@ function createTenantContextWithRole(string $role, int $employeeLimit = 3): arra
     return [$user, $organization];
 }
 
+/**
+ * @return array<string, mixed>
+ */
+function validEmployeePayload(array $overrides = []): array
+{
+    return array_merge([
+        'employee_number' => 'EMP-0001',
+        'first_name' => 'Amina',
+        'last_name' => 'Yusuf',
+        'bank_name' => 'Access Bank',
+        'bank_account_name' => 'Amina Yusuf',
+        'bank_account_number' => '0123456789',
+        'salary_input_mode' => 'gross',
+        'salary_amount_period' => 'monthly',
+        'monthly_gross_salary' => '250000',
+        'annual_gross_salary' => '3000000',
+        'employment_type' => 'full_time',
+        'status' => 'active',
+    ], $overrides);
+}
+
 test('tenant users can view the add employee form', function () {
     /** @var TestCase $this */
     [$user] = createTenantContext();
@@ -135,6 +156,8 @@ test('tenant users can view the add employee form', function () {
         ->where('employeeCount', 0)
         ->where('employeeLimit', 3)
         ->where('canCreateEmployee', true)
+        ->where('salaryComputation.salaryInputMode', 'gross')
+        ->where('salaryComputation.salaryAmountPeriod', 'monthly')
         ->where('payrollCustomFields', [])
     );
 });
@@ -171,7 +194,7 @@ test('tenant users can add employees within plan limit', function () {
 
     $response = $this
         ->actingAs($user)
-        ->post('http://acme-payroll.payrollsaas.test/employees', [
+        ->post('http://acme-payroll.payrollsaas.test/employees', validEmployeePayload([
             'employee_number' => 'EMP-0001',
             'first_name' => 'Amina',
             'last_name' => 'Yusuf',
@@ -215,7 +238,7 @@ test('tenant users can add employees within plan limit', function () {
             'hire_date' => '2026-04-01',
             'exit_date' => null,
             'status' => 'active',
-        ]);
+        ]));
 
     $response->assertRedirect('http://acme-payroll.payrollsaas.test/employees');
 
@@ -256,17 +279,12 @@ test('employee creation is blocked when plan limit is reached', function () {
     $response = $this
         ->actingAs($user)
         ->from('http://acme-payroll.payrollsaas.test/employees/create')
-        ->post('http://acme-payroll.payrollsaas.test/employees', [
+        ->post('http://acme-payroll.payrollsaas.test/employees', validEmployeePayload([
             'employee_number' => 'EMP-0002',
             'first_name' => 'Second',
             'last_name' => 'Employee',
-            'bank_name' => 'Access Bank',
             'bank_account_name' => 'Second Employee',
-            'bank_account_number' => '0123456789',
-            'monthly_gross_salary' => '250000',
-            'employment_type' => 'full_time',
-            'status' => 'active',
-        ]);
+        ]));
 
     $response->assertSessionHasErrors('employee_limit');
 
@@ -291,17 +309,12 @@ test('organization member cannot create employees', function () {
 
     $response = $this
         ->actingAs($user)
-        ->post('http://'.$organization->slug.'.payrollsaas.test/employees', [
+        ->post('http://'.$organization->slug.'.payrollsaas.test/employees', validEmployeePayload([
             'employee_number' => 'EMP-0101',
             'first_name' => 'Member',
             'last_name' => 'Blocked',
-            'bank_name' => 'Access Bank',
             'bank_account_name' => 'Member Blocked',
-            'bank_account_number' => '0123456789',
-            'monthly_gross_salary' => '250000',
-            'employment_type' => 'full_time',
-            'status' => 'active',
-        ]);
+        ]));
 
     $response->assertForbidden();
 
@@ -369,14 +382,17 @@ test('owner can update employee and deduction toggles persist with zeroed deduct
 
     $response = $this
         ->actingAs($user)
-        ->patch('http://'.$organization->slug.'.payrollsaas.test/employees/'.$employee->id, [
+        ->patch('http://'.$organization->slug.'.payrollsaas.test/employees/'.$employee->id, validEmployeePayload([
             'employee_number' => 'EMP-0211',
             'first_name' => 'Bello',
             'last_name' => 'Lawal',
             'bank_name' => 'UBA',
             'bank_account_name' => 'Bello Lawal',
             'bank_account_number' => '1234567890',
+            'salary_input_mode' => 'gross',
+            'salary_amount_period' => 'monthly',
             'monthly_gross_salary' => '180000',
+            'annual_gross_salary' => '2160000',
             'monthly_tax_deduction' => '9000',
             'apply_paye_deduction' => false,
             'monthly_pension_deduction' => '14400',
@@ -386,7 +402,7 @@ test('owner can update employee and deduction toggles persist with zeroed deduct
             'other_monthly_deductions' => '1000',
             'employment_type' => 'full_time',
             'status' => 'active',
-        ]);
+        ]));
 
     $response->assertRedirect('http://'.$organization->slug.'.payrollsaas.test/employees/'.$employee->id);
 
@@ -429,22 +445,59 @@ test('organization hr can create employees', function () {
 
     $response = $this
         ->actingAs($user)
-        ->post('http://'.$organization->slug.'.payrollsaas.test/employees', [
+        ->post('http://'.$organization->slug.'.payrollsaas.test/employees', validEmployeePayload([
             'employee_number' => 'EMP-0777',
             'first_name' => 'Halima',
             'last_name' => 'Ibrahim',
-            'bank_name' => 'Access Bank',
             'bank_account_name' => 'Halima Ibrahim',
-            'bank_account_number' => '0123456789',
             'monthly_gross_salary' => '350000',
-            'employment_type' => 'full_time',
-            'status' => 'active',
-        ]);
+            'annual_gross_salary' => '4200000',
+        ]));
 
     $response->assertRedirect('http://'.$organization->slug.'.payrollsaas.test/employees');
 
     Tenancy::initialize($organization);
     expect(Employee::query()->where('employee_number', 'EMP-0777')->exists())->toBeTrue();
+});
+
+test('employee annual salary elements are normalized to monthly stored values', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createTenantContext();
+
+    $response = $this
+        ->actingAs($user)
+        ->post('http://'.$organization->slug.'.payrollsaas.test/employees', validEmployeePayload([
+            'employee_number' => 'EMP-0420',
+            'first_name' => 'Ifeoma',
+            'last_name' => 'Nwosu',
+            'salary_input_mode' => 'salary_elements',
+            'salary_amount_period' => 'annual',
+            'monthly_gross_salary' => '250000',
+            'annual_gross_salary' => '3000000',
+            'basic_salary' => '1800000',
+            'housing_allowance' => '600000',
+            'transport_allowance' => '360000',
+            'other_allowance_1' => '120000',
+            'other_allowance_2' => '120000',
+            'monthly_pension_deduction' => '20000',
+            'monthly_nhf_deduction' => '2500',
+        ]));
+
+    $response->assertRedirect('http://'.$organization->slug.'.payrollsaas.test/employees');
+
+    Tenancy::initialize($organization);
+
+    $employee = Employee::query()->where('employee_number', 'EMP-0420')->firstOrFail();
+
+    expect((string) $employee->salary_input_mode)->toBe('salary_elements');
+    expect((string) $employee->salary_amount_period)->toBe('annual');
+    expect((float) $employee->basic_salary)->toBe(150000.0);
+    expect((float) $employee->housing_allowance)->toBe(50000.0);
+    expect((float) $employee->transport_allowance)->toBe(30000.0);
+    expect((float) $employee->other_allowance_1)->toBe(10000.0);
+    expect((float) $employee->other_allowance_2)->toBe(10000.0);
+    expect((float) $employee->monthly_gross_salary)->toBe(250000.0);
+    expect((float) $employee->annual_gross_salary)->toBe(3000000.0);
 });
 
 test('owner can view employee detail page', function () {

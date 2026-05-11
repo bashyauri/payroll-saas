@@ -13,6 +13,8 @@ class EffectivePayrollSettingsResolver
 
     public const DEFAULT_SALARY_INPUT_MODE = 'gross';
 
+    public const DEFAULT_SALARY_AMOUNT_PERIOD = 'monthly';
+
     public const DEFAULT_PENSION_EMPLOYEE_RATE = 8.0;
 
     public const DEFAULT_PENSION_EMPLOYER_RATE = 10.0;
@@ -57,6 +59,7 @@ class EffectivePayrollSettingsResolver
             'transport_allowance_percentage' => (float) ($settings?->transport_allowance_percentage ?? 10),
             'other_allowance_percentage' => (float) ($settings?->other_allowance_percentage ?? 20),
             'salary_input_mode' => (string) ($settings?->salary_input_mode ?? self::DEFAULT_SALARY_INPUT_MODE),
+            'salary_amount_period' => (string) ($settings?->salary_amount_period ?? self::DEFAULT_SALARY_AMOUNT_PERIOD),
             'pension_employee_rate' => (float) ($settings?->pension_employee_rate ?? self::DEFAULT_PENSION_EMPLOYEE_RATE),
             'pension_employer_rate' => (float) ($settings?->pension_employer_rate ?? self::DEFAULT_PENSION_EMPLOYER_RATE),
             'pension_contribution_base' => (string) ($settings?->pension_contribution_base ?? self::DEFAULT_PENSION_CONTRIBUTION_BASE),
@@ -93,6 +96,7 @@ class EffectivePayrollSettingsResolver
             'transport_allowance_percentage' => (float) ($snapshot['transport_allowance_percentage'] ?? 10),
             'other_allowance_percentage' => (float) ($snapshot['other_allowance_percentage'] ?? 20),
             'salary_input_mode' => (string) ($snapshot['salary_input_mode'] ?? self::DEFAULT_SALARY_INPUT_MODE),
+            'salary_amount_period' => (string) ($snapshot['salary_amount_period'] ?? self::DEFAULT_SALARY_AMOUNT_PERIOD),
             'pension_employee_rate' => (float) ($snapshot['pension_employee_rate'] ?? self::DEFAULT_PENSION_EMPLOYEE_RATE),
             'pension_employer_rate' => (float) ($snapshot['pension_employer_rate'] ?? self::DEFAULT_PENSION_EMPLOYER_RATE),
             'pension_contribution_base' => (string) ($snapshot['pension_contribution_base'] ?? self::DEFAULT_PENSION_CONTRIBUTION_BASE),

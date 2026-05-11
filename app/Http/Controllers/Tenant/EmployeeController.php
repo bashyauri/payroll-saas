@@ -72,6 +72,9 @@ class EmployeeController extends Controller
         $organization = $this->resolveOrganization();
         $employeeUsage = $this->employeeLimitService->usage($organization);
         $settings = $this->settingsResolver->resolve(now(), 'default');
+        $salaryAmountPeriod = (string) ($employee->salary_amount_period
+            ?? ($settings['salary_amount_period'] ?? EffectivePayrollSettingsResolver::DEFAULT_SALARY_AMOUNT_PERIOD));
+        $salaryAmountMultiplier = $salaryAmountPeriod === 'annual' ? 12 : 1;
 
         return Inertia::render('employees/create', [
             ...$this->employeeFormProps($employeeUsage, $settings),
@@ -93,9 +96,13 @@ class EmployeeController extends Controller
                 'bank_name' => $employee->bank_name,
                 'bank_account_name' => $employee->bank_account_name,
                 'bank_account_number' => $employee->bank_account_number,
-                'monthly_gross_salary' => (float) $employee->monthly_gross_salary,
+                'salary_amount_period' => $salaryAmountPeriod,
+                'monthly_gross_salary' => (float) $employee->monthly_gross_salary * $salaryAmountMultiplier,
                 'annual_gross_salary' => $employee->annual_gross_salary !== null ? (float) $employee->annual_gross_salary : null,
                 'salary_input_mode' => $employee->salary_input_mode,
+                'basic_salary' => $employee->basic_salary !== null ? (float) $employee->basic_salary * $salaryAmountMultiplier : null,
+                'housing_allowance' => $employee->housing_allowance !== null ? (float) $employee->housing_allowance * $salaryAmountMultiplier : null,
+                'transport_allowance' => $employee->transport_allowance !== null ? (float) $employee->transport_allowance * $salaryAmountMultiplier : null,
                 'monthly_tax_deduction' => (float) $employee->monthly_tax_deduction,
                 'apply_paye_deduction' => (bool) ($employee->apply_paye_deduction ?? true),
                 'monthly_pension_deduction' => (float) $employee->monthly_pension_deduction,
@@ -103,8 +110,8 @@ class EmployeeController extends Controller
                 'monthly_nhf_deduction' => (float) $employee->monthly_nhf_deduction,
                 'apply_nhf_deduction' => (bool) ($employee->apply_nhf_deduction ?? true),
                 'other_monthly_deductions' => (float) $employee->other_monthly_deductions,
-                'other_allowance_1' => $employee->other_allowance_1 !== null ? (float) $employee->other_allowance_1 : null,
-                'other_allowance_2' => $employee->other_allowance_2 !== null ? (float) $employee->other_allowance_2 : null,
+                'other_allowance_1' => $employee->other_allowance_1 !== null ? (float) $employee->other_allowance_1 * $salaryAmountMultiplier : null,
+                'other_allowance_2' => $employee->other_allowance_2 !== null ? (float) $employee->other_allowance_2 * $salaryAmountMultiplier : null,
                 'total_salary' => $employee->total_salary !== null ? (float) $employee->total_salary : null,
                 'personal_life_insurance' => $employee->personal_life_insurance !== null ? (float) $employee->personal_life_insurance : null,
                 'rent_relief' => $employee->rent_relief !== null ? (float) $employee->rent_relief : null,
@@ -191,7 +198,9 @@ class EmployeeController extends Controller
         }
 
         $validated = $request->validated();
-        $validated = $this->applyDeductionToggleOverrides($validated);
+        $settings = $this->settingsResolver->resolve(now(), 'default');
+        $validated = $this->normalizeCompensationPayload($validated, $settings);
+        $validated = $this->applyDeductionToggleOverrides($validated, $settings);
         $validated['custom_items'] = $this->storedEmployeeCustomItems($validated['custom_items'] ?? null);
 
         Employee::query()->create($validated);
@@ -204,7 +213,9 @@ class EmployeeController extends Controller
     public function update(UpdateEmployeeRequest $request, Employee $employee): RedirectResponse
     {
         $validated = $request->validated();
-        $validated = $this->applyDeductionToggleOverrides($validated);
+        $settings = $this->settingsResolver->resolve(now(), 'default');
+        $validated = $this->normalizeCompensationPayload($validated, $settings);
+        $validated = $this->applyDeductionToggleOverrides($validated, $settings);
         $validated['custom_items'] = $this->storedEmployeeCustomItems($validated['custom_items'] ?? null);
 
         $employee->update($validated);
@@ -243,6 +254,7 @@ class EmployeeController extends Controller
             ],
             'salaryComputation' => [
                 'salaryInputMode' => (string) ($settings['salary_input_mode'] ?? EffectivePayrollSettingsResolver::DEFAULT_SALARY_INPUT_MODE),
+                'salaryAmountPeriod' => (string) ($settings['salary_amount_period'] ?? EffectivePayrollSettingsResolver::DEFAULT_SALARY_AMOUNT_PERIOD),
                 'basicSalaryPercentage' => (float) ($settings['basic_salary_percentage'] ?? 50),
                 'housingAllowancePercentage' => (float) ($settings['housing_allowance_percentage'] ?? 20),
                 'transportAllowancePercentage' => (float) ($settings['transport_allowance_percentage'] ?? 10),
@@ -258,11 +270,15 @@ class EmployeeController extends Controller
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
-    private function applyDeductionToggleOverrides(array $payload): array
+    private function applyDeductionToggleOverrides(array $payload, array $settings): array
     {
-        $payload['apply_paye_deduction'] = (bool) ($payload['apply_paye_deduction'] ?? true);
-        $payload['apply_pension_deduction'] = (bool) ($payload['apply_pension_deduction'] ?? true);
-        $payload['apply_nhf_deduction'] = (bool) ($payload['apply_nhf_deduction'] ?? true);
+        $orgDeductionDefaults = is_array($settings['enabled_deductions'] ?? null)
+            ? $settings['enabled_deductions']
+            : ['pension', 'nhf', 'nhis', 'nsitf', 'paye'];
+
+        $payload['apply_paye_deduction'] = (bool) ($payload['apply_paye_deduction'] ?? in_array('paye', $orgDeductionDefaults, true));
+        $payload['apply_pension_deduction'] = (bool) ($payload['apply_pension_deduction'] ?? in_array('pension', $orgDeductionDefaults, true));
+        $payload['apply_nhf_deduction'] = (bool) ($payload['apply_nhf_deduction'] ?? in_array('nhf', $orgDeductionDefaults, true));
 
         if (! $payload['apply_paye_deduction']) {
             $payload['monthly_tax_deduction'] = 0;
@@ -277,6 +293,61 @@ class EmployeeController extends Controller
         }
 
         return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $settings
+     * @return array<string, mixed>
+     */
+    private function normalizeCompensationPayload(array $payload, array $settings): array
+    {
+        $salaryInputMode = (string) ($payload['salary_input_mode'] ?? $settings['salary_input_mode'] ?? EffectivePayrollSettingsResolver::DEFAULT_SALARY_INPUT_MODE);
+        $salaryAmountPeriod = (string) ($payload['salary_amount_period'] ?? $settings['salary_amount_period'] ?? EffectivePayrollSettingsResolver::DEFAULT_SALARY_AMOUNT_PERIOD);
+        $multiplier = $salaryAmountPeriod === 'annual' ? 12 : 1;
+
+        $basicSalary = $this->normalizeAmount($payload['basic_salary'] ?? null, $multiplier);
+        $housingAllowance = $this->normalizeAmount($payload['housing_allowance'] ?? null, $multiplier);
+        $transportAllowance = $this->normalizeAmount($payload['transport_allowance'] ?? null, $multiplier);
+        $otherAllowanceOne = $this->normalizeAmount($payload['other_allowance_1'] ?? null, $multiplier);
+        $otherAllowanceTwo = $this->normalizeAmount($payload['other_allowance_2'] ?? null, $multiplier);
+
+        if ($salaryInputMode === 'salary_elements') {
+            $monthlyGrossSalary = $basicSalary + $housingAllowance + $transportAllowance + $otherAllowanceOne + $otherAllowanceTwo;
+        } else {
+            $submittedMonthlyGross = (float) ($payload['monthly_gross_salary'] ?? 0);
+            $submittedAnnualGross = (float) ($payload['annual_gross_salary'] ?? 0);
+            $monthlyGrossSalary = $salaryAmountPeriod === 'annual'
+                ? ($submittedAnnualGross / 12)
+                : $submittedMonthlyGross;
+
+            $basicSalary = ($monthlyGrossSalary * (float) ($settings['basic_salary_percentage'] ?? 50)) / 100;
+            $housingAllowance = ($monthlyGrossSalary * (float) ($settings['housing_allowance_percentage'] ?? 20)) / 100;
+            $transportAllowance = ($monthlyGrossSalary * (float) ($settings['transport_allowance_percentage'] ?? 10)) / 100;
+            $otherAllowanceOne = 0;
+            $otherAllowanceTwo = 0;
+        }
+
+        $payload['salary_input_mode'] = $salaryInputMode;
+        $payload['salary_amount_period'] = $salaryAmountPeriod;
+        $payload['monthly_gross_salary'] = round($monthlyGrossSalary, 2);
+        $payload['annual_gross_salary'] = round($monthlyGrossSalary * 12, 2);
+        $payload['basic_salary'] = round($basicSalary, 2);
+        $payload['housing_allowance'] = round($housingAllowance, 2);
+        $payload['transport_allowance'] = round($transportAllowance, 2);
+        $payload['other_allowance_1'] = round($otherAllowanceOne, 2);
+        $payload['other_allowance_2'] = round($otherAllowanceTwo, 2);
+
+        return $payload;
+    }
+
+    private function normalizeAmount(mixed $value, int $multiplier): float
+    {
+        if ($value === null || $value === '') {
+            return 0.0;
+        }
+
+        return round(((float) $value) / $multiplier, 2);
     }
 
     /**

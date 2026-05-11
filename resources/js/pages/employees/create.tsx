@@ -1,5 +1,5 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -47,6 +47,7 @@ export default function CreateEmployee({
     };
     salaryComputation: {
         salaryInputMode: 'gross' | 'salary_elements';
+        salaryAmountPeriod: 'monthly' | 'annual';
         basicSalaryPercentage: number;
         housingAllowancePercentage: number;
         transportAllowancePercentage: number;
@@ -72,9 +73,13 @@ export default function CreateEmployee({
         bank_name: string;
         bank_account_name: string;
         bank_account_number: string;
+        salary_amount_period: 'monthly' | 'annual' | null;
         monthly_gross_salary: number;
         annual_gross_salary: number | null;
         salary_input_mode: string | null;
+        basic_salary: number | null;
+        housing_allowance: number | null;
+        transport_allowance: number | null;
         monthly_tax_deduction: number;
         apply_paye_deduction: boolean;
         monthly_pension_deduction: number;
@@ -119,36 +124,61 @@ export default function CreateEmployee({
             href: isEditMode ? `/employees/${employee.id}/edit` : create(),
         },
     ];
-    const hasPension = enabledDeductions.includes('pension');
-    const hasNhf = enabledDeductions.includes('nhf');
+    const orgDefaultPension = enabledDeductions.includes('pension');
+    const orgDefaultNhf = enabledDeductions.includes('nhf');
+    const orgDefaultPaye = enabledDeductions.includes('paye');
+    const hasPension = true;
+    const hasNhf = true;
     const hasNhis = enabledDeductions.includes('nhis');
     const hasNsitf = enabledDeductions.includes('nsitf');
-    const hasPaye = enabledDeductions.includes('paye');
+    const hasPaye = true;
     const { auth } = usePage().props as {
         auth?: { organizationRole?: string | null };
     };
     const isOrganizationAdmin = auth?.organizationRole === 'admin';
+    const initialSalaryInputMode =
+        (employee?.salary_input_mode as 'gross' | 'salary_elements' | null) ??
+        salaryComputation.salaryInputMode ??
+        'gross';
+    const initialSalaryAmountPeriod =
+        employee?.salary_amount_period ??
+        salaryComputation.salaryAmountPeriod ??
+        'monthly';
+    const displayAmount = (
+        amount: number | null | undefined,
+        period: 'monthly' | 'annual',
+    ): string => {
+        if (amount === null || amount === undefined) {
+            return '';
+        }
+
+        return String(period === 'annual' ? amount * 12 : amount);
+    };
     const [salaryEntryMode, setSalaryEntryMode] = useState<
         'gross' | 'salary_elements'
-    >(
-        (employee?.salary_input_mode as 'gross' | 'salary_elements') ??
-            salaryComputation.salaryInputMode ??
-            'gross',
-    );
-    const [overrideSalaryMode, setOverrideSalaryMode] = useState(
-        isEditMode && employee?.salary_input_mode ? true : false,
-    );
+    >(initialSalaryInputMode);
+    const [salaryAmountPeriod, setSalaryAmountPeriod] = useState<
+        'monthly' | 'annual'
+    >(initialSalaryAmountPeriod);
     const [grossSalary, setGrossSalary] = useState(
-        employee?.monthly_gross_salary?.toString() ?? '',
+        initialSalaryAmountPeriod === 'annual'
+            ? (employee?.annual_gross_salary?.toString() ?? '')
+            : (employee?.monthly_gross_salary?.toString() ?? ''),
     );
-    const [basicSalary, setBasicSalary] = useState('');
-    const [housingAllowance, setHousingAllowance] = useState('');
-    const [transportAllowance, setTransportAllowance] = useState('');
+    const [basicSalary, setBasicSalary] = useState(
+        displayAmount(employee?.basic_salary, initialSalaryAmountPeriod),
+    );
+    const [housingAllowance, setHousingAllowance] = useState(
+        displayAmount(employee?.housing_allowance, initialSalaryAmountPeriod),
+    );
+    const [transportAllowance, setTransportAllowance] = useState(
+        displayAmount(employee?.transport_allowance, initialSalaryAmountPeriod),
+    );
     const [otherAllowanceOne, setOtherAllowanceOne] = useState(
-        employee?.other_allowance_1?.toString() ?? '',
+        displayAmount(employee?.other_allowance_1, initialSalaryAmountPeriod),
     );
     const [otherAllowanceTwo, setOtherAllowanceTwo] = useState(
-        employee?.other_allowance_2?.toString() ?? '',
+        displayAmount(employee?.other_allowance_2, initialSalaryAmountPeriod),
     );
     const [pensionDeduction, setPensionDeduction] = useState(
         employee?.monthly_pension_deduction?.toString() ?? '',
@@ -158,32 +188,65 @@ export default function CreateEmployee({
     );
     const [nhisDeduction, setNhisDeduction] = useState('');
     const [applyPayeDeduction, setApplyPayeDeduction] = useState(
-        employee?.apply_paye_deduction ?? true,
+        employee?.apply_paye_deduction ?? orgDefaultPaye,
     );
     const [applyPensionDeduction, setApplyPensionDeduction] = useState(
-        employee?.apply_pension_deduction ?? true,
+        employee?.apply_pension_deduction ?? orgDefaultPension,
     );
     const [applyNhfDeduction, setApplyNhfDeduction] = useState(
-        employee?.apply_nhf_deduction ?? true,
+        employee?.apply_nhf_deduction ?? orgDefaultNhf,
+    );
+    const [hasTouchedCompensation, setHasTouchedCompensation] = useState(
+        employee === null,
     );
 
-    function calcFromGross(gross: string) {
-        const value = parseFloat(gross);
+    const toMonthlyAmount = (value: string): number => {
+        const parsed = parseFloat(value || '0');
+
+        if (Number.isNaN(parsed)) {
+            return 0;
+        }
+
+        return salaryAmountPeriod === 'annual' ? parsed / 12 : parsed;
+    };
+
+    const monthlyBasicSalary = toMonthlyAmount(basicSalary);
+    const monthlyHousingAllowance = toMonthlyAmount(housingAllowance);
+    const monthlyTransportAllowance = toMonthlyAmount(transportAllowance);
+    const monthlyOtherAllowanceOne = toMonthlyAmount(otherAllowanceOne);
+    const monthlyOtherAllowanceTwo = toMonthlyAmount(otherAllowanceTwo);
+    const monthlyGrossSalary =
+        salaryEntryMode === 'salary_elements'
+            ? monthlyBasicSalary +
+              monthlyHousingAllowance +
+              monthlyTransportAllowance +
+              monthlyOtherAllowanceOne +
+              monthlyOtherAllowanceTwo
+            : toMonthlyAmount(grossSalary);
+    const annualGrossSalary = monthlyGrossSalary * 12;
+    const displayedAlternateGross =
+        salaryAmountPeriod === 'annual'
+            ? monthlyGrossSalary
+            : annualGrossSalary;
+
+    function recalculateDeductions(): void {
+        const value = monthlyGrossSalary;
+
         if (!isNaN(value) && value > 0) {
             const basic =
                 salaryEntryMode === 'salary_elements'
-                    ? parseFloat(basicSalary || '0')
+                    ? monthlyBasicSalary
                     : (value * salaryComputation.basicSalaryPercentage) / 100;
 
             const transport =
                 salaryEntryMode === 'salary_elements'
-                    ? parseFloat(transportAllowance || '0')
+                    ? monthlyTransportAllowance
                     : (value * salaryComputation.transportAllowancePercentage) /
                       100;
 
             const housing =
                 salaryEntryMode === 'salary_elements'
-                    ? parseFloat(housingAllowance || '0')
+                    ? monthlyHousingAllowance
                     : (value * salaryComputation.housingAllowancePercentage) /
                       100;
 
@@ -220,6 +283,50 @@ export default function CreateEmployee({
         }
     }
 
+    useEffect(() => {
+        if (!hasTouchedCompensation) {
+            return;
+        }
+
+        recalculateDeductions();
+    }, [
+        hasTouchedCompensation,
+        salaryEntryMode,
+        salaryAmountPeriod,
+        grossSalary,
+        basicSalary,
+        housingAllowance,
+        transportAllowance,
+        otherAllowanceOne,
+        otherAllowanceTwo,
+    ]);
+
+    const switchSalaryAmountPeriod = (nextPeriod: 'monthly' | 'annual') => {
+        if (salaryAmountPeriod === nextPeriod) {
+            return;
+        }
+
+        const multiplier = nextPeriod === 'annual' ? 12 : 1 / 12;
+        const convertValue = (value: string): string => {
+            const parsed = parseFloat(value || '0');
+
+            if (Number.isNaN(parsed) || parsed === 0) {
+                return value;
+            }
+
+            return (parsed * multiplier).toFixed(2);
+        };
+
+        setSalaryAmountPeriod(nextPeriod);
+        setHasTouchedCompensation(true);
+        setGrossSalary(convertValue(grossSalary));
+        setBasicSalary(convertValue(basicSalary));
+        setHousingAllowance(convertValue(housingAllowance));
+        setTransportAllowance(convertValue(transportAllowance));
+        setOtherAllowanceOne(convertValue(otherAllowanceOne));
+        setOtherAllowanceTwo(convertValue(otherAllowanceTwo));
+    };
+
     const allowanceCustomFields = payrollCustomFields.filter(
         (field) => field.category === 'allowance',
     );
@@ -241,6 +348,10 @@ export default function CreateEmployee({
         );
 
         return matchedItem ? String(matchedItem.value) : '';
+    };
+
+    const deductionDefaultMessage = (enabled: boolean): string => {
+        return enabled ? 'Org default: enabled' : 'Org default: disabled';
     };
 
     return (
@@ -589,84 +700,52 @@ export default function CreateEmployee({
                                 </CardHeader>
                                 <CardContent className="grid gap-4 md:grid-cols-2">
                                     <div className="grid gap-2 md:col-span-2">
-                                        <div className="flex items-center justify-between">
-                                            <Label>Salary entry mode</Label>
-                                            {isEditMode && (
-                                                <label className="flex items-center gap-2 text-sm">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={
-                                                            overrideSalaryMode
-                                                        }
-                                                        onChange={(e) =>
-                                                            setOverrideSalaryMode(
-                                                                e.target
-                                                                    .checked,
-                                                            )
-                                                        }
-                                                        className="rounded"
-                                                    />
-                                                    <span>
-                                                        Override org setting
-                                                    </span>
-                                                </label>
-                                            )}
-                                        </div>
-                                        {!overrideSalaryMode && isEditMode && (
-                                            <p className="text-sm text-muted-foreground">
-                                                Using org-wide setting:{' '}
-                                                {salaryComputation.salaryInputMode ===
-                                                'salary_elements'
-                                                    ? 'Salary elements'
-                                                    : 'Monthly/annual gross'}
-                                            </p>
-                                        )}
+                                        <Label>
+                                            Employee salary entry mode
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            Org default:{' '}
+                                            {salaryComputation.salaryInputMode ===
+                                            'salary_elements'
+                                                ? 'Salary elements'
+                                                : 'Gross salary'}
+                                            . You can change this employee to a
+                                            different mode when needed.
+                                        </p>
                                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                             <button
                                                 type="button"
-                                                onClick={() =>
-                                                    setSalaryEntryMode('gross')
-                                                }
-                                                disabled={
-                                                    !overrideSalaryMode &&
-                                                    isEditMode
-                                                }
+                                                onClick={() => {
+                                                    setHasTouchedCompensation(
+                                                        true,
+                                                    );
+                                                    setSalaryEntryMode('gross');
+                                                }}
                                                 className={`rounded-lg border p-3 text-left transition-colors ${
                                                     salaryEntryMode === 'gross'
                                                         ? 'border-primary bg-primary/5'
                                                         : 'border-border'
-                                                } ${
-                                                    !overrideSalaryMode &&
-                                                    isEditMode
-                                                        ? 'opacity-50'
-                                                        : ''
                                                 }`}
                                             >
                                                 <p className="text-sm font-medium">
-                                                    Monthly/annual gross
+                                                    Gross salary
                                                 </p>
                                             </button>
                                             <button
                                                 type="button"
-                                                onClick={() =>
+                                                onClick={() => {
+                                                    setHasTouchedCompensation(
+                                                        true,
+                                                    );
                                                     setSalaryEntryMode(
                                                         'salary_elements',
-                                                    )
-                                                }
-                                                disabled={
-                                                    !overrideSalaryMode &&
-                                                    isEditMode
-                                                }
+                                                    );
+                                                }}
                                                 className={`rounded-lg border p-3 text-left transition-colors ${
                                                     salaryEntryMode ===
                                                     'salary_elements'
                                                         ? 'border-primary bg-primary/5'
                                                         : 'border-border'
-                                                } ${
-                                                    !overrideSalaryMode &&
-                                                    isEditMode
-                                                        ? 'opacity-50'
-                                                        : ''
                                                 }`}
                                             >
                                                 <p className="text-sm font-medium">
@@ -674,53 +753,134 @@ export default function CreateEmployee({
                                                 </p>
                                             </button>
                                         </div>
-                                        {overrideSalaryMode && (
-                                            <input
-                                                type="hidden"
-                                                name="salary_input_mode"
-                                                value={salaryEntryMode}
-                                            />
-                                        )}
+                                    </div>
+
+                                    <div className="grid gap-2 md:col-span-2">
+                                        <Label>Salary amount period</Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            Org default:{' '}
+                                            {
+                                                salaryComputation.salaryAmountPeriod
+                                            }
+                                            . Monthly input multiplies by 12 for
+                                            annual remittance calculations;
+                                            annual input divides by 12 for
+                                            monthly payroll.
+                                        </p>
+                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    switchSalaryAmountPeriod(
+                                                        'monthly',
+                                                    )
+                                                }
+                                                className={`rounded-lg border p-3 text-left transition-colors ${
+                                                    salaryAmountPeriod ===
+                                                    'monthly'
+                                                        ? 'border-primary bg-primary/5'
+                                                        : 'border-border'
+                                                }`}
+                                            >
+                                                <p className="text-sm font-medium">
+                                                    Monthly amounts
+                                                </p>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    switchSalaryAmountPeriod(
+                                                        'annual',
+                                                    )
+                                                }
+                                                className={`rounded-lg border p-3 text-left transition-colors ${
+                                                    salaryAmountPeriod ===
+                                                    'annual'
+                                                        ? 'border-primary bg-primary/5'
+                                                        : 'border-border'
+                                                }`}
+                                            >
+                                                <p className="text-sm font-medium">
+                                                    Annual amounts
+                                                </p>
+                                            </button>
+                                        </div>
+                                        <input
+                                            type="hidden"
+                                            name="salary_input_mode"
+                                            value={salaryEntryMode}
+                                        />
+                                        <input
+                                            type="hidden"
+                                            name="salary_amount_period"
+                                            value={salaryAmountPeriod}
+                                        />
+                                        <input
+                                            type="hidden"
+                                            name="monthly_gross_salary"
+                                            value={monthlyGrossSalary.toFixed(
+                                                2,
+                                            )}
+                                        />
+                                        <input
+                                            type="hidden"
+                                            name="annual_gross_salary"
+                                            value={annualGrossSalary.toFixed(2)}
+                                        />
+                                        <input
+                                            type="hidden"
+                                            name="basic_salary"
+                                            value={monthlyBasicSalary.toFixed(
+                                                2,
+                                            )}
+                                        />
+                                        <input
+                                            type="hidden"
+                                            name="housing_allowance"
+                                            value={monthlyHousingAllowance.toFixed(
+                                                2,
+                                            )}
+                                        />
+                                        <input
+                                            type="hidden"
+                                            name="transport_allowance"
+                                            value={monthlyTransportAllowance.toFixed(
+                                                2,
+                                            )}
+                                        />
+                                        <input
+                                            type="hidden"
+                                            name="other_allowance_1"
+                                            value={monthlyOtherAllowanceOne.toFixed(
+                                                2,
+                                            )}
+                                        />
+                                        <input
+                                            type="hidden"
+                                            name="other_allowance_2"
+                                            value={monthlyOtherAllowanceTwo.toFixed(
+                                                2,
+                                            )}
+                                        />
                                     </div>
 
                                     {salaryEntryMode === 'salary_elements' && (
                                         <>
                                             <div className="grid gap-2">
                                                 <Label htmlFor="salary_element_basic">
-                                                    Basic salary
+                                                    Basic salary (
+                                                    {salaryAmountPeriod})
                                                 </Label>
                                                 <Input
                                                     id="salary_element_basic"
                                                     inputMode="decimal"
                                                     value={basicSalary}
                                                     onChange={(e) => {
+                                                        setHasTouchedCompensation(
+                                                            true,
+                                                        );
                                                         setBasicSalary(
                                                             e.target.value,
-                                                        );
-                                                        calcFromGross(
-                                                            (
-                                                                (parseFloat(
-                                                                    e.target
-                                                                        .value ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    housingAllowance ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    transportAllowance ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    otherAllowanceOne ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    otherAllowanceTwo ||
-                                                                        '0',
-                                                                ) || 0)
-                                                            ).toString(),
                                                         );
                                                     }}
                                                     placeholder="150000"
@@ -728,40 +888,19 @@ export default function CreateEmployee({
                                             </div>
                                             <div className="grid gap-2">
                                                 <Label htmlFor="salary_element_housing">
-                                                    Housing allowance
+                                                    Housing allowance (
+                                                    {salaryAmountPeriod})
                                                 </Label>
                                                 <Input
                                                     id="salary_element_housing"
                                                     inputMode="decimal"
                                                     value={housingAllowance}
                                                     onChange={(e) => {
+                                                        setHasTouchedCompensation(
+                                                            true,
+                                                        );
                                                         setHousingAllowance(
                                                             e.target.value,
-                                                        );
-                                                        calcFromGross(
-                                                            (
-                                                                (parseFloat(
-                                                                    basicSalary ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    e.target
-                                                                        .value ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    transportAllowance ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    otherAllowanceOne ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    otherAllowanceTwo ||
-                                                                        '0',
-                                                                ) || 0)
-                                                            ).toString(),
                                                         );
                                                     }}
                                                     placeholder="50000"
@@ -769,40 +908,19 @@ export default function CreateEmployee({
                                             </div>
                                             <div className="grid gap-2">
                                                 <Label htmlFor="salary_element_transport">
-                                                    Transport allowance
+                                                    Transport allowance (
+                                                    {salaryAmountPeriod})
                                                 </Label>
                                                 <Input
                                                     id="salary_element_transport"
                                                     inputMode="decimal"
                                                     value={transportAllowance}
                                                     onChange={(e) => {
+                                                        setHasTouchedCompensation(
+                                                            true,
+                                                        );
                                                         setTransportAllowance(
                                                             e.target.value,
-                                                        );
-                                                        calcFromGross(
-                                                            (
-                                                                (parseFloat(
-                                                                    basicSalary ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    housingAllowance ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    e.target
-                                                                        .value ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    otherAllowanceOne ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    otherAllowanceTwo ||
-                                                                        '0',
-                                                                ) || 0)
-                                                            ).toString(),
                                                         );
                                                     }}
                                                     placeholder="30000"
@@ -810,41 +928,19 @@ export default function CreateEmployee({
                                             </div>
                                             <div className="grid gap-2">
                                                 <Label htmlFor="other_allowance_1">
-                                                    Additional income 1
+                                                    Additional income 1 (
+                                                    {salaryAmountPeriod})
                                                 </Label>
                                                 <Input
                                                     id="other_allowance_1"
-                                                    name="other_allowance_1"
                                                     inputMode="decimal"
                                                     value={otherAllowanceOne}
                                                     onChange={(e) => {
+                                                        setHasTouchedCompensation(
+                                                            true,
+                                                        );
                                                         setOtherAllowanceOne(
                                                             e.target.value,
-                                                        );
-                                                        calcFromGross(
-                                                            (
-                                                                (parseFloat(
-                                                                    basicSalary ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    housingAllowance ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    transportAllowance ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    e.target
-                                                                        .value ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    otherAllowanceTwo ||
-                                                                        '0',
-                                                                ) || 0)
-                                                            ).toString(),
                                                         );
                                                     }}
                                                     placeholder="Optional"
@@ -852,41 +948,19 @@ export default function CreateEmployee({
                                             </div>
                                             <div className="grid gap-2">
                                                 <Label htmlFor="other_allowance_2">
-                                                    Additional income 2
+                                                    Additional income 2 (
+                                                    {salaryAmountPeriod})
                                                 </Label>
                                                 <Input
                                                     id="other_allowance_2"
-                                                    name="other_allowance_2"
                                                     inputMode="decimal"
                                                     value={otherAllowanceTwo}
                                                     onChange={(e) => {
+                                                        setHasTouchedCompensation(
+                                                            true,
+                                                        );
                                                         setOtherAllowanceTwo(
                                                             e.target.value,
-                                                        );
-                                                        calcFromGross(
-                                                            (
-                                                                (parseFloat(
-                                                                    basicSalary ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    housingAllowance ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    transportAllowance ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    otherAllowanceOne ||
-                                                                        '0',
-                                                                ) || 0) +
-                                                                (parseFloat(
-                                                                    e.target
-                                                                        .value ||
-                                                                        '0',
-                                                                ) || 0)
-                                                            ).toString(),
                                                         );
                                                     }}
                                                     placeholder="Optional"
@@ -896,12 +970,13 @@ export default function CreateEmployee({
                                     )}
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="monthly_gross_salary">
-                                            Monthly gross salary
+                                        <Label htmlFor="gross_salary_amount">
+                                            {salaryAmountPeriod === 'monthly'
+                                                ? 'Monthly gross salary'
+                                                : 'Annual gross salary'}
                                         </Label>
                                         <Input
-                                            id="monthly_gross_salary"
-                                            name="monthly_gross_salary"
+                                            id="gross_salary_amount"
                                             required
                                             inputMode="decimal"
                                             placeholder="250000"
@@ -911,8 +986,8 @@ export default function CreateEmployee({
                                                 'salary_elements'
                                             }
                                             onChange={(e) => {
+                                                setHasTouchedCompensation(true);
                                                 setGrossSalary(e.target.value);
-                                                calcFromGross(e.target.value);
                                             }}
                                         />
                                         {salaryEntryMode ===
@@ -929,18 +1004,22 @@ export default function CreateEmployee({
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="annual_gross_salary">
-                                            Annual gross salary
+                                        <Label htmlFor="alternate_gross_salary">
+                                            {salaryAmountPeriod === 'monthly'
+                                                ? 'Annual gross salary'
+                                                : 'Monthly gross salary'}
                                         </Label>
                                         <Input
-                                            id="annual_gross_salary"
-                                            name="annual_gross_salary"
+                                            id="alternate_gross_salary"
                                             inputMode="decimal"
-                                            placeholder="Optional"
-                                            defaultValue={
-                                                employee?.annual_gross_salary ??
-                                                ''
+                                            value={
+                                                displayedAlternateGross > 0
+                                                    ? displayedAlternateGross.toFixed(
+                                                          2,
+                                                      )
+                                                    : ''
                                             }
+                                            readOnly
                                         />
                                         <InputError
                                             message={errors.annual_gross_salary}
@@ -964,6 +1043,11 @@ export default function CreateEmployee({
                                                     Apply PAYE for this employee
                                                 </Label>
                                             </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                {deductionDefaultMessage(
+                                                    orgDefaultPaye,
+                                                )}
+                                            </p>
                                             <Label htmlFor="monthly_tax_deduction">
                                                 Monthly PAYE deduction
                                             </Label>
@@ -1028,6 +1112,11 @@ export default function CreateEmployee({
                                                     employee
                                                 </Label>
                                             </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                {deductionDefaultMessage(
+                                                    orgDefaultPension,
+                                                )}
+                                            </p>
                                             <Label htmlFor="monthly_pension_deduction">
                                                 Monthly pension deduction
                                             </Label>
@@ -1106,6 +1195,11 @@ export default function CreateEmployee({
                                                     Apply NHF for this employee
                                                 </Label>
                                             </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                {deductionDefaultMessage(
+                                                    orgDefaultNhf,
+                                                )}
+                                            </p>
                                             <Label htmlFor="monthly_nhf_deduction">
                                                 Monthly NHF deduction
                                             </Label>

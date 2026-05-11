@@ -30,9 +30,13 @@ class Employee extends Model
         'bank_name',
         'bank_account_name',
         'bank_account_number',
+        'salary_amount_period',
         'monthly_gross_salary',
         'annual_gross_salary',
         'salary_input_mode',
+        'basic_salary',
+        'housing_allowance',
+        'transport_allowance',
         'monthly_tax_deduction',
         'apply_paye_deduction',
         'monthly_pension_deduction',
@@ -57,9 +61,13 @@ class Employee extends Model
     ];
 
     protected $casts = [
+        'salary_amount_period' => 'string',
         'monthly_gross_salary' => 'decimal:2',
         'annual_gross_salary' => 'decimal:2',
         'salary_input_mode' => 'string',
+        'basic_salary' => 'decimal:2',
+        'housing_allowance' => 'decimal:2',
+        'transport_allowance' => 'decimal:2',
         'monthly_tax_deduction' => 'decimal:2',
         'apply_paye_deduction' => 'boolean',
         'monthly_pension_deduction' => 'decimal:2',
