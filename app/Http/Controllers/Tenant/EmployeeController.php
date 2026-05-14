@@ -109,6 +109,10 @@ class EmployeeController extends Controller
                 'apply_pension_deduction' => (bool) ($employee->apply_pension_deduction ?? true),
                 'monthly_nhf_deduction' => (float) $employee->monthly_nhf_deduction,
                 'apply_nhf_deduction' => (bool) ($employee->apply_nhf_deduction ?? true),
+                'monthly_nhis_deduction' => (float) ($employee->monthly_nhis_deduction ?? 0),
+                'apply_nhis_deduction' => (bool) ($employee->apply_nhis_deduction ?? true),
+                'monthly_nsitf_deduction' => (float) ($employee->monthly_nsitf_deduction ?? 0),
+                'apply_nsitf_deduction' => (bool) ($employee->apply_nsitf_deduction ?? true),
                 'other_monthly_deductions' => (float) $employee->other_monthly_deductions,
                 'other_allowance_1' => $employee->other_allowance_1 !== null ? (float) $employee->other_allowance_1 * $salaryAmountMultiplier : null,
                 'other_allowance_2' => $employee->other_allowance_2 !== null ? (float) $employee->other_allowance_2 * $salaryAmountMultiplier : null,
@@ -160,6 +164,8 @@ class EmployeeController extends Controller
                 'monthlyTaxDeduction' => $employee->monthly_tax_deduction,
                 'monthlyPensionDeduction' => $employee->monthly_pension_deduction,
                 'monthlyNhfDeduction' => $employee->monthly_nhf_deduction,
+                'monthlyNhisDeduction' => $employee->monthly_nhis_deduction,
+                'monthlyNsitfDeduction' => $employee->monthly_nsitf_deduction,
                 'otherMonthlyDeductions' => $employee->other_monthly_deductions,
                 'otherAllowance1' => $employee->other_allowance_1,
                 'otherAllowance2' => $employee->other_allowance_2,
@@ -279,6 +285,8 @@ class EmployeeController extends Controller
         $payload['apply_paye_deduction'] = (bool) ($payload['apply_paye_deduction'] ?? in_array('paye', $orgDeductionDefaults, true));
         $payload['apply_pension_deduction'] = (bool) ($payload['apply_pension_deduction'] ?? in_array('pension', $orgDeductionDefaults, true));
         $payload['apply_nhf_deduction'] = (bool) ($payload['apply_nhf_deduction'] ?? in_array('nhf', $orgDeductionDefaults, true));
+        $payload['apply_nhis_deduction'] = (bool) ($payload['apply_nhis_deduction'] ?? in_array('nhis', $orgDeductionDefaults, true));
+        $payload['apply_nsitf_deduction'] = (bool) ($payload['apply_nsitf_deduction'] ?? in_array('nsitf', $orgDeductionDefaults, true));
 
         if (! $payload['apply_paye_deduction']) {
             $payload['monthly_tax_deduction'] = 0;
@@ -290,6 +298,14 @@ class EmployeeController extends Controller
 
         if (! $payload['apply_nhf_deduction']) {
             $payload['monthly_nhf_deduction'] = 0;
+        }
+
+        if (! $payload['apply_nhis_deduction']) {
+            $payload['monthly_nhis_deduction'] = 0;
+        }
+
+        if (! $payload['apply_nsitf_deduction']) {
+            $payload['monthly_nsitf_deduction'] = 0;
         }
 
         return $payload;

@@ -372,9 +372,13 @@ test('owner can update employee and deduction toggles persist with zeroed deduct
         'monthly_tax_deduction' => 9000,
         'monthly_pension_deduction' => 14400,
         'monthly_nhf_deduction' => 4500,
+        'monthly_nhis_deduction' => 9000,
+        'monthly_nsitf_deduction' => 1800,
         'apply_paye_deduction' => true,
         'apply_pension_deduction' => true,
         'apply_nhf_deduction' => true,
+        'apply_nhis_deduction' => true,
+        'apply_nsitf_deduction' => true,
         'employment_type' => 'full_time',
         'status' => 'active',
     ]);
@@ -399,6 +403,10 @@ test('owner can update employee and deduction toggles persist with zeroed deduct
             'apply_pension_deduction' => true,
             'monthly_nhf_deduction' => '4500',
             'apply_nhf_deduction' => false,
+            'monthly_nhis_deduction' => '9000',
+            'apply_nhis_deduction' => false,
+            'monthly_nsitf_deduction' => '1800',
+            'apply_nsitf_deduction' => true,
             'other_monthly_deductions' => '1000',
             'employment_type' => 'full_time',
             'status' => 'active',
@@ -412,9 +420,13 @@ test('owner can update employee and deduction toggles persist with zeroed deduct
     expect($employee->apply_paye_deduction)->toBeFalse();
     expect($employee->apply_pension_deduction)->toBeTrue();
     expect($employee->apply_nhf_deduction)->toBeFalse();
+    expect($employee->apply_nhis_deduction)->toBeFalse();
+    expect($employee->apply_nsitf_deduction)->toBeTrue();
     expect((float) $employee->monthly_tax_deduction)->toBe(0.0);
     expect((float) $employee->monthly_pension_deduction)->toBe(14400.0);
     expect((float) $employee->monthly_nhf_deduction)->toBe(0.0);
+    expect((float) $employee->monthly_nhis_deduction)->toBe(0.0);
+    expect((float) $employee->monthly_nsitf_deduction)->toBe(1800.0);
 });
 
 test('organization member cannot view employees listing', function () {

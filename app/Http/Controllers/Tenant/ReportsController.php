@@ -154,6 +154,8 @@ class ReportsController extends Controller
                 - (float) $employee->monthly_tax_deduction
                 - (float) $employee->monthly_pension_deduction
                 - (float) $employee->monthly_nhf_deduction
+                - (float) ($employee->monthly_nhis_deduction ?? 0)
+                - (float) ($employee->monthly_nsitf_deduction ?? 0)
                 - (float) $employee->other_monthly_deductions;
 
             return [

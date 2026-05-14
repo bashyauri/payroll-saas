@@ -86,6 +86,10 @@ export default function CreateEmployee({
         apply_pension_deduction: boolean;
         monthly_nhf_deduction: number;
         apply_nhf_deduction: boolean;
+        monthly_nhis_deduction: number;
+        apply_nhis_deduction: boolean;
+        monthly_nsitf_deduction: number;
+        apply_nsitf_deduction: boolean;
         other_monthly_deductions: number;
         other_allowance_1: number | null;
         other_allowance_2: number | null;
@@ -126,11 +130,13 @@ export default function CreateEmployee({
     ];
     const orgDefaultPension = enabledDeductions.includes('pension');
     const orgDefaultNhf = enabledDeductions.includes('nhf');
+    const orgDefaultNhis = enabledDeductions.includes('nhis');
+    const orgDefaultNsitf = enabledDeductions.includes('nsitf');
     const orgDefaultPaye = enabledDeductions.includes('paye');
     const hasPension = true;
     const hasNhf = true;
-    const hasNhis = enabledDeductions.includes('nhis');
-    const hasNsitf = enabledDeductions.includes('nsitf');
+    const hasNhis = true;
+    const hasNsitf = true;
     const hasPaye = true;
     const { auth } = usePage().props as {
         auth?: { organizationRole?: string | null };
@@ -186,7 +192,12 @@ export default function CreateEmployee({
     const [nhfDeduction, setNhfDeduction] = useState(
         employee?.monthly_nhf_deduction?.toString() ?? '',
     );
-    const [nhisDeduction, setNhisDeduction] = useState('');
+    const [nhisDeduction, setNhisDeduction] = useState(
+        employee?.monthly_nhis_deduction?.toString() ?? '',
+    );
+    const [nsitfDeduction, setNsitfDeduction] = useState(
+        employee?.monthly_nsitf_deduction?.toString() ?? '',
+    );
     const [applyPayeDeduction, setApplyPayeDeduction] = useState(
         employee?.apply_paye_deduction ?? orgDefaultPaye,
     );
@@ -195,6 +206,12 @@ export default function CreateEmployee({
     );
     const [applyNhfDeduction, setApplyNhfDeduction] = useState(
         employee?.apply_nhf_deduction ?? orgDefaultNhf,
+    );
+    const [applyNhisDeduction, setApplyNhisDeduction] = useState(
+        employee?.apply_nhis_deduction ?? orgDefaultNhis,
+    );
+    const [applyNsitfDeduction, setApplyNsitfDeduction] = useState(
+        employee?.apply_nsitf_deduction ?? orgDefaultNsitf,
     );
     const [hasTouchedCompensation, setHasTouchedCompensation] = useState(
         employee === null,
@@ -276,10 +293,15 @@ export default function CreateEmployee({
                 setNhisDeduction(
                     ((value * payrollRates.nhisEmployeeRate) / 100).toFixed(2),
                 );
+            if (hasNsitf)
+                setNsitfDeduction(
+                    ((value * payrollRates.nsitfRate) / 100).toFixed(2),
+                );
         } else {
             setPensionDeduction('');
             setNhfDeduction('');
             setNhisDeduction('');
+            setNsitfDeduction('');
         }
     }
 
@@ -1248,10 +1270,153 @@ export default function CreateEmployee({
                                             />
                                         </div>
                                     )}
+                                    {hasNhis && (
+                                        <div className="grid gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <Checkbox
+                                                    id="apply_nhis_deduction"
+                                                    checked={applyNhisDeduction}
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) => {
+                                                        const shouldApply =
+                                                            checked === true;
+                                                        setApplyNhisDeduction(
+                                                            shouldApply,
+                                                        );
+                                                        if (!shouldApply) {
+                                                            setNhisDeduction(
+                                                                '0',
+                                                            );
+                                                        }
+                                                    }}
+                                                />
+                                                <Label htmlFor="apply_nhis_deduction">
+                                                    Apply NHIS for this employee
+                                                </Label>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                {deductionDefaultMessage(
+                                                    orgDefaultNhis,
+                                                )}
+                                            </p>
+                                            <Label htmlFor="monthly_nhis_deduction">
+                                                Monthly NHIS deduction
+                                            </Label>
+                                            <Input
+                                                id="monthly_nhis_deduction"
+                                                name="monthly_nhis_deduction"
+                                                inputMode="decimal"
+                                                value={nhisDeduction}
+                                                disabled={!applyNhisDeduction}
+                                                onChange={(e) =>
+                                                    setNhisDeduction(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder={`${payrollRates.nhisEmployeeRate}% of gross salary`}
+                                            />
+                                            {!applyNhisDeduction && (
+                                                <input
+                                                    type="hidden"
+                                                    name="monthly_nhis_deduction"
+                                                    value="0"
+                                                />
+                                            )}
+                                            <input
+                                                type="hidden"
+                                                name="apply_nhis_deduction"
+                                                value={
+                                                    applyNhisDeduction
+                                                        ? '1'
+                                                        : '0'
+                                                }
+                                            />
+                                            <InputError
+                                                message={
+                                                    errors.monthly_nhis_deduction
+                                                }
+                                            />
+                                        </div>
+                                    )}
+                                    {hasNsitf && (
+                                        <div className="grid gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <Checkbox
+                                                    id="apply_nsitf_deduction"
+                                                    checked={
+                                                        applyNsitfDeduction
+                                                    }
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) => {
+                                                        const shouldApply =
+                                                            checked === true;
+                                                        setApplyNsitfDeduction(
+                                                            shouldApply,
+                                                        );
+                                                        if (!shouldApply) {
+                                                            setNsitfDeduction(
+                                                                '0',
+                                                            );
+                                                        }
+                                                    }}
+                                                />
+                                                <Label htmlFor="apply_nsitf_deduction">
+                                                    Apply NSITF for this
+                                                    employee
+                                                </Label>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                {deductionDefaultMessage(
+                                                    orgDefaultNsitf,
+                                                )}
+                                            </p>
+                                            <Label htmlFor="monthly_nsitf_deduction">
+                                                Monthly NSITF deduction
+                                            </Label>
+                                            <Input
+                                                id="monthly_nsitf_deduction"
+                                                name="monthly_nsitf_deduction"
+                                                inputMode="decimal"
+                                                value={nsitfDeduction}
+                                                disabled={!applyNsitfDeduction}
+                                                onChange={(e) =>
+                                                    setNsitfDeduction(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder={`${payrollRates.nsitfRate}% of gross salary`}
+                                            />
+                                            {!applyNsitfDeduction && (
+                                                <input
+                                                    type="hidden"
+                                                    name="monthly_nsitf_deduction"
+                                                    value="0"
+                                                />
+                                            )}
+                                            <input
+                                                type="hidden"
+                                                name="apply_nsitf_deduction"
+                                                value={
+                                                    applyNsitfDeduction
+                                                        ? '1'
+                                                        : '0'
+                                                }
+                                            />
+                                            <InputError
+                                                message={
+                                                    errors.monthly_nsitf_deduction
+                                                }
+                                            />
+                                        </div>
+                                    )}
                                     {isOrganizationAdmin &&
                                         (!applyPayeDeduction ||
                                             !applyPensionDeduction ||
-                                            !applyNhfDeduction) && (
+                                            !applyNhfDeduction ||
+                                            !applyNhisDeduction ||
+                                            !applyNsitfDeduction) && (
                                             <div className="md:col-span-2">
                                                 <Alert className="border-amber-200 bg-amber-50 text-amber-900">
                                                     <AlertTitle>
@@ -1281,41 +1446,6 @@ export default function CreateEmployee({
                                                 0
                                             }
                                         />
-                                        {grossSalary &&
-                                            (hasNhis || hasNsitf) && (
-                                                <p className="text-xs text-muted-foreground">
-                                                    {hasNhis && (
-                                                        <>
-                                                            Estimated NHIS (
-                                                            {
-                                                                payrollRates.nhisEmployeeRate
-                                                            }
-                                                            %): {nhisDeduction}
-                                                        </>
-                                                    )}
-                                                    {hasNhis && hasNsitf && (
-                                                        <> &nbsp;|&nbsp; </>
-                                                    )}
-                                                    {hasNsitf && (
-                                                        <>
-                                                            NSITF (
-                                                            {
-                                                                payrollRates.nsitfRate
-                                                            }
-                                                            %):{' '}
-                                                            {(
-                                                                (parseFloat(
-                                                                    grossSalary,
-                                                                ) *
-                                                                    payrollRates.nsitfRate) /
-                                                                100
-                                                            ).toFixed(2)}
-                                                        </>
-                                                    )}{' '}
-                                                    — include these here if
-                                                    applicable
-                                                </p>
-                                            )}
                                         <InputError
                                             message={
                                                 errors.other_monthly_deductions

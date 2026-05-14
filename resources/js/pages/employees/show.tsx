@@ -36,6 +36,8 @@ type EmployeeDetail = {
     monthlyTaxDeduction: string | number;
     monthlyPensionDeduction: string | number;
     monthlyNhfDeduction: string | number;
+    monthlyNhisDeduction: string | number;
+    monthlyNsitfDeduction: string | number;
     otherMonthlyDeductions: string | number;
     otherAllowance1: string | number | null;
     otherAllowance2: string | number | null;
@@ -263,6 +265,18 @@ export default function EmployeeShow({
                             NHF deduction:{' '}
                             <span className="font-medium text-foreground">
                                 {formatMoney(employee.monthlyNhfDeduction)}
+                            </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            NHIS deduction:{' '}
+                            <span className="font-medium text-foreground">
+                                {formatMoney(employee.monthlyNhisDeduction)}
+                            </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            NSITF deduction:{' '}
+                            <span className="font-medium text-foreground">
+                                {formatMoney(employee.monthlyNsitfDeduction)}
                             </span>
                         </p>
                         <p className="text-sm text-muted-foreground md:col-span-2">
