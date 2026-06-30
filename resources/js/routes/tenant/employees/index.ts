@@ -416,7 +416,7 @@ edit.head = (args: { employee: string | number | { id: string | number } } | [em
     edit.form = editForm
 /**
 * @see \App\Http\Controllers\Tenant\EmployeeController::update
- * @see app/Http/Controllers/Tenant/EmployeeController.php:219
+ * @see app/Http/Controllers/Tenant/EmployeeController.php:235
  * @route '/employees/{employee}'
  */
 export const update = (args: { employee: string | number | { id: string | number } } | [employee: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -431,7 +431,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Tenant\EmployeeController::update
- * @see app/Http/Controllers/Tenant/EmployeeController.php:219
+ * @see app/Http/Controllers/Tenant/EmployeeController.php:235
  * @route '/employees/{employee}'
  */
 update.url = (args: { employee: string | number | { id: string | number } } | [employee: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
@@ -464,7 +464,7 @@ update.url = (args: { employee: string | number | { id: string | number } } | [e
 
 /**
 * @see \App\Http\Controllers\Tenant\EmployeeController::update
- * @see app/Http/Controllers/Tenant/EmployeeController.php:219
+ * @see app/Http/Controllers/Tenant/EmployeeController.php:235
  * @route '/employees/{employee}'
  */
 update.patch = (args: { employee: string | number | { id: string | number } } | [employee: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -474,7 +474,7 @@ update.patch = (args: { employee: string | number | { id: string | number } } | 
 
     /**
 * @see \App\Http\Controllers\Tenant\EmployeeController::update
- * @see app/Http/Controllers/Tenant/EmployeeController.php:219
+ * @see app/Http/Controllers/Tenant/EmployeeController.php:235
  * @route '/employees/{employee}'
  */
     const updateForm = (args: { employee: string | number | { id: string | number } } | [employee: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -489,7 +489,7 @@ update.patch = (args: { employee: string | number | { id: string | number } } | 
 
             /**
 * @see \App\Http\Controllers\Tenant\EmployeeController::update
- * @see app/Http/Controllers/Tenant/EmployeeController.php:219
+ * @see app/Http/Controllers/Tenant/EmployeeController.php:235
  * @route '/employees/{employee}'
  */
         updateForm.patch = (args: { employee: string | number | { id: string | number } } | [employee: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
