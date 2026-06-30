@@ -1,6 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
 import { useState } from 'react';
-import PayrollSettingsController from '@/actions/App/Http/Controllers/Settings/PayrollSettingsController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -10,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
-import { edit } from '@/routes/payroll/settings';
+import { edit, update } from '@/routes/payroll/settings';
 import type { BreadcrumbItem } from '@/types';
 
 type CustomItem = {
@@ -190,7 +189,7 @@ export default function PayrollSettings({
                     )}
 
                     <Form
-                        {...PayrollSettingsController.update.form()}
+                        {...update.form()}
                         options={{
                             preserveScroll: true,
                         }}

@@ -1,6 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
 import { useState } from 'react';
-import WorkspaceController from '@/actions/App/Http/Controllers/Settings/WorkspaceController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -9,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
-import { edit } from '@/routes/workspace';
+import { edit, update } from '@/routes/workspace';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -53,7 +52,7 @@ export default function WorkspaceSettings({
                     </Alert>
 
                     <Form
-                        {...WorkspaceController.update.form()}
+                        {...update.form()}
                         options={{
                             preserveScroll: true,
                         }}
