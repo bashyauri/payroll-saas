@@ -209,6 +209,13 @@ class EmployeeController extends Controller
         $validated = $this->applyDeductionToggleOverrides($validated, $settings);
         $validated['custom_items'] = $this->storedEmployeeCustomItems($validated['custom_items'] ?? null);
 
+        // Ensure boolean values are explicitly true/false for PostgreSQL
+        $validated['apply_paye_deduction'] = $validated['apply_paye_deduction'] ? true : false;
+        $validated['apply_pension_deduction'] = $validated['apply_pension_deduction'] ? true : false;
+        $validated['apply_nhf_deduction'] = $validated['apply_nhf_deduction'] ? true : false;
+        $validated['apply_nhis_deduction'] = $validated['apply_nhis_deduction'] ? true : false;
+        $validated['apply_nsitf_deduction'] = $validated['apply_nsitf_deduction'] ? true : false;
+
         Employee::query()->create($validated);
 
         return redirect()
@@ -223,6 +230,13 @@ class EmployeeController extends Controller
         $validated = $this->normalizeCompensationPayload($validated, $settings);
         $validated = $this->applyDeductionToggleOverrides($validated, $settings);
         $validated['custom_items'] = $this->storedEmployeeCustomItems($validated['custom_items'] ?? null);
+
+        // Ensure boolean values are explicitly true/false for PostgreSQL
+        $validated['apply_paye_deduction'] = $validated['apply_paye_deduction'] ? true : false;
+        $validated['apply_pension_deduction'] = $validated['apply_pension_deduction'] ? true : false;
+        $validated['apply_nhf_deduction'] = $validated['apply_nhf_deduction'] ? true : false;
+        $validated['apply_nhis_deduction'] = $validated['apply_nhis_deduction'] ? true : false;
+        $validated['apply_nsitf_deduction'] = $validated['apply_nsitf_deduction'] ? true : false;
 
         $employee->update($validated);
 
