@@ -93,4 +93,44 @@ class Employee extends Model
         'hire_date' => 'date',
         'exit_date' => 'date',
     ];
+
+    /**
+     * Set the apply_paye_deduction attribute.
+     */
+    protected function setApplyPayeDeductionAttribute($value): void
+    {
+        $this->attributes['apply_paye_deduction'] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Set the apply_pension_deduction attribute.
+     */
+    protected function setApplyPensionDeductionAttribute($value): void
+    {
+        $this->attributes['apply_pension_deduction'] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Set the apply_nhf_deduction attribute.
+     */
+    protected function setApplyNhfDeductionAttribute($value): void
+    {
+        $this->attributes['apply_nhf_deduction'] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Set the apply_nhis_deduction attribute.
+     */
+    protected function setApplyNhisDeductionAttribute($value): void
+    {
+        $this->attributes['apply_nhis_deduction'] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Set the apply_nsitf_deduction attribute.
+     */
+    protected function setApplyNsitfDeductionAttribute($value): void
+    {
+        $this->attributes['apply_nsitf_deduction'] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
 }
