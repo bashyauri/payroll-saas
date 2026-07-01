@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Expression;
 
 class Employee extends Model
 {
@@ -99,7 +100,7 @@ class Employee extends Model
      */
     protected function setApplyPayeDeductionAttribute($value): void
     {
-        $this->attributes['apply_paye_deduction'] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        $this->setDeductionToggleAttribute('apply_paye_deduction', $value);
     }
 
     /**
@@ -107,7 +108,7 @@ class Employee extends Model
      */
     protected function setApplyPensionDeductionAttribute($value): void
     {
-        $this->attributes['apply_pension_deduction'] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        $this->setDeductionToggleAttribute('apply_pension_deduction', $value);
     }
 
     /**
@@ -115,7 +116,7 @@ class Employee extends Model
      */
     protected function setApplyNhfDeductionAttribute($value): void
     {
-        $this->attributes['apply_nhf_deduction'] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        $this->setDeductionToggleAttribute('apply_nhf_deduction', $value);
     }
 
     /**
@@ -123,7 +124,7 @@ class Employee extends Model
      */
     protected function setApplyNhisDeductionAttribute($value): void
     {
-        $this->attributes['apply_nhis_deduction'] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        $this->setDeductionToggleAttribute('apply_nhis_deduction', $value);
     }
 
     /**
@@ -131,6 +132,23 @@ class Employee extends Model
      */
     protected function setApplyNsitfDeductionAttribute($value): void
     {
-        $this->attributes['apply_nsitf_deduction'] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        $this->setDeductionToggleAttribute('apply_nsitf_deduction', $value);
+    }
+
+    private function setDeductionToggleAttribute(string $key, mixed $value): void
+    {
+        $booleanValue = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        $connectionName = $this->getConnectionName() ?? config('database.default');
+        $driver = is_string($connectionName)
+            ? config("database.connections.{$connectionName}.driver")
+            : null;
+
+        if ($driver === 'pgsql') {
+            $this->attributes[$key] = new Expression($booleanValue ? 'true' : 'false');
+
+            return;
+        }
+
+        $this->attributes[$key] = $booleanValue;
     }
 }

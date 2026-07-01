@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Tenant\EmployeeController::index
  * @see app/Http/Controllers/Tenant/EmployeeController.php:26
@@ -503,13 +503,6 @@ update.patch = (args: { employee: string | number | { id: string | number } } | 
         })
     
     update.form = updateForm
-const employees = {
-    index: Object.assign(index, index),
-create: Object.assign(create, create),
-store: Object.assign(store, store),
-show: Object.assign(show, show),
-edit: Object.assign(edit, edit),
-update: Object.assign(update, update),
-}
+const EmployeeController = { index, create, store, show, edit, update }
 
-export default employees
+export default EmployeeController
