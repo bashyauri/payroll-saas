@@ -19,6 +19,22 @@ import { plans as billingPlans } from '@/routes/billing';
 import { create, index } from '@/routes/tenant/employees';
 import type { BreadcrumbItem } from '@/types';
 
+function BooleanHiddenInput({
+    name,
+    value,
+}: {
+    name: string;
+    value: boolean;
+}) {
+    return (
+        <input
+            type="hidden"
+            name={name}
+            value={value ? '1' : '0'}
+        />
+    );
+}
+
 export default function CreateEmployee({
     employeeCount,
     employeeLimit,
@@ -1083,15 +1099,10 @@ export default function CreateEmployee({
                                                 }
                                                 disabled={!applyPayeDeduction}
                                             />
-                                            <input
-                                                type="hidden"
-                                                name="apply_paye_deduction"
-                                                value={
-                                                    applyPayeDeduction
-                                                        ? '1'
-                                                        : '0'
-                                                }
-                                            />
+                                           <BooleanHiddenInput
+    name="apply_paye_deduction"
+    value={applyPayeDeduction}
+/>
                                             {!applyPayeDeduction && (
                                                 <input
                                                     type="hidden"
@@ -1176,14 +1187,9 @@ export default function CreateEmployee({
                                                     value="0"
                                                 />
                                             )}
-                                            <input
-                                                type="hidden"
+                                            <BooleanHiddenInput
                                                 name="apply_pension_deduction"
-                                                value={
-                                                    applyPensionDeduction
-                                                        ? '1'
-                                                        : '0'
-                                                }
+                                                value={applyPensionDeduction}
                                             />
                                             <InputError
                                                 message={
@@ -1254,14 +1260,9 @@ export default function CreateEmployee({
                                                     value="0"
                                                 />
                                             )}
-                                            <input
-                                                type="hidden"
+                                            <BooleanHiddenInput
                                                 name="apply_nhf_deduction"
-                                                value={
-                                                    applyNhfDeduction
-                                                        ? '1'
-                                                        : '0'
-                                                }
+                                                value={applyNhfDeduction}
                                             />
                                             <InputError
                                                 message={
@@ -1323,14 +1324,9 @@ export default function CreateEmployee({
                                                     value="0"
                                                 />
                                             )}
-                                            <input
-                                                type="hidden"
+                                            <BooleanHiddenInput
                                                 name="apply_nhis_deduction"
-                                                value={
-                                                    applyNhisDeduction
-                                                        ? '1'
-                                                        : '0'
-                                                }
+                                                value={applyNhisDeduction}
                                             />
                                             <InputError
                                                 message={
@@ -1395,14 +1391,9 @@ export default function CreateEmployee({
                                                     value="0"
                                                 />
                                             )}
-                                            <input
-                                                type="hidden"
+                                            <BooleanHiddenInput
                                                 name="apply_nsitf_deduction"
-                                                value={
-                                                    applyNsitfDeduction
-                                                        ? '1'
-                                                        : '0'
-                                                }
+                                                value={applyNsitfDeduction}
                                             />
                                             <InputError
                                                 message={
