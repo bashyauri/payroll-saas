@@ -42,6 +42,7 @@ class PayrollController extends Controller
                 'totalGrossSalary' => (float) $run->total_gross_salary,
                 'totalDeductions' => (float) $run->total_deductions,
                 'totalNetPay' => (float) $run->total_net_pay,
+                'nhisEmployerContribution' => (float) data_get($run->settings_snapshot, 'computed_totals.nhis_employer_contribution', 0),
                 'createdAt' => $run->created_at?->toIso8601String(),
                 'finalizedAt' => $run->finalized_at?->toIso8601String(),
             ])
@@ -81,6 +82,9 @@ class PayrollController extends Controller
             ->where('status', 'active')
             ->get();
 
+        $settingsSnapshot = $this->settingsResolver->resolve($periodStart, 'default');
+        $nhisEmployerRate = (float) ($settingsSnapshot['nhis_employer_rate'] ?? EffectivePayrollSettingsResolver::DEFAULT_NHIS_EMPLOYER_RATE);
+
         $totalGrossSalary = (float) $employees->sum(fn (Employee $employee): float => (float) $employee->monthly_gross_salary);
         $totalDeductions = (float) $employees->sum(function (Employee $employee): float {
             return (float) $employee->monthly_tax_deduction
@@ -90,8 +94,19 @@ class PayrollController extends Controller
                 + (float) ($employee->monthly_nsitf_deduction ?? 0)
                 + (float) $employee->other_monthly_deductions;
         });
+        $totalNhisEmployerContribution = (float) $employees->sum(function (Employee $employee) use ($nhisEmployerRate): float {
+            if (! $employee->apply_nhis_deduction) {
+                return 0;
+            }
 
-        $settingsSnapshot = $this->settingsResolver->resolve($periodStart, 'default');
+            return ((float) $employee->basic_salary * $nhisEmployerRate) / 100;
+        });
+
+        $settingsSnapshot['computed_totals'] = [
+            'nhis_employer_rate' => $nhisEmployerRate,
+            'nhis_employer_base' => 'basic_salary',
+            'nhis_employer_contribution' => round($totalNhisEmployerContribution, 2),
+        ];
 
         PayrollRun::query()->create([
             'period_month' => $periodMonth,

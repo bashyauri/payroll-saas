@@ -19,20 +19,8 @@ import { plans as billingPlans } from '@/routes/billing';
 import { create, index } from '@/routes/tenant/employees';
 import type { BreadcrumbItem } from '@/types';
 
-function BooleanHiddenInput({
-    name,
-    value,
-}: {
-    name: string;
-    value: boolean;
-}) {
-    return (
-        <input
-            type="hidden"
-            name={name}
-            value={value ? '1' : '0'}
-        />
-    );
+function BooleanHiddenInput({ name, value }: { name: string; value: boolean }) {
+    return <input type="hidden" name={name} value={value ? '1' : '0'} />;
 }
 
 export default function CreateEmployee({
@@ -1099,10 +1087,10 @@ export default function CreateEmployee({
                                                 }
                                                 disabled={!applyPayeDeduction}
                                             />
-                                           <BooleanHiddenInput
-    name="apply_paye_deduction"
-    value={applyPayeDeduction}
-/>
+                                            <BooleanHiddenInput
+                                                name="apply_paye_deduction"
+                                                value={applyPayeDeduction}
+                                            />
                                             {!applyPayeDeduction && (
                                                 <input
                                                     type="hidden"
@@ -1317,6 +1305,16 @@ export default function CreateEmployee({
                                                 }
                                                 placeholder={`${payrollRates.nhisEmployeeRate}% of gross salary`}
                                             />
+                                            <p className="text-xs text-muted-foreground">
+                                                National Health Insurance Scheme
+                                                (NHIS): Every employer with 10
+                                                or more staff is expected to
+                                                deduct NHIS from staff
+                                                emolument. Employer contributes
+                                                10% of basic salary while
+                                                employee contributes 5% of basic
+                                                salary.
+                                            </p>
                                             {!applyNhisDeduction && (
                                                 <input
                                                     type="hidden"
@@ -1493,6 +1491,11 @@ export default function CreateEmployee({
                                                 employee?.rent_relief ?? ''
                                             }
                                         />
+                                        <p className="text-xs text-muted-foreground">
+                                            Rent relief of 20% annual rent or
+                                            500,000 Naira whichever is lower.
+                                            Relevant documents may be required.
+                                        </p>
                                         <InputError
                                             message={errors.rent_relief}
                                         />

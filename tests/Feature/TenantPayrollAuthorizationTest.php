@@ -177,6 +177,43 @@ test('owner can export csv reports', function () {
     expect($streamed)->toContain('EMP-0001');
 });
 
+test('owner can export nhis report with employer contribution', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createPayrollTenantContextWithRole('owner');
+
+    Tenancy::initialize($organization);
+
+    Employee::query()->create([
+        'employee_number' => 'EMP-NHIS-CSV-01',
+        'first_name' => 'Fola',
+        'last_name' => 'Dada',
+        'bank_name' => 'GTBank',
+        'bank_account_name' => 'Fola Dada',
+        'bank_account_number' => '0987654321',
+        'monthly_gross_salary' => 300000,
+        'basic_salary' => 120000,
+        'monthly_nhis_deduction' => 6000,
+        'apply_nhis_deduction' => true,
+        'employment_type' => 'full_time',
+        'status' => 'active',
+    ]);
+
+    Tenancy::end();
+
+    $response = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/reports/export?type=nhis');
+
+    $response->assertOk();
+    $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    $streamed = $response->streamedContent();
+
+    expect($streamed)->toContain('Employer NHIS Contribution');
+    expect($streamed)->toContain('EMP-NHIS-CSV-01');
+    expect($streamed)->toContain('12000');
+});
+
 test('member is forbidden from reports export endpoint', function () {
     /** @var TestCase $this */
     [$user, $organization] = createPayrollTenantContextWithRole('member');
@@ -203,6 +240,24 @@ test('owner can create a payroll run', function () {
     /** @var TestCase $this */
     [$user, $organization] = createPayrollTenantContextWithRole('owner');
 
+    Tenancy::initialize($organization);
+
+    Employee::query()->create([
+        'employee_number' => 'EMP-NHIS-001',
+        'first_name' => 'Sade',
+        'last_name' => 'Adeleke',
+        'bank_name' => 'First Bank',
+        'bank_account_name' => 'Sade Adeleke',
+        'bank_account_number' => '1234567890',
+        'monthly_gross_salary' => 250000,
+        'basic_salary' => 100000,
+        'employment_type' => 'full_time',
+        'status' => 'active',
+        'apply_nhis_deduction' => true,
+    ]);
+
+    Tenancy::end();
+
     $response = $this
         ->actingAs($user)
         ->post('http://'.$organization->slug.'.payrollsaas.test/payroll/runs', [
@@ -213,7 +268,10 @@ test('owner can create a payroll run', function () {
 
     Tenancy::initialize($organization);
 
-    expect(PayrollRun::query()->where('period_month', '2026-05')->exists())->toBeTrue();
+    $run = PayrollRun::query()->where('period_month', '2026-05')->first();
+
+    expect($run)->not->toBeNull();
+    expect((float) data_get($run?->settings_snapshot, 'computed_totals.nhis_employer_contribution'))->toBe(10000.0);
 });
 
 test('member is forbidden from creating payroll run', function () {

@@ -20,6 +20,7 @@ type ReportsPageProps = {
     reportOptions: Array<{
         key: string;
         label: string;
+        description?: string;
         href: string;
         exportHref: string;
     }>;
@@ -65,6 +66,11 @@ export default function ReportsIndex({
                                 <CardTitle className="text-base">
                                     {report.label}
                                 </CardTitle>
+                                {report.description && (
+                                    <CardDescription>
+                                        {report.description}
+                                    </CardDescription>
+                                )}
                             </CardHeader>
                             <CardContent className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
                                 <span>

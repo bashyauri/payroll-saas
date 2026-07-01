@@ -36,6 +36,7 @@ type PayrollPageProps = {
         totalGrossSalary: number;
         totalDeductions: number;
         totalNetPay: number;
+        nhisEmployerContribution: number;
         createdAt: string | null;
         finalizedAt: string | null;
     }>;
@@ -235,6 +236,14 @@ export default function PayrollIndex({
                                             Net pay:{' '}
                                             <span className="font-medium text-foreground">
                                                 {formatMoney(run.totalNetPay)}
+                                            </span>
+                                        </p>
+                                        <p>
+                                            NHIS employer contribution:{' '}
+                                            <span className="font-medium text-foreground">
+                                                {formatMoney(
+                                                    run.nhisEmployerContribution,
+                                                )}
                                             </span>
                                         </p>
                                     </div>
