@@ -1088,8 +1088,8 @@ export default function CreateEmployee({
                                                 name="apply_paye_deduction"
                                                 value={
                                                     applyPayeDeduction
-                                                        ? 'true'
-                                                        : 'false'
+                                                        ? '1'
+                                                        : '0'
                                                 }
                                             />
                                             {!applyPayeDeduction && (
@@ -1181,8 +1181,8 @@ export default function CreateEmployee({
                                                 name="apply_pension_deduction"
                                                 value={
                                                     applyPensionDeduction
-                                                        ? 'true'
-                                                        : 'false'
+                                                        ? '1'
+                                                        : '0'
                                                 }
                                             />
                                             <InputError
@@ -1259,8 +1259,8 @@ export default function CreateEmployee({
                                                 name="apply_nhf_deduction"
                                                 value={
                                                     applyNhfDeduction
-                                                        ? 'true'
-                                                        : 'false'
+                                                        ? '1'
+                                                        : '0'
                                                 }
                                             />
                                             <InputError
@@ -1328,8 +1328,8 @@ export default function CreateEmployee({
                                                 name="apply_nhis_deduction"
                                                 value={
                                                     applyNhisDeduction
-                                                        ? 'true'
-                                                        : 'false'
+                                                        ? '1'
+                                                        : '0'
                                                 }
                                             />
                                             <InputError
@@ -1400,8 +1400,8 @@ export default function CreateEmployee({
                                                 name="apply_nsitf_deduction"
                                                 value={
                                                     applyNsitfDeduction
-                                                        ? 'true'
-                                                        : 'false'
+                                                        ? '1'
+                                                        : '0'
                                                 }
                                             />
                                             <InputError

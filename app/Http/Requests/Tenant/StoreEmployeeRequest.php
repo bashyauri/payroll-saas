@@ -33,6 +33,20 @@ class StoreEmployeeRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'apply_paye_deduction' => $this->boolean('apply_paye_deduction'),
+            'apply_pension_deduction' => $this->boolean('apply_pension_deduction'),
+            'apply_nhf_deduction' => $this->boolean('apply_nhf_deduction'),
+            'apply_nhis_deduction' => $this->boolean('apply_nhis_deduction'),
+            'apply_nsitf_deduction' => $this->boolean('apply_nsitf_deduction'),
+        ]);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, mixed>
