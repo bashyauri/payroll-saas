@@ -19,7 +19,7 @@ class ReportsController extends Controller
     ) {}
 
     /** @var list<string> */
-    private const ALLOWED_TYPES = ['pension', 'paye', 'bank', 'nhf', 'nhis'];
+    private const ALLOWED_TYPES = ['pension', 'paye', 'bank', 'nhf', 'nhis', 'payroll-register', 'earnings', 'deductions', 'tax-liability', 'job-costing'];
 
     public function __invoke(Request $request): Response
     {
@@ -39,6 +39,41 @@ class ReportsController extends Controller
             ],
             'activeType' => $type,
             'reportOptions' => [
+                [
+                    'key' => 'payroll-register',
+                    'label' => 'Payroll Register',
+                    'description' => 'Master report showing gross pay, net pay, taxes, and deductions for all employees.',
+                    'href' => '/reports?type=payroll-register',
+                    'exportHref' => '/reports/export?type=payroll-register',
+                ],
+                [
+                    'key' => 'earnings',
+                    'label' => 'Earnings Report',
+                    'description' => 'Breakdown of earnings including regular pay, overtime, bonuses, commission, and PTO.',
+                    'href' => '/reports?type=earnings',
+                    'exportHref' => '/reports/export?type=earnings',
+                ],
+                [
+                    'key' => 'deductions',
+                    'label' => 'Deductions Report',
+                    'description' => 'Detailed breakdown of voluntary and involuntary deductions from employee pay.',
+                    'href' => '/reports?type=deductions',
+                    'exportHref' => '/reports/export?type=deductions',
+                ],
+                [
+                    'key' => 'tax-liability',
+                    'label' => 'Tax Liability Report',
+                    'description' => 'State, local, and federal taxes withheld plus employer matching liabilities.',
+                    'href' => '/reports?type=tax-liability',
+                    'exportHref' => '/reports/export?type=tax-liability',
+                ],
+                [
+                    'key' => 'job-costing',
+                    'label' => 'Job Costing Report',
+                    'description' => 'Payroll expenses broken down by department, project, location, or team.',
+                    'href' => '/reports?type=job-costing',
+                    'exportHref' => '/reports/export?type=job-costing',
+                ],
                 [
                     'key' => 'pension',
                     'label' => 'Pension Schedule',
@@ -126,6 +161,290 @@ class ReportsController extends Controller
     {
         $settings = $this->settingsResolver->resolve(now(), 'default');
         $nhisEmployerRate = (float) ($settings['nhis_employer_rate'] ?? EffectivePayrollSettingsResolver::DEFAULT_NHIS_EMPLOYER_RATE);
+
+        // Payroll Register - Master report
+        if ($type === 'payroll-register') {
+            $headers = [
+                'Employee Number',
+                'Employee Name',
+                'Department',
+                'Job Title',
+                'Gross Salary',
+                'Basic Salary',
+                'Housing Allowance',
+                'Transport Allowance',
+                'Other Allowance 1',
+                'Other Allowance 2',
+                'Total Earnings',
+                'PAYE Tax',
+                'Pension Deduction',
+                'NHF Deduction',
+                'NHIS Deduction',
+                'NSITF Deduction',
+                'Other Deductions',
+                'Total Deductions',
+                'Net Pay',
+            ];
+            $rows = $employees->map(function (Employee $employee): array {
+                $totalEarnings = (float) $employee->basic_salary
+                    + (float) $employee->housing_allowance
+                    + (float) $employee->transport_allowance
+                    + (float) ($employee->other_allowance_1 ?? 0)
+                    + (float) ($employee->other_allowance_2 ?? 0);
+                
+                $totalDeductions = (float) $employee->monthly_tax_deduction
+                    + (float) $employee->monthly_pension_deduction
+                    + (float) $employee->monthly_nhf_deduction
+                    + (float) ($employee->monthly_nhis_deduction ?? 0)
+                    + (float) ($employee->monthly_nsitf_deduction ?? 0)
+                    + (float) $employee->other_monthly_deductions;
+
+                $netPay = (float) $employee->monthly_gross_salary - $totalDeductions;
+
+                return [
+                    $employee->employee_number,
+                    trim($employee->first_name.' '.$employee->last_name),
+                    (string) ($employee->department ?? ''),
+                    (string) ($employee->job_title ?? ''),
+                    (float) $employee->monthly_gross_salary,
+                    (float) $employee->basic_salary,
+                    (float) $employee->housing_allowance,
+                    (float) $employee->transport_allowance,
+                    (float) ($employee->other_allowance_1 ?? 0),
+                    (float) ($employee->other_allowance_2 ?? 0),
+                    $totalEarnings,
+                    (float) $employee->monthly_tax_deduction,
+                    (float) $employee->monthly_pension_deduction,
+                    (float) $employee->monthly_nhf_deduction,
+                    (float) ($employee->monthly_nhis_deduction ?? 0),
+                    (float) ($employee->monthly_nsitf_deduction ?? 0),
+                    (float) $employee->other_monthly_deductions,
+                    $totalDeductions,
+                    max($netPay, 0),
+                ];
+            })->all();
+
+            return [$headers, $rows];
+        }
+
+        // Earnings Report
+        if ($type === 'earnings') {
+            $headers = [
+                'Employee Number',
+                'Employee Name',
+                'Department',
+                'Basic Salary',
+                'Housing Allowance',
+                'Transport Allowance',
+                'Other Allowance 1',
+                'Other Allowance 2',
+                'Total Regular Pay',
+                'Overtime Pay',
+                'Bonus',
+                'Commission',
+                'PTO Pay',
+                'Total Earnings',
+            ];
+            $rows = $employees->map(function (Employee $employee): array {
+                $totalRegularPay = (float) $employee->basic_salary
+                    + (float) $employee->housing_allowance
+                    + (float) $employee->transport_allowance
+                    + (float) ($employee->other_allowance_1 ?? 0)
+                    + (float) ($employee->other_allowance_2 ?? 0);
+
+                // Parse custom items for overtime, bonus, commission, PTO
+                $customItems = $employee->custom_items ?? [];
+                $overtimePay = 0;
+                $bonus = 0;
+                $commission = 0;
+                $ptoPay = 0;
+
+                foreach ($customItems as $item) {
+                    if (isset($item['type']) && isset($item['amount'])) {
+                        switch (strtolower($item['type'])) {
+                            case 'overtime':
+                                $overtimePay += (float) $item['amount'];
+                                break;
+                            case 'bonus':
+                                $bonus += (float) $item['amount'];
+                                break;
+                            case 'commission':
+                                $commission += (float) $item['amount'];
+                                break;
+                            case 'pto':
+                                $ptoPay += (float) $item['amount'];
+                                break;
+                        }
+                    }
+                }
+
+                $totalEarnings = $totalRegularPay + $overtimePay + $bonus + $commission + $ptoPay;
+
+                return [
+                    $employee->employee_number,
+                    trim($employee->first_name.' '.$employee->last_name),
+                    (string) ($employee->department ?? ''),
+                    (float) $employee->basic_salary,
+                    (float) $employee->housing_allowance,
+                    (float) $employee->transport_allowance,
+                    (float) ($employee->other_allowance_1 ?? 0),
+                    (float) ($employee->other_allowance_2 ?? 0),
+                    $totalRegularPay,
+                    $overtimePay,
+                    $bonus,
+                    $commission,
+                    $ptoPay,
+                    $totalEarnings,
+                ];
+            })->all();
+
+            return [$headers, $rows];
+        }
+
+        // Deductions Report
+        if ($type === 'deductions') {
+            $headers = [
+                'Employee Number',
+                'Employee Name',
+                'Department',
+                'PAYE Tax (Involuntary)',
+                'Pension Deduction (Involuntary)',
+                'NHF Deduction (Involuntary)',
+                'NHIS Deduction (Involuntary)',
+                'NSITF Deduction (Involuntary)',
+                'Other Involuntary Deductions',
+                'Total Involuntary Deductions',
+                'Voluntary Deductions',
+                'Total Deductions',
+            ];
+            $rows = $employees->map(function (Employee $employee): array {
+                $totalInvoluntary = (float) $employee->monthly_tax_deduction
+                    + (float) $employee->monthly_pension_deduction
+                    + (float) $employee->monthly_nhf_deduction
+                    + (float) ($employee->monthly_nhis_deduction ?? 0)
+                    + (float) ($employee->monthly_nsitf_deduction ?? 0);
+
+                // Parse custom items for voluntary deductions
+                $customItems = $employee->custom_items ?? [];
+                $voluntaryDeductions = 0;
+
+                foreach ($customItems as $item) {
+                    if (isset($item['type']) && isset($item['amount']) && isset($item['is_deduction']) && $item['is_deduction']) {
+                        $voluntaryDeductions += (float) $item['amount'];
+                    }
+                }
+
+                $totalDeductions = $totalInvoluntary + $voluntaryDeductions;
+
+                return [
+                    $employee->employee_number,
+                    trim($employee->first_name.' '.$employee->last_name),
+                    (string) ($employee->department ?? ''),
+                    (float) $employee->monthly_tax_deduction,
+                    (float) $employee->monthly_pension_deduction,
+                    (float) $employee->monthly_nhf_deduction,
+                    (float) ($employee->monthly_nhis_deduction ?? 0),
+                    (float) ($employee->monthly_nsitf_deduction ?? 0),
+                    0, // Other involuntary deductions - can be added later
+                    $totalInvoluntary,
+                    $voluntaryDeductions,
+                    $totalDeductions,
+                ];
+            })->all();
+
+            return [$headers, $rows];
+        }
+
+        // Tax Liability Report
+        if ($type === 'tax-liability') {
+            $headers = [
+                'Employee Number',
+                'Employee Name',
+                'Tax Identification Number',
+                'Gross Salary',
+                'Federal Tax Withheld',
+                'State Tax Withheld',
+                'Local Tax Withheld',
+                'Total Employee Tax',
+                'Employer Federal Tax Match',
+                'Employer State Tax Match',
+                'Employer Local Tax Match',
+                'Total Employer Liability',
+                'Total Tax Liability',
+            ];
+            $rows = $employees->map(function (Employee $employee): array {
+                // For now, all PAYE is treated as federal tax
+                // This can be split later based on tax configuration
+                $federalTax = (float) $employee->monthly_tax_deduction;
+                $stateTax = 0;
+                $localTax = 0;
+
+                $totalEmployeeTax = $federalTax + $stateTax + $localTax;
+
+                // Employer matching (typically 7.65% for Social Security + Medicare in US)
+                // Adjust based on local tax laws
+                $employerFederalMatch = $federalTax * 0.0765; // Example rate
+                $employerStateMatch = $stateTax * 0.05; // Example rate
+                $employerLocalMatch = $localTax * 0.02; // Example rate
+
+                $totalEmployerLiability = $employerFederalMatch + $employerStateMatch + $employerLocalMatch;
+                $totalTaxLiability = $totalEmployeeTax + $totalEmployerLiability;
+
+                return [
+                    $employee->employee_number,
+                    trim($employee->first_name.' '.$employee->last_name),
+                    (string) ($employee->tax_identification_number ?? ''),
+                    (float) $employee->monthly_gross_salary,
+                    $federalTax,
+                    $stateTax,
+                    $localTax,
+                    $totalEmployeeTax,
+                    round($employerFederalMatch, 2),
+                    round($employerStateMatch, 2),
+                    round($employerLocalMatch, 2),
+                    round($totalEmployerLiability, 2),
+                    round($totalTaxLiability, 2),
+                ];
+            })->all();
+
+            return [$headers, $rows];
+        }
+
+        // Job Costing Report
+        if ($type === 'job-costing') {
+            $headers = [
+                'Employee Number',
+                'Employee Name',
+                'Department',
+                'Job Title',
+                'Location',
+                'Employment Type',
+                'Gross Salary',
+                'Total Cost (Gross + Benefits)',
+                'Cost Per Department',
+                'Cost Per Location',
+            ];
+            $rows = $employees->map(function (Employee $employee): array {
+                // Calculate total cost including benefits (typically 1.2-1.3x gross salary)
+                $benefitsMultiplier = 1.25;
+                $totalCost = (float) $employee->monthly_gross_salary * $benefitsMultiplier;
+
+                return [
+                    $employee->employee_number,
+                    trim($employee->first_name.' '.$employee->last_name),
+                    (string) ($employee->department ?? 'Unassigned'),
+                    (string) ($employee->job_title ?? ''),
+                    (string) ($employee->location ?? 'Unassigned'),
+                    (string) ($employee->employment_type ?? 'Full-time'),
+                    (float) $employee->monthly_gross_salary,
+                    round($totalCost, 2),
+                    round($totalCost, 2), // Cost per department (same as total for individual)
+                    round($totalCost, 2), // Cost per location (same as total for individual)
+                ];
+            })->all();
+
+            return [$headers, $rows];
+        }
 
         if ($type === 'pension') {
             $headers = ['Employee Number', 'Employee Name', 'PFA Name', 'Pension PIN', 'Gross Salary', 'Employee Pension Deduction'];
