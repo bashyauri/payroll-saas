@@ -10,6 +10,7 @@ use App\Http\Controllers\Tenant\PayrollController;
 use App\Http\Controllers\Tenant\PayrollFinalizationController;
 use App\Http\Controllers\Tenant\ReportsController;
 use App\Http\Middleware\EnsureBillingOnboardingComplete;
+use App\Http\Middleware\EnforceReadOnlyMode;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -29,7 +30,7 @@ Route::middleware([
     PreventAccessFromCentralDomains::class,
     InitializeTenancyByDomain::class,
 ])->group(function () {
-    Route::middleware(['auth', 'verified', EnsureBillingOnboardingComplete::class])->group(function () {
+    Route::middleware(['auth', 'verified', EnsureBillingOnboardingComplete::class, EnforceReadOnlyMode::class])->group(function () {
         Route::redirect('dashboardcheck', 'dashboard')->name('dashboard.check');
         Route::get('dashboard', DashboardController::class)->name('dashboard');
 
