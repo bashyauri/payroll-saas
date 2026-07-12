@@ -82,18 +82,20 @@ export default function ReportsIndex({
                                         'Open report view'
                                     )}
                                 </span>
-                                <Link
-                                    className="text-primary underline underline-offset-4"
+                                <a
+                                    className="text-primary underline underline-offset-4 cursor-pointer"
                                     href={report.href}
                                 >
                                     Open
-                                </Link>
-                                <Link
-                                    className="text-primary underline underline-offset-4"
+                                </a>
+                                <a
+                                    className="text-primary underline underline-offset-4 cursor-pointer"
                                     href={report.exportHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                 >
                                     Export CSV
-                                </Link>
+                                </a>
                             </CardContent>
                         </Card>
                     ))}
