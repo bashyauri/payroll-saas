@@ -80,6 +80,9 @@ Route::middleware([
         Route::get('reports', ReportsController::class)
             ->middleware('organization.role:owner,admin')
             ->name('tenant.reports.index');
+        Route::get('reports/view', [ReportsController::class, 'view'])
+            ->middleware('organization.role:owner,admin')
+            ->name('tenant.reports.view');
         Route::get('reports/export', [ReportsController::class, 'export'])
             ->middleware('organization.role:owner,admin')
             ->name('tenant.reports.export');

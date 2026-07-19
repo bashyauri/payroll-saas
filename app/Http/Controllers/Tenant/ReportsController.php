@@ -43,73 +43,119 @@ class ReportsController extends Controller
                     'key' => 'payroll-register',
                     'label' => 'Payroll Register',
                     'description' => 'Master report showing gross pay, net pay, taxes, and deductions for all employees.',
-                    'href' => '/reports?type=payroll-register',
+                    'href' => '/reports/view?type=payroll-register',
                     'exportHref' => '/reports/export?type=payroll-register',
                 ],
                 [
                     'key' => 'earnings',
                     'label' => 'Earnings Report',
                     'description' => 'Breakdown of earnings including regular pay, overtime, bonuses, commission, and PTO.',
-                    'href' => '/reports?type=earnings',
+                    'href' => '/reports/view?type=earnings',
                     'exportHref' => '/reports/export?type=earnings',
                 ],
                 [
                     'key' => 'deductions',
                     'label' => 'Deductions Report',
                     'description' => 'Detailed breakdown of voluntary and involuntary deductions from employee pay.',
-                    'href' => '/reports?type=deductions',
+                    'href' => '/reports/view?type=deductions',
                     'exportHref' => '/reports/export?type=deductions',
                 ],
                 [
                     'key' => 'tax-liability',
                     'label' => 'Tax Liability Report',
                     'description' => 'State, local, and federal taxes withheld plus employer matching liabilities.',
-                    'href' => '/reports?type=tax-liability',
+                    'href' => '/reports/view?type=tax-liability',
                     'exportHref' => '/reports/export?type=tax-liability',
                 ],
                 [
                     'key' => 'job-costing',
                     'label' => 'Job Costing Report',
                     'description' => 'Payroll expenses broken down by department, project, location, or team.',
-                    'href' => '/reports?type=job-costing',
+                    'href' => '/reports/view?type=job-costing',
                     'exportHref' => '/reports/export?type=job-costing',
                 ],
                 [
                     'key' => 'pension',
                     'label' => 'Pension Schedule',
                     'description' => 'Monthly pension schedule export.',
-                    'href' => '/reports?type=pension',
+                    'href' => '/reports/view?type=pension',
                     'exportHref' => '/reports/export?type=pension',
                 ],
                 [
                     'key' => 'paye',
                     'label' => 'PAYE Remittance',
                     'description' => 'PAYE remittance report export.',
-                    'href' => '/reports?type=paye',
+                    'href' => '/reports/view?type=paye',
                     'exportHref' => '/reports/export?type=paye',
                 ],
                 [
                     'key' => 'bank',
                     'label' => 'Bank Transfer Sheet',
                     'description' => 'Bank transfer-ready net pay sheet.',
-                    'href' => '/reports?type=bank',
+                    'href' => '/reports/view?type=bank',
                     'exportHref' => '/reports/export?type=bank',
                 ],
                 [
                     'key' => 'nhf',
                     'label' => 'NHF Contribution',
                     'description' => 'National Housing Fund contribution report.',
-                    'href' => '/reports?type=nhf',
+                    'href' => '/reports/view?type=nhf',
                     'exportHref' => '/reports/export?type=nhf',
                 ],
                 [
                     'key' => 'nhis',
                     'label' => 'NHIS Contribution',
                     'description' => 'Employer contributes 10% and employee contributes 5% of basic salary.',
-                    'href' => '/reports?type=nhis',
+                    'href' => '/reports/view?type=nhis',
                     'exportHref' => '/reports/export?type=nhis',
                 ],
             ],
+        ]);
+    }
+
+    public function view(Request $request): Response
+    {
+        $type = (string) $request->query('type', 'pension');
+
+        if (! in_array($type, self::ALLOWED_TYPES, true)) {
+            $type = 'pension';
+        }
+
+        $organization = tenant();
+        $employees = Employee::query()
+            ->orderBy('last_name', 'asc')
+            ->orderBy('first_name', 'asc')
+            ->get();
+
+        [$headers, $rows] = $this->buildReportRows($type, $employees);
+
+        // Check if organization is in trial period
+        $subscription = $organization->subscriptions()->latest()->first();
+        $isTrial = $subscription && $subscription->trial_end_date && now()->lessThan($subscription->trial_end_date);
+
+        $reportLabels = [
+            'payroll-register' => 'Payroll Register',
+            'earnings' => 'Earnings Report',
+            'deductions' => 'Deductions Report',
+            'tax-liability' => 'Tax Liability Report',
+            'job-costing' => 'Job Costing Report',
+            'pension' => 'Pension Schedule',
+            'paye' => 'PAYE Remittance',
+            'bank' => 'Bank Transfer Sheet',
+            'nhf' => 'NHF Contribution',
+            'nhis' => 'NHIS Contribution',
+        ];
+
+        return Inertia::render('reports/view', [
+            'organization' => [
+                'name' => $organization->name,
+                'domain' => $organization->domains()->value('domain'),
+            ],
+            'reportType' => $type,
+            'reportLabel' => $reportLabels[$type] ?? 'Report',
+            'headers' => $headers,
+            'rows' => $rows,
+            'isTrial' => $isTrial,
         ]);
     }
 
