@@ -27,6 +27,10 @@ class Subscription extends Model
         'next_billing_date',
         'grace_period_ends_at',
         'canceled_at',
+        'refunded_at',
+        'refund_reference',
+        'refund_amount',
+        'refund_reason',
         'paystack_reference',
         'paystack_customer_code',
         'paystack_subscription_code',
@@ -41,6 +45,8 @@ class Subscription extends Model
         'next_billing_date' => 'date',
         'grace_period_ends_at' => 'datetime',
         'canceled_at' => 'datetime',
+        'refunded_at' => 'datetime',
+        'refund_amount' => 'decimal:2',
         'amount_paid' => 'decimal:2',
         'employee_count' => 'integer',
     ];
@@ -77,6 +83,26 @@ class Subscription extends Model
     {
         return in_array($this->status, self::accessEligibleStatuses(), true)
             && $this->paystack_reference !== null;
+    }
+
+    /**
+     * Check if subscription is within refund eligibility window.
+     */
+    public function isRefundEligible(): bool
+    {
+        if ($this->refund_eligible_until === null) {
+            return false;
+        }
+
+        if (now()->greaterThan($this->refund_eligible_until)) {
+            return false;
+        }
+
+        if ($this->status === self::STATUS_CANCELED) {
+            return false;
+        }
+
+        return $this->paystack_reference !== null;
     }
 
     public function organization(): BelongsTo
