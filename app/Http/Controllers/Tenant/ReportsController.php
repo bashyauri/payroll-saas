@@ -199,6 +199,54 @@ class ReportsController extends Controller
         ]);
     }
 
+    public function exportPdf(Request $request): \Illuminate\Http\Response
+    {
+        $type = (string) $request->query('type', 'pension');
+
+        if (! in_array($type, self::ALLOWED_TYPES, true)) {
+            abort(422, 'Unsupported report type.');
+        }
+
+        $organization = tenant();
+        $employees = Employee::query()
+            ->orderBy('last_name', 'asc')
+            ->orderBy('first_name', 'asc')
+            ->get();
+
+        [$headers, $rows] = $this->buildReportRows($type, $employees);
+
+        $reportLabels = [
+            'payroll-register' => 'Payroll Register',
+            'earnings' => 'Earnings Report',
+            'deductions' => 'Deductions Report',
+            'tax-liability' => 'Tax Liability Report',
+            'job-costing' => 'Job Costing Report',
+            'pension' => 'Pension Schedule',
+            'paye' => 'PAYE Remittance',
+            'bank' => 'Bank Transfer Sheet',
+            'nhf' => 'NHF Contribution',
+            'nhis' => 'NHIS Contribution',
+        ];
+
+        $reportLabel = $reportLabels[$type] ?? 'Report';
+
+        $pdf = \PDF::loadView('reports.pdf', [
+            'organization' => $organization,
+            'reportLabel' => $reportLabel,
+            'headers' => $headers,
+            'rows' => $rows,
+            'generatedAt' => now()->format('F j, Y, g:i a'),
+        ]);
+
+        $fileName = sprintf(
+            '%s-report-%s.pdf',
+            $type,
+            now()->format('Ymd-His')
+        );
+
+        return $pdf->download($fileName);
+    }
+
     /**
      * @param  Collection<int, Employee>  $employees
      * @return array{0: list<string>, 1: list<list<string|float>>}

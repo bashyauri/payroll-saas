@@ -86,6 +86,9 @@ Route::middleware([
         Route::get('reports/export', [ReportsController::class, 'export'])
             ->middleware('organization.role:owner,admin')
             ->name('tenant.reports.export');
+        Route::get('reports/export-pdf', [ReportsController::class, 'exportPdf'])
+            ->middleware('organization.role:owner,admin')
+            ->name('tenant.reports.export-pdf');
     });
 
     Route::post('/payroll/finalize', PayrollFinalizationController::class)
