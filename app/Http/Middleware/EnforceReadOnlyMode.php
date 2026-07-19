@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
-use Stancl\Tenancy\Facades\Tenancy;
 
 class EnforceReadOnlyMode
 {
@@ -18,7 +17,7 @@ class EnforceReadOnlyMode
      */
     public function handle(Request $request, Closure $next)
     {
-        $tenant = Tenancy::getTenant();
+        $tenant = tenancy()->initialized ? tenancy()->tenant : null;
 
         if (! $tenant) {
             return $next($request);
