@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\Organization;
 use App\Models\PayrollRun;
 use App\Services\Payroll\EffectivePayrollSettingsResolver;
+use App\Services\Payroll\PayrollCalculationService;
 use App\Services\Payroll\PayrollFinalizationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,7 @@ class PayrollController extends Controller
     public function __construct(
         private readonly EffectivePayrollSettingsResolver $settingsResolver,
         private readonly PayrollFinalizationService $payrollFinalizationService,
+        private readonly PayrollCalculationService $calculationService,
     ) {}
 
     public function __invoke(): Response
@@ -83,17 +85,12 @@ class PayrollController extends Controller
             ->get();
 
         $settingsSnapshot = $this->settingsResolver->resolve($periodStart, 'default');
-        $nhisEmployerRate = (float) ($settingsSnapshot['nhis_employer_rate'] ?? EffectivePayrollSettingsResolver::DEFAULT_NHIS_EMPLOYER_RATE);
 
-        $totalGrossSalary = (float) $employees->sum(fn (Employee $employee): float => (float) $employee->monthly_gross_salary);
-        $totalDeductions = (float) $employees->sum(function (Employee $employee): float {
-            return (float) $employee->monthly_tax_deduction
-                + (float) $employee->monthly_pension_deduction
-                + (float) $employee->monthly_nhf_deduction
-                + (float) ($employee->monthly_nhis_deduction ?? 0)
-                + (float) ($employee->monthly_nsitf_deduction ?? 0)
-                + (float) $employee->other_monthly_deductions;
-        });
+        // Use calculation service for accurate payroll calculations
+        $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settingsSnapshot);
+        $totals = $this->calculationService->calculateTotals($employeeCalculations);
+
+        $nhisEmployerRate = (float) ($settingsSnapshot['nhis_employer_rate'] ?? EffectivePayrollSettingsResolver::DEFAULT_NHIS_EMPLOYER_RATE);
         $totalNhisEmployerContribution = (float) $employees->sum(function (Employee $employee) use ($nhisEmployerRate): float {
             if (! $employee->apply_nhis_deduction) {
                 return 0;
@@ -106,6 +103,7 @@ class PayrollController extends Controller
             'nhis_employer_rate' => $nhisEmployerRate,
             'nhis_employer_base' => 'basic_salary',
             'nhis_employer_contribution' => round($totalNhisEmployerContribution, 2),
+            'employee_calculations' => $employeeCalculations,
         ];
 
         PayrollRun::query()->create([
@@ -113,10 +111,10 @@ class PayrollController extends Controller
             'period_start' => $periodStart->toDateString(),
             'period_end' => $periodEnd->toDateString(),
             'status' => PayrollRun::STATUS_DRAFT,
-            'employee_count' => $employees->count(),
-            'total_gross_salary' => $totalGrossSalary,
-            'total_deductions' => $totalDeductions,
-            'total_net_pay' => max($totalGrossSalary - $totalDeductions, 0),
+            'employee_count' => $totals['employee_count'],
+            'total_gross_salary' => $totals['total_gross_salary'],
+            'total_deductions' => $totals['total_deductions'],
+            'total_net_pay' => $totals['total_net_pay'],
             'settings_snapshot' => $settingsSnapshot,
             'created_by_user_id' => (string) $request->user()->id,
         ]);
