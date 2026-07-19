@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::store
- * @see app/Http/Controllers/Tenant/PayrollController.php:68
+ * @see app/Http/Controllers/Tenant/PayrollController.php:70
  * @route '/payroll/runs'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::store
- * @see app/Http/Controllers/Tenant/PayrollController.php:68
+ * @see app/Http/Controllers/Tenant/PayrollController.php:70
  * @route '/payroll/runs'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::store
- * @see app/Http/Controllers/Tenant/PayrollController.php:68
+ * @see app/Http/Controllers/Tenant/PayrollController.php:70
  * @route '/payroll/runs'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -35,7 +35,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Tenant\PayrollController::store
- * @see app/Http/Controllers/Tenant/PayrollController.php:68
+ * @see app/Http/Controllers/Tenant/PayrollController.php:70
  * @route '/payroll/runs'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -45,7 +45,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Tenant\PayrollController::store
- * @see app/Http/Controllers/Tenant/PayrollController.php:68
+ * @see app/Http/Controllers/Tenant/PayrollController.php:70
  * @route '/payroll/runs'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -56,7 +56,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::finalize
- * @see app/Http/Controllers/Tenant/PayrollController.php:129
+ * @see app/Http/Controllers/Tenant/PayrollController.php:127
  * @route '/payroll/runs/{payrollRun}/finalize'
  */
 export const finalize = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -71,7 +71,7 @@ finalize.definition = {
 
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::finalize
- * @see app/Http/Controllers/Tenant/PayrollController.php:129
+ * @see app/Http/Controllers/Tenant/PayrollController.php:127
  * @route '/payroll/runs/{payrollRun}/finalize'
  */
 finalize.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
@@ -104,7 +104,7 @@ finalize.url = (args: { payrollRun: string | number | { id: string | number } } 
 
 /**
 * @see \App\Http\Controllers\Tenant\PayrollController::finalize
- * @see app/Http/Controllers/Tenant/PayrollController.php:129
+ * @see app/Http/Controllers/Tenant/PayrollController.php:127
  * @route '/payroll/runs/{payrollRun}/finalize'
  */
 finalize.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -114,7 +114,7 @@ finalize.post = (args: { payrollRun: string | number | { id: string | number } }
 
     /**
 * @see \App\Http\Controllers\Tenant\PayrollController::finalize
- * @see app/Http/Controllers/Tenant/PayrollController.php:129
+ * @see app/Http/Controllers/Tenant/PayrollController.php:127
  * @route '/payroll/runs/{payrollRun}/finalize'
  */
     const finalizeForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -124,7 +124,7 @@ finalize.post = (args: { payrollRun: string | number | { id: string | number } }
 
             /**
 * @see \App\Http\Controllers\Tenant\PayrollController::finalize
- * @see app/Http/Controllers/Tenant/PayrollController.php:129
+ * @see app/Http/Controllers/Tenant/PayrollController.php:127
  * @route '/payroll/runs/{payrollRun}/finalize'
  */
         finalizeForm.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
