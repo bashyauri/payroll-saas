@@ -424,8 +424,8 @@ Channels:
 3. ~~Implement webhook idempotency and billing event store.~~ ✓ COMPLETED
 4. ~~Add read-only mode behavior for canceled/suspended organizations.~~ ✓ COMPLETED
 5. ~~Build refund workflow and admin controls.~~ ✓ COMPLETED
-6. Align UI copy and plan names to Essential/Professional only.
-7. Remove remaining legacy references to free-tier-first onboarding.
+6. ~~Align UI copy and plan names to Essential/Professional only.~~ ✓ COMPLETED
+7. ~~Remove remaining legacy references to free-tier-first onboarding.~~ ✓ COMPLETED
 8. Add tests for:
    - trial window behavior
    - refund eligibility edge cases
