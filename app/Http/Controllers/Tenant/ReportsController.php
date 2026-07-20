@@ -271,7 +271,7 @@ class ReportsController extends Controller
         return $pdf->download($fileName);
     }
 
-    public function exportExcel(Request $request): \Illuminate\Http\Response
+    public function exportExcel(Request $request): StreamedResponse
     {
         $type = (string) $request->query('type', 'pension');
 
