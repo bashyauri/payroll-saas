@@ -122,6 +122,6 @@ class PaystackCallbackController extends Controller
             ->away($onboarding->tenantDashboardUrl($organization))
             ->with('success', $checkoutMode === 'upgrade'
                 ? 'Your subscription has been updated successfully.'
-                : 'Welcome! Your 7-day free trial has started.');
+                : 'Welcome! Your subscription is active with 7-day money-back guarantee.');
     }
 }
