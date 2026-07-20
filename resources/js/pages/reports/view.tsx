@@ -64,10 +64,16 @@ export default function ReportView({
                                         Export CSV
                                     </a>
                                 </Button>
-                                <Button asChild>
+                                <Button asChild variant="outline">
                                     <a href={`/reports/export-pdf?type=${reportType}`} target="_blank" rel="noopener noreferrer">
                                         <Download className="mr-2 h-4 w-4" />
                                         Export PDF
+                                    </a>
+                                </Button>
+                                <Button asChild>
+                                    <a href={`/reports/export-excel?type=${reportType}`} target="_blank" rel="noopener noreferrer">
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Export Excel
                                     </a>
                                 </Button>
                             </>

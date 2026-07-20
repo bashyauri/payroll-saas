@@ -24,6 +24,7 @@ type ReportsPageProps = {
         href: string;
         exportHref: string;
         exportPdfHref: string;
+        exportExcelHref: string;
     }>;
 };
 
@@ -104,6 +105,14 @@ export default function ReportsIndex({
                                     rel="noopener noreferrer"
                                 >
                                     Export PDF
+                                </a>
+                                <a
+                                    className="text-primary underline underline-offset-4 cursor-pointer"
+                                    href={report.exportExcelHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    Export Excel
                                 </a>
                             </CardContent>
                         </Card>

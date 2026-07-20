@@ -46,6 +46,7 @@ class ReportsController extends Controller
                     'href' => '/reports/view?type=payroll-register',
                     'exportHref' => '/reports/export?type=payroll-register',
                     'exportPdfHref' => '/reports/export-pdf?type=payroll-register',
+                    'exportExcelHref' => '/reports/export-excel?type=payroll-register',
                 ],
                 [
                     'key' => 'earnings',
@@ -54,6 +55,7 @@ class ReportsController extends Controller
                     'href' => '/reports/view?type=earnings',
                     'exportHref' => '/reports/export?type=earnings',
                     'exportPdfHref' => '/reports/export-pdf?type=earnings',
+                    'exportExcelHref' => '/reports/export-excel?type=earnings',
                 ],
                 [
                     'key' => 'deductions',
@@ -62,6 +64,7 @@ class ReportsController extends Controller
                     'href' => '/reports/view?type=deductions',
                     'exportHref' => '/reports/export?type=deductions',
                     'exportPdfHref' => '/reports/export-pdf?type=deductions',
+                    'exportExcelHref' => '/reports/export-excel?type=deductions',
                 ],
                 [
                     'key' => 'tax-liability',
@@ -70,6 +73,7 @@ class ReportsController extends Controller
                     'href' => '/reports/view?type=tax-liability',
                     'exportHref' => '/reports/export?type=tax-liability',
                     'exportPdfHref' => '/reports/export-pdf?type=tax-liability',
+                    'exportExcelHref' => '/reports/export-excel?type=tax-liability',
                 ],
                 [
                     'key' => 'job-costing',
@@ -78,6 +82,7 @@ class ReportsController extends Controller
                     'href' => '/reports/view?type=job-costing',
                     'exportHref' => '/reports/export?type=job-costing',
                     'exportPdfHref' => '/reports/export-pdf?type=job-costing',
+                    'exportExcelHref' => '/reports/export-excel?type=job-costing',
                 ],
                 [
                     'key' => 'pension',
@@ -86,6 +91,7 @@ class ReportsController extends Controller
                     'href' => '/reports/view?type=pension',
                     'exportHref' => '/reports/export?type=pension',
                     'exportPdfHref' => '/reports/export-pdf?type=pension',
+                    'exportExcelHref' => '/reports/export-excel?type=pension',
                 ],
                 [
                     'key' => 'paye',
@@ -94,6 +100,7 @@ class ReportsController extends Controller
                     'href' => '/reports/view?type=paye',
                     'exportHref' => '/reports/export?type=paye',
                     'exportPdfHref' => '/reports/export-pdf?type=paye',
+                    'exportExcelHref' => '/reports/export-excel?type=paye',
                 ],
                 [
                     'key' => 'bank',
@@ -102,6 +109,7 @@ class ReportsController extends Controller
                     'href' => '/reports/view?type=bank',
                     'exportHref' => '/reports/export?type=bank',
                     'exportPdfHref' => '/reports/export-pdf?type=bank',
+                    'exportExcelHref' => '/reports/export-excel?type=bank',
                 ],
                 [
                     'key' => 'nhf',
@@ -110,6 +118,7 @@ class ReportsController extends Controller
                     'href' => '/reports/view?type=nhf',
                     'exportHref' => '/reports/export?type=nhf',
                     'exportPdfHref' => '/reports/export-pdf?type=nhf',
+                    'exportExcelHref' => '/reports/export-excel?type=nhf',
                 ],
                 [
                     'key' => 'nhis',
@@ -118,6 +127,7 @@ class ReportsController extends Controller
                     'href' => '/reports/view?type=nhis',
                     'exportHref' => '/reports/export?type=nhis',
                     'exportPdfHref' => '/reports/export-pdf?type=nhis',
+                    'exportExcelHref' => '/reports/export-excel?type=nhis',
                 ],
             ],
         ]);
@@ -255,6 +265,85 @@ class ReportsController extends Controller
         );
 
         return $pdf->download($fileName);
+    }
+
+    public function exportExcel(Request $request): \Illuminate\Http\Response
+    {
+        $type = (string) $request->query('type', 'pension');
+
+        if (! in_array($type, self::ALLOWED_TYPES, true)) {
+            abort(422, 'Unsupported report type.');
+        }
+
+        $organization = tenant();
+        $employees = Employee::query()
+            ->orderBy('last_name', 'asc')
+            ->orderBy('first_name', 'asc')
+            ->get();
+
+        [$headers, $rows] = $this->buildReportRows($type, $employees);
+
+        $reportLabels = [
+            'payroll-register' => 'Payroll Register',
+            'earnings' => 'Earnings Report',
+            'deductions' => 'Deductions Report',
+            'tax-liability' => 'Tax Liability Report',
+            'job-costing' => 'Job Costing Report',
+            'pension' => 'Pension Schedule',
+            'paye' => 'PAYE Remittance',
+            'bank' => 'Bank Transfer Sheet',
+            'nhf' => 'NHF Contribution',
+            'nhis' => 'NHIS Contribution',
+        ];
+
+        $reportLabel = $reportLabels[$type] ?? 'Report';
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Set headers
+        $column = 1;
+        foreach ($headers as $header) {
+            $sheet->setCellValueByColumnAndRow($column, 1, $header);
+            $column++;
+        }
+
+        // Set data
+        $row = 2;
+        foreach ($rows as $rowData) {
+            $column = 1;
+            foreach ($rowData as $cell) {
+                $sheet->setCellValueByColumnAndRow($column, $row, $cell);
+                $column++;
+            }
+            $row++;
+        }
+
+        // Add organization info and timestamp
+        $sheet->setCellValue('A' . ($row + 2), 'Organization: ' . $organization->name);
+        $sheet->setCellValue('A' . ($row + 3), 'Report: ' . $reportLabel);
+        $sheet->setCellValue('A' . ($row + 4), 'Generated: ' . now()->format('F j, Y, g:i a'));
+        $sheet->setCellValue('A' . ($row + 5), 'Total Records: ' . count($rows));
+
+        // Style the header row
+        $headerRange = 'A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1';
+        $sheet->getStyle($headerRange)->getFont()->setBold(true);
+        $sheet->getStyle($headerRange)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('E2E8F0');
+
+        $fileName = sprintf(
+            '%s-report-%s.xlsx',
+            $type,
+            now()->format('Ymd-His')
+        );
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+        ]);
     }
 
     /**
