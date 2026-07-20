@@ -12,14 +12,14 @@ const steps = [
     { number: 1, title: 'Sign Up', completed: true },
     { number: 2, title: 'Verify Email', completed: false },
     { number: 3, title: 'Choose Plan', completed: false },
-    { number: 4, title: 'Start Free Trial', completed: false },
+    { number: 4, title: 'Complete Payment', completed: false },
 ];
 
 export default function VerifyEmail({ status }: { status?: string }) {
     return (
         <AuthLayout
             title="Verify your email"
-            description="Complete this step to unlock billing plans and start your free trial"
+            description="Complete this step to unlock billing plans and complete your subscription"
         >
             <Head title="Email verification" />
 
@@ -85,8 +85,8 @@ export default function VerifyEmail({ status }: { status?: string }) {
                                 3
                             </span>
                             <span>
-                                Complete payment via Paystack to start your
-                                7-day free trial
+                                Complete payment via Paystack to activate your
+                                subscription with 7-day money-back guarantee
                             </span>
                         </li>
                     </ol>

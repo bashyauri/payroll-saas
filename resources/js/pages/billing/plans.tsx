@@ -138,7 +138,7 @@ export default function BillingPlans({
         { number: 1, title: 'Sign Up', completed: true },
         { number: 2, title: 'Verify Email', completed: true },
         { number: 3, title: 'Choose Plan', completed: false },
-        { number: 4, title: 'Start Free Trial', completed: false },
+        { number: 4, title: 'Complete Payment', completed: false },
     ];
     const billingCycleMonths = billingCycle === 'annual' ? 12 : 1;
     const annualSavingsPercent = Math.round(annualDiscountRate * 100);
@@ -505,7 +505,7 @@ export default function BillingPlans({
                                                     className="w-full gap-2 text-sm"
                                                     disabled
                                                 >
-                                                    Start Free Trial
+                                                    Continue to Paystack
                                                     <ArrowRight className="h-4 w-4" />
                                                 </Button>
                                             ) : (
@@ -525,7 +525,7 @@ export default function BillingPlans({
                                                 >
                                                     {isUpgrade
                                                         ? 'Continue to Paystack'
-                                                        : 'Start Free Trial'}
+                                                        : 'Continue to Paystack'}
                                                     <ArrowRight className="h-4 w-4" />
                                                 </Button>
                                             )}
@@ -587,7 +587,7 @@ export default function BillingPlans({
                                     </span>
                                     <div>
                                         <p className="font-medium text-foreground">
-                                            Click "Start Free Trial"
+                                            Click "Continue to Paystack"
                                         </p>
                                         <p className="text-muted-foreground">
                                             You'll be redirected to Paystack to

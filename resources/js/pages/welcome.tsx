@@ -68,7 +68,7 @@ export default function Welcome({
         {
             number: 4,
             title: 'Get Started',
-            description: 'Immediately access full features for 7 days',
+            description: 'Immediately access full features with 7-day guarantee',
         },
     ];
 
@@ -213,7 +213,7 @@ export default function Welcome({
                                             size="lg"
                                             className="w-full gap-2 text-base sm:w-auto"
                                         >
-                                            Start 7-Day Trial Free{' '}
+                                            Start Your Subscription{' '}
                                             <ArrowRight className="h-4 w-4" />
                                         </Button>
                                     </Link>
@@ -229,8 +229,7 @@ export default function Welcome({
                                 </a>
                             </div>
                             <p className="text-xs text-muted-foreground sm:text-sm">
-                                No credit card required. Payment secured via
-                                Paystack.
+                                Payment secured via Paystack. 7-day money-back guarantee.
                             </p>
 
                             {/* Trust Indicators */}
@@ -347,7 +346,7 @@ export default function Welcome({
                                     size="lg"
                                     className="w-full gap-2 sm:w-auto"
                                 >
-                                    Start 7-Day Trial
+                                    Choose Your Plan
                                     <ArrowRight className="h-4 w-4" />
                                 </Button>
                             </Link>
@@ -400,8 +399,8 @@ export default function Welcome({
                                 Get Started in 4 Simple Steps
                             </h2>
                             <p className="mx-auto max-w-2xl text-sm text-muted-foreground sm:text-base lg:text-lg">
-                                From sign-up to full access in minutes. No
-                                credit card required for the first 7 days.
+                                From sign-up to full access in minutes. Payment
+                                required with 7-day money-back guarantee.
                             </p>
                         </div>
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -470,13 +469,13 @@ export default function Welcome({
                                     variant="secondary"
                                     className="w-full gap-2 text-base sm:w-auto"
                                 >
-                                    Start Your Free Trial{' '}
+                                    Start Your Subscription{' '}
                                     <ArrowRight className="h-5 w-5" />
                                 </Button>
                             </Link>
                         )}
                         <p className="mt-6 text-xs opacity-75 sm:text-sm">
-                            7-day money-back guarantee • No credit card required
+                            7-day money-back guarantee • Payment secured via Paystack
                         </p>
                     </div>
                 </section>

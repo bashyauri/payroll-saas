@@ -20,7 +20,7 @@ export default function Register() {
         { number: 1, title: 'Sign Up', completed: true },
         { number: 2, title: 'Verify Email', completed: false },
         { number: 3, title: 'Choose Plan', completed: false },
-        { number: 4, title: 'Start Free Trial', completed: false },
+        { number: 4, title: 'Complete Payment', completed: false },
     ];
 
     return (
@@ -62,11 +62,10 @@ export default function Register() {
             {/* Quick Info Banner */}
             <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 sm:p-4 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
                 <p className="font-medium">
-                    Free 7-day trial • No credit card required yet
+                    7-Day Money-Back Guarantee • Secure Payment via Paystack
                 </p>
                 <p className="text-xs opacity-90 sm:text-sm">
-                    You'll secure your account with payment details after email
-                    verification.
+                    You'll complete payment after email verification to activate your subscription.
                 </p>
             </div>
 
