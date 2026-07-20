@@ -436,7 +436,8 @@ Channels:
 **Additional Completed Work:**
 - Report view pages with trial watermarking ✓
 - Payroll calculation module with configurable rates ✓
-- PDF export for reports (in progress - UI button pending)
+- PDF export for reports ✓
+- Excel export for reports ✓
 
 ---
 
