@@ -45,6 +45,7 @@ class ReportsController extends Controller
                     'description' => 'Master report showing gross pay, net pay, taxes, and deductions for all employees.',
                     'href' => '/reports/view?type=payroll-register',
                     'exportHref' => '/reports/export?type=payroll-register',
+                    'exportPdfHref' => '/reports/export-pdf?type=payroll-register',
                 ],
                 [
                     'key' => 'earnings',
@@ -52,6 +53,7 @@ class ReportsController extends Controller
                     'description' => 'Breakdown of earnings including regular pay, overtime, bonuses, commission, and PTO.',
                     'href' => '/reports/view?type=earnings',
                     'exportHref' => '/reports/export?type=earnings',
+                    'exportPdfHref' => '/reports/export-pdf?type=earnings',
                 ],
                 [
                     'key' => 'deductions',
@@ -59,6 +61,7 @@ class ReportsController extends Controller
                     'description' => 'Detailed breakdown of voluntary and involuntary deductions from employee pay.',
                     'href' => '/reports/view?type=deductions',
                     'exportHref' => '/reports/export?type=deductions',
+                    'exportPdfHref' => '/reports/export-pdf?type=deductions',
                 ],
                 [
                     'key' => 'tax-liability',
@@ -66,6 +69,7 @@ class ReportsController extends Controller
                     'description' => 'State, local, and federal taxes withheld plus employer matching liabilities.',
                     'href' => '/reports/view?type=tax-liability',
                     'exportHref' => '/reports/export?type=tax-liability',
+                    'exportPdfHref' => '/reports/export-pdf?type=tax-liability',
                 ],
                 [
                     'key' => 'job-costing',
@@ -73,6 +77,7 @@ class ReportsController extends Controller
                     'description' => 'Payroll expenses broken down by department, project, location, or team.',
                     'href' => '/reports/view?type=job-costing',
                     'exportHref' => '/reports/export?type=job-costing',
+                    'exportPdfHref' => '/reports/export-pdf?type=job-costing',
                 ],
                 [
                     'key' => 'pension',
@@ -80,6 +85,7 @@ class ReportsController extends Controller
                     'description' => 'Monthly pension schedule export.',
                     'href' => '/reports/view?type=pension',
                     'exportHref' => '/reports/export?type=pension',
+                    'exportPdfHref' => '/reports/export-pdf?type=pension',
                 ],
                 [
                     'key' => 'paye',
@@ -87,6 +93,7 @@ class ReportsController extends Controller
                     'description' => 'PAYE remittance report export.',
                     'href' => '/reports/view?type=paye',
                     'exportHref' => '/reports/export?type=paye',
+                    'exportPdfHref' => '/reports/export-pdf?type=paye',
                 ],
                 [
                     'key' => 'bank',
@@ -94,6 +101,7 @@ class ReportsController extends Controller
                     'description' => 'Bank transfer-ready net pay sheet.',
                     'href' => '/reports/view?type=bank',
                     'exportHref' => '/reports/export?type=bank',
+                    'exportPdfHref' => '/reports/export-pdf?type=bank',
                 ],
                 [
                     'key' => 'nhf',
@@ -101,6 +109,7 @@ class ReportsController extends Controller
                     'description' => 'National Housing Fund contribution report.',
                     'href' => '/reports/view?type=nhf',
                     'exportHref' => '/reports/export?type=nhf',
+                    'exportPdfHref' => '/reports/export-pdf?type=nhf',
                 ],
                 [
                     'key' => 'nhis',
@@ -108,6 +117,7 @@ class ReportsController extends Controller
                     'description' => 'Employer contributes 10% and employee contributes 5% of basic salary.',
                     'href' => '/reports/view?type=nhis',
                     'exportHref' => '/reports/export?type=nhis',
+                    'exportPdfHref' => '/reports/export-pdf?type=nhis',
                 ],
             ],
         ]);

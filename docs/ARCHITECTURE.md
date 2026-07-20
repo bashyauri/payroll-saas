@@ -419,11 +419,11 @@ Channels:
 
 ## 12. Implementation Checklist (Immediate)
 
-1. Update central schema for trial/refund/billing lifecycle fields.
-2. Add Billing Access Guard middleware/service for payroll finalization.
-3. Implement webhook idempotency and billing event store.
-4. Add read-only mode behavior for canceled/suspended organizations.
-5. Build refund workflow and admin controls.
+1. ~~Update central schema for trial/refund/billing lifecycle fields.~~ ✓ COMPLETED
+2. ~~Add Billing Access Guard middleware/service for payroll finalization.~~ ✓ COMPLETED
+3. ~~Implement webhook idempotency and billing event store.~~ ✓ COMPLETED
+4. ~~Add read-only mode behavior for canceled/suspended organizations.~~ ✓ COMPLETED
+5. ~~Build refund workflow and admin controls.~~ ✓ COMPLETED
 6. Align UI copy and plan names to Essential/Professional only.
 7. Remove remaining legacy references to free-tier-first onboarding.
 8. Add tests for:
@@ -431,7 +431,12 @@ Channels:
    - refund eligibility edge cases
    - payment failure and grace expiration
    - payroll finalization blocking rules
-9. Enforce idempotent refund requests per subscription to prevent double refunds.
+9. ~~Enforce idempotent refund requests per subscription to prevent double refunds.~~ ✓ COMPLETED
+
+**Additional Completed Work:**
+- Report view pages with trial watermarking ✓
+- Payroll calculation module with configurable rates ✓
+- PDF export for reports (in progress - UI button pending)
 
 ---
 

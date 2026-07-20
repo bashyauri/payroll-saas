@@ -55,14 +55,24 @@ export default function ReportView({
                             {organization.name} - {rows.length} records
                         </p>
                     </div>
-                    {!isTrial && (
-                        <Button asChild>
-                            <a href={`/reports/export?type=${reportType}`} target="_blank" rel="noopener noreferrer">
-                                <Download className="mr-2 h-4 w-4" />
-                                Export CSV
-                            </a>
-                        </Button>
-                    )}
+                    <div className="flex gap-2">
+                        {!isTrial && (
+                            <>
+                                <Button asChild variant="outline">
+                                    <a href={`/reports/export?type=${reportType}`} target="_blank" rel="noopener noreferrer">
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Export CSV
+                                    </a>
+                                </Button>
+                                <Button asChild>
+                                    <a href={`/reports/export-pdf?type=${reportType}`} target="_blank" rel="noopener noreferrer">
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Export PDF
+                                    </a>
+                                </Button>
+                            </>
+                        )}
+                    </div>
                 </div>
 
                 {isTrial && (

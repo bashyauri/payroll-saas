@@ -23,6 +23,7 @@ type ReportsPageProps = {
         description?: string;
         href: string;
         exportHref: string;
+        exportPdfHref: string;
     }>;
 };
 
@@ -95,6 +96,14 @@ export default function ReportsIndex({
                                     rel="noopener noreferrer"
                                 >
                                     Export CSV
+                                </a>
+                                <a
+                                    className="text-primary underline underline-offset-4 cursor-pointer"
+                                    href={report.exportPdfHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    Export PDF
                                 </a>
                             </CardContent>
                         </Card>
