@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportsController extends Controller
@@ -298,13 +302,13 @@ class ReportsController extends Controller
 
         $reportLabel = $reportLabels[$type] ?? 'Report';
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Set headers
         $column = 1;
         foreach ($headers as $header) {
-            $sheet->setCellValueByColumnAndRow($column, 1, $header);
+            $sheet->setCellValue(Coordinate::stringFromColumnIndex($column).'1', $header);
             $column++;
         }
 
@@ -313,22 +317,22 @@ class ReportsController extends Controller
         foreach ($rows as $rowData) {
             $column = 1;
             foreach ($rowData as $cell) {
-                $sheet->setCellValueByColumnAndRow($column, $row, $cell);
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($column).$row, $cell);
                 $column++;
             }
             $row++;
         }
 
         // Add organization info and timestamp
-        $sheet->setCellValue('A' . ($row + 2), 'Organization: ' . $organization->name);
-        $sheet->setCellValue('A' . ($row + 3), 'Report: ' . $reportLabel);
-        $sheet->setCellValue('A' . ($row + 4), 'Generated: ' . now()->format('F j, Y, g:i a'));
-        $sheet->setCellValue('A' . ($row + 5), 'Total Records: ' . count($rows));
+        $sheet->setCellValue('A'.($row + 2), 'Organization: '.$organization->name);
+        $sheet->setCellValue('A'.($row + 3), 'Report: '.$reportLabel);
+        $sheet->setCellValue('A'.($row + 4), 'Generated: '.now()->format('F j, Y, g:i a'));
+        $sheet->setCellValue('A'.($row + 5), 'Total Records: '.count($rows));
 
         // Style the header row
-        $headerRange = 'A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1';
+        $headerRange = 'A1:'.Coordinate::stringFromColumnIndex(count($headers)).'1';
         $sheet->getStyle($headerRange)->getFont()->setBold(true);
-        $sheet->getStyle($headerRange)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('E2E8F0');
+        $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E2E8F0');
 
         $fileName = sprintf(
             '%s-report-%s.xlsx',
@@ -336,7 +340,7 @@ class ReportsController extends Controller
             now()->format('Ymd-His')
         );
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer = new Xlsx($spreadsheet);
 
         return response()->streamDownload(function () use ($writer) {
             $writer->save('php://output');
@@ -384,7 +388,7 @@ class ReportsController extends Controller
                     + (float) $employee->transport_allowance
                     + (float) ($employee->other_allowance_1 ?? 0)
                     + (float) ($employee->other_allowance_2 ?? 0);
-                
+
                 $totalDeductions = (float) $employee->monthly_tax_deduction
                     + (float) $employee->monthly_pension_deduction
                     + (float) $employee->monthly_nhf_deduction
