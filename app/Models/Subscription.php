@@ -105,6 +105,18 @@ class Subscription extends Model
         return $this->paystack_reference !== null;
     }
 
+    /**
+     * Check if subscription is currently in trial period.
+     */
+    public function isInTrial(): bool
+    {
+        if ($this->trial_end_date === null) {
+            return false;
+        }
+
+        return now()->lessThan($this->trial_end_date);
+    }
+
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class, 'organization_id');
