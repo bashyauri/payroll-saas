@@ -426,11 +426,7 @@ Channels:
 5. ~~Build refund workflow and admin controls.~~ ✓ COMPLETED
 6. ~~Align UI copy and plan names to Essential/Professional only.~~ ✓ COMPLETED
 7. ~~Remove remaining legacy references to free-tier-first onboarding.~~ ✓ COMPLETED
-8. Add tests for:
-   - trial window behavior
-   - refund eligibility edge cases
-   - payment failure and grace expiration
-   - payroll finalization blocking rules
+8. ~~Add tests for trial window, refund eligibility, payment failure, payroll finalization blocking.~~ ✓ COMPLETED
 9. ~~Enforce idempotent refund requests per subscription to prevent double refunds.~~ ✓ COMPLETED
 
 **Additional Completed Work:**
