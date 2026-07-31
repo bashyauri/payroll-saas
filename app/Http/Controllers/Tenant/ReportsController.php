@@ -360,7 +360,7 @@ class ReportsController extends Controller
         $nhisEmployerRate = (float) ($settings['nhis_employer_rate'] ?? EffectivePayrollSettingsResolver::DEFAULT_NHIS_EMPLOYER_RATE);
 
         // Helper function to format currency with comma separators
-        $formatCurrency = fn ($amount): string => '₦' . number_format((float) $amount, 2, '.', ',');
+        $formatCurrency = fn ($amount): string => 'NGN ' . number_format((float) $amount, 2, '.', ',');
 
         // Payroll Register - Master report
         if ($type === 'payroll-register') {
@@ -369,21 +369,21 @@ class ReportsController extends Controller
                 'Employee Name',
                 'Department',
                 'Job Title',
-                'Gross Salary (₦)',
-                'Basic Salary (₦)',
-                'Housing Allowance (₦)',
-                'Transport Allowance (₦)',
-                'Other Allowance 1 (₦)',
-                'Other Allowance 2 (₦)',
-                'Total Earnings (₦)',
-                'PAYE Tax (₦)',
-                'Pension Deduction (₦)',
-                'NHF Deduction (₦)',
-                'NHIS Deduction (₦)',
-                'NSITF Deduction (₦)',
-                'Other Deductions (₦)',
-                'Total Deductions (₦)',
-                'Net Pay (₦)',
+                'Gross Salary (NGN)',
+                'Basic Salary (NGN)',
+                'Housing Allowance (NGN)',
+                'Transport Allowance (NGN)',
+                'Other Allowance 1 (NGN)',
+                'Other Allowance 2 (NGN)',
+                'Total Earnings (NGN)',
+                'PAYE Tax (NGN)',
+                'Pension Deduction (NGN)',
+                'NHF Deduction (NGN)',
+                'NHIS Deduction (NGN)',
+                'NSITF Deduction (NGN)',
+                'Other Deductions (NGN)',
+                'Total Deductions (NGN)',
+                'Net Pay (NGN)',
             ];
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
                 $totalEarnings = (float) $employee->basic_salary
@@ -433,17 +433,17 @@ class ReportsController extends Controller
                 'Employee Number',
                 'Employee Name',
                 'Department',
-                'Basic Salary (₦)',
-                'Housing Allowance (₦)',
-                'Transport Allowance (₦)',
-                'Other Allowance 1 (₦)',
-                'Other Allowance 2 (₦)',
-                'Total Regular Pay (₦)',
-                'Overtime Pay (₦)',
-                'Bonus (₦)',
-                'Commission (₦)',
-                'PTO Pay (₦)',
-                'Total Earnings (₦)',
+                'Basic Salary (NGN)',
+                'Housing Allowance (NGN)',
+                'Transport Allowance (NGN)',
+                'Other Allowance 1 (NGN)',
+                'Other Allowance 2 (NGN)',
+                'Total Regular Pay (NGN)',
+                'Overtime Pay (NGN)',
+                'Bonus (NGN)',
+                'Commission (NGN)',
+                'PTO Pay (NGN)',
+                'Total Earnings (NGN)',
             ];
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
                 $totalRegularPay = (float) $employee->basic_salary
@@ -507,15 +507,15 @@ class ReportsController extends Controller
                 'Employee Number',
                 'Employee Name',
                 'Department',
-                'PAYE Tax (₦) (Involuntary)',
-                'Pension Deduction (₦) (Involuntary)',
-                'NHF Deduction (₦) (Involuntary)',
-                'NHIS Deduction (₦) (Involuntary)',
-                'NSITF Deduction (₦) (Involuntary)',
-                'Other Involuntary Deductions (₦)',
-                'Total Involuntary Deductions (₦)',
-                'Voluntary Deductions (₦)',
-                'Total Deductions (₦)',
+                'PAYE Tax (NGN) (Involuntary)',
+                'Pension Deduction (NGN) (Involuntary)',
+                'NHF Deduction (NGN) (Involuntary)',
+                'NHIS Deduction (NGN) (Involuntary)',
+                'NSITF Deduction (NGN) (Involuntary)',
+                'Other Involuntary Deductions (NGN)',
+                'Total Involuntary Deductions (NGN)',
+                'Voluntary Deductions (NGN)',
+                'Total Deductions (NGN)',
             ];
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
                 $totalInvoluntary = (float) $employee->monthly_tax_deduction
@@ -561,16 +561,16 @@ class ReportsController extends Controller
                 'Employee Number',
                 'Employee Name',
                 'Tax Identification Number',
-                'Gross Salary (₦)',
-                'Federal Tax Withheld (₦)',
-                'State Tax Withheld (₦)',
-                'Local Tax Withheld (₦)',
-                'Total Employee Tax (₦)',
-                'Employer Federal Tax Match (₦)',
-                'Employer State Tax Match (₦)',
-                'Employer Local Tax Match (₦)',
-                'Total Employer Liability (₦)',
-                'Total Tax Liability (₦)',
+                'Gross Salary (NGN)',
+                'Federal Tax Withheld (NGN)',
+                'State Tax Withheld (NGN)',
+                'Local Tax Withheld (NGN)',
+                'Total Employee Tax (NGN)',
+                'Employer Federal Tax Match (NGN)',
+                'Employer State Tax Match (NGN)',
+                'Employer Local Tax Match (NGN)',
+                'Total Employer Liability (NGN)',
+                'Total Tax Liability (NGN)',
             ];
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
                 // For now, all PAYE is treated as federal tax
@@ -619,10 +619,10 @@ class ReportsController extends Controller
                 'Job Title',
                 'Location',
                 'Employment Type',
-                'Gross Salary (₦)',
-                'Total Cost (₦) (Gross + Benefits)',
-                'Cost Per Department (₦)',
-                'Cost Per Location (₦)',
+                'Gross Salary (NGN)',
+                'Total Cost (NGN) (Gross + Benefits)',
+                'Cost Per Department (NGN)',
+                'Cost Per Location (NGN)',
             ];
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
                 // Calculate total cost including benefits (typically 1.2-1.3x gross salary)
@@ -647,7 +647,7 @@ class ReportsController extends Controller
         }
 
         if ($type === 'pension') {
-            $headers = ['Employee Number', 'Employee Name', 'PFA Name', 'Pension PIN', 'Gross Salary (₦)', 'Employee Pension Deduction (₦)'];
+            $headers = ['Employee Number', 'Employee Name', 'PFA Name', 'Pension PIN', 'Gross Salary (NGN)', 'Employee Pension Deduction (NGN)'];
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
                 return [
                     $employee->employee_number,
@@ -663,7 +663,7 @@ class ReportsController extends Controller
         }
 
         if ($type === 'nhis') {
-            $headers = ['Employee Number', 'Employee Name', 'Basic Salary (₦)', 'Employee NHIS Deduction (₦)', 'Employer NHIS Contribution (₦)'];
+            $headers = ['Employee Number', 'Employee Name', 'Basic Salary (NGN)', 'Employee NHIS Deduction (NGN)', 'Employer NHIS Contribution (NGN)'];
             $rows = $employees->map(function (Employee $employee) use ($nhisEmployerRate, $formatCurrency): array {
                 $employerNhisContribution = $employee->apply_nhis_deduction
                     ? (((float) $employee->basic_salary * $nhisEmployerRate) / 100)
@@ -682,7 +682,7 @@ class ReportsController extends Controller
         }
 
         if ($type === 'paye') {
-            $headers = ['Employee Number', 'Employee Name', 'Tax Identification Number', 'Gross Salary (₦)', 'PAYE Deduction (₦)'];
+            $headers = ['Employee Number', 'Employee Name', 'Tax Identification Number', 'Gross Salary (NGN)', 'PAYE Deduction (NGN)'];
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
                 return [
                     $employee->employee_number,
@@ -697,7 +697,7 @@ class ReportsController extends Controller
         }
 
         if ($type === 'nhf') {
-            $headers = ['Employee Number', 'Employee Name', 'NHF Number', 'Gross Salary (₦)', 'NHF Deduction (₦)'];
+            $headers = ['Employee Number', 'Employee Name', 'NHF Number', 'Gross Salary (NGN)', 'NHF Deduction (NGN)'];
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
                 return [
                     $employee->employee_number,
@@ -711,7 +711,7 @@ class ReportsController extends Controller
             return [$headers, $rows];
         }
 
-        $headers = ['Employee Number', 'Employee Name', 'Bank Name', 'Account Name', 'Account Number', 'Net Pay (₦)'];
+        $headers = ['Employee Number', 'Employee Name', 'Bank Name', 'Account Name', 'Account Number', 'Net Pay (NGN)'];
         $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
             $netPay = (float) $employee->monthly_gross_salary
                 - (float) $employee->monthly_tax_deduction

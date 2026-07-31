@@ -5,7 +5,7 @@
     <title>{{ $reportLabel }}</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: DejaVu Sans, Arial, sans-serif;
             font-size: 12px;
             margin: 20px;
             color: #333;
