@@ -67,4 +67,26 @@ class User extends Authenticatable implements MustVerifyEmail
             'organization_id'
         )->withPivot('role')->withTimestamps();
     }
+
+    /**
+     * Get the employee record associated with this user (for self-service).
+     * This assumes employees are linked to users via email matching.
+     */
+    public function employee()
+    {
+        // This will be resolved in tenant context
+        if (! tenancy()->initialized) {
+            return null;
+        }
+
+        return \App\Models\Employee::where('work_email', $this->email)->first();
+    }
+
+    /**
+     * Check if this user has an associated employee record in the current tenant.
+     */
+    public function hasEmployeeRecord(): bool
+    {
+        return $this->employee() !== null;
+    }
 }

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Employee\SelfServiceController;
 use App\Http\Controllers\Settings\PayrollSettingsController;
 use App\Http\Controllers\Settings\WorkspaceController;
 use App\Http\Controllers\Tenant\DashboardController;
@@ -97,4 +98,36 @@ Route::middleware([
     Route::post('/payroll/finalize', PayrollFinalizationController::class)
         ->middleware(['auth', 'organization.role:owner,admin'])
         ->name('tenant.payroll.finalize');
+
+    // Employee Self-Service Routes
+    Route::middleware(['auth', 'employee.record'])->group(function () {
+        Route::get('/employee/dashboard', [SelfServiceController::class, 'dashboard'])
+            ->name('employee.dashboard');
+        Route::get('/employee/profile', [SelfServiceController::class, 'profile'])
+            ->name('employee.profile');
+        Route::patch('/employee/profile', [SelfServiceController::class, 'updateProfile'])
+            ->name('employee.profile.update');
+        Route::get('/employee/payslips/{payrollRun}', [SelfServiceController::class, 'payslip'])
+            ->name('employee.payslip');
+        
+        // Tax Documents Routes
+        Route::get('/employee/tax-documents', [\App\Http\Controllers\Employee\TaxDocumentsController::class, 'index'])
+            ->name('employee.tax-documents');
+        Route::get('/employee/tax-documents/paye-certificate/{payrollRun}', [\App\Http\Controllers\Employee\TaxDocumentsController::class, 'payeCertificate'])
+            ->name('employee.tax-documents.paye-certificate');
+        Route::get('/employee/tax-documents/pension-statement', [\App\Http\Controllers\Employee\TaxDocumentsController::class, 'pensionStatement'])
+            ->name('employee.tax-documents.pension-statement');
+        
+        // Leave Balance Routes
+        Route::get('/employee/leave-balance', [\App\Http\Controllers\Employee\LeaveBalanceController::class, 'index'])
+            ->name('employee.leave-balance');
+        
+        // Notification Routes
+        Route::get('/employee/notifications', [\App\Http\Controllers\Employee\NotificationController::class, 'index'])
+            ->name('employee.notifications');
+        Route::post('/employee/notifications/mark-read', [\App\Http\Controllers\Employee\NotificationController::class, 'markAsRead'])
+            ->name('employee.notifications.mark-read');
+        Route::post('/employee/notifications/mark-all-read', [\App\Http\Controllers\Employee\NotificationController::class, 'markAllAsRead'])
+            ->name('employee.notifications.mark-all-read');
+    });
 });

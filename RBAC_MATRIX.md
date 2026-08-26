@@ -114,18 +114,59 @@ Role: Staff
 
 ---
 
-## Implementation Checklist (Later)
+## Implementation Status (Phase 1 - Launch)
 
-- [ ] Install `spatie/laravel-permission`
-- [ ] Create Role & Permission models (DB migration)
-- [ ] Seed 4 roles + 30 permissions
-- [ ] Create Spatie traits on `User` model
-- [ ] Add `@can()` & `@cannot()` gates to Blade templates
-- [ ] Create Resource Policies for Employee, Payroll, Leave
-- [ ] Add route middleware + controller checks
+### ✅ Currently Implemented (Sufficient for Launch)
+- [x] Install `spatie/laravel-permission`
+- [x] Create Role & Permission models (DB migration)
+- [x] Seed 3 roles + 4 core permissions (simplified approach)
+- [x] Create Spatie traits on `User` model
+- [x] Add organization-level role middleware (`RequireOrganizationRole`)
+- [x] Add route middleware + controller checks
+- [x] Multi-tenant role synchronization via `OrganizationRoleSyncService`
+- [x] Test each role on critical flows (login, create employee, run payroll)
+
+### 🔧 Current Permission Structure (Phase 1)
+**Roles:**
+- **admin**: Owner/Admin organization roles → Full access
+- **hr**: HR organization role → Employee management + payroll view
+- **staff**: Member organization role → Basic payroll view
+
+**Permissions:**
+- `manage payroll` - Admin only
+- `add employee` - Admin + HR
+- `view payroll` - All roles
+- `manage settings` - Admin only
+
+### 📋 Incremental Enhancement Roadmap
+
+**Phase 2 Enhancements (When adding leave/self-service):**
+- [ ] Add self-service permissions: `view own payslip`, `update own profile`
+- [ ] Add leave management permissions: `manage leave`, `approve leave`, `view leave requests`
+- [ ] Add report permissions: `export reports`, `view advanced reports`
+- [ ] Add employee permissions: `edit employee`, `delete employee`, `view all employees`
+- [ ] Create EmployeePolicy for self-service access control
+- [ ] Update form requests to support self-service scenarios
+
+**Phase 3 Enhancements (Enterprise features):**
+- [ ] Add Resource Policies for Payroll, Leave, Reports
 - [ ] Add auditable trait for permission/role changes
-- [ ] Test each role on critical flows (login, create employee, run payroll)
+- [ ] Implement approval workflow permissions
+- [ ] Add granular export and data access controls
 - [ ] Deploy to staging, validate, then production
+
+### 🎯 Implementation Strategy
+**Current approach:**
+- Simplified permission structure adequate for Phase 1 launch
+- Organization role middleware provides strong tenant isolation
+- Direct role checks in form requests for security
+- Spatie permissions available for future incremental enhancements
+
+**Benefits:**
+- Reduced complexity for launch timeline
+- Clear upgrade path as features are added
+- Multi-tenant security maintained
+- Easy to test and maintain
 
 ---
 
@@ -135,3 +176,33 @@ Role: Staff
 2. **Approval workflow**: Is "payroll.approve" distinct from "payroll.run", or combined? Currently separate for safety.
 3. **Export permissions**: Should be audited (log who/when exported payroll data).
 4. **Future expansion**: Add `viewer`/`auditor` role if clients need read-only power users.
+
+## Current Implementation Notes
+
+**Simplified RBAC Approach (Phase 1):**
+- Used 3 roles (admin, hr, staff) instead of 4 roles from original matrix
+- Implemented 4 core permissions covering essential launch features
+- Organization role middleware (`RequireOrganizationRole`) provides primary access control
+- Spatie permissions available for incremental enhancements
+- Multi-tenant role synchronization handles per-tenant permission mapping
+
+**Security Model:**
+- Organization roles (owner, admin, hr, member) mapped to Spatie roles (admin, hr, staff)
+- Tenant isolation enforced at middleware level
+- Form requests use direct organization role checks for reliability
+- Permission sync service maintains consistency between org roles and Spatie permissions
+
+**Testing Coverage:**
+- Existing EmployeeManagementTest covers role-based access
+- Organization member access restrictions tested
+- HR role employee management verified
+- Owner/admin full access validated
+
+**Missing from Original Matrix (Intentional for Phase 1):**
+- Manager role (consolidated into HR for MVP simplicity)
+- Granular payroll permissions (combined into 'manage payroll')
+- 30+ detailed permissions (reduced to 4 core permissions)
+- Self-service permissions (deferred to Phase 2)
+- Leave management permissions (deferred to Phase 2)
+- Advanced report permissions (deferred to Phase 2)
+- Resource policies (deferred until needed for self-service)

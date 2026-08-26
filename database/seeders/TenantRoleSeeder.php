@@ -25,9 +25,13 @@ class TenantRoleSeeder extends Seeder
         $viewPayroll = Permission::firstOrCreate(['name' => 'view payroll', 'guard_name' => 'web']);
         $manageSettings = Permission::firstOrCreate(['name' => 'manage settings', 'guard_name' => 'web']);
 
-        $admin->syncPermissions([$managePayroll, $addEmployee, $viewPayroll, $manageSettings]);
-        $hr->syncPermissions([$addEmployee, $viewPayroll]);
-        $staff->syncPermissions([$viewPayroll]);
+        // Self-service permissions
+        $viewOwnPayslip = Permission::firstOrCreate(['name' => 'view own payslip', 'guard_name' => 'web']);
+        $updateOwnProfile = Permission::firstOrCreate(['name' => 'update own profile', 'guard_name' => 'web']);
+
+        $admin->syncPermissions([$managePayroll, $addEmployee, $viewPayroll, $manageSettings, $viewOwnPayslip, $updateOwnProfile]);
+        $hr->syncPermissions([$addEmployee, $viewPayroll, $viewOwnPayslip, $updateOwnProfile]);
+        $staff->syncPermissions([$viewPayroll, $viewOwnPayslip, $updateOwnProfile]);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }

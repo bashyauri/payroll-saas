@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\DynamicAppUrl;
+use App\Http\Middleware\EnsureEmployeeRecord;
 use App\Http\Middleware\EnsureUserBelongsToTenantHost;
 use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\HandleAppearance;
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'organization.role' => RequireOrganizationRole::class,
+            'employee.record' => EnsureEmployeeRecord::class,
         ]);
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);

@@ -227,6 +227,32 @@ Behavior when blocked:
 - Renewal failure triggers a 7-day grace period.
 - At grace expiry, account moves to suspended read-only mode.
 - A deletion-risk notification is issued after suspension, with a 30-day warning milestone.
+
+### 6.6 Role-Based Access Control (RBAC) Architecture
+
+**Current Implementation (Phase 1):**
+- Simplified 3-role system: admin, hr, staff
+- 4 core permissions: manage payroll, add employee, view payroll, manage settings
+- Organization-based access control via `RequireOrganizationRole` middleware
+- Multi-tenant role synchronization via `OrganizationRoleSyncService`
+- Spatie Laravel Permission package for permission management
+
+**Role Mapping:**
+- Organization Owner/Admin → admin role (full access)
+- Organization HR → hr role (employee management + payroll view)
+- Organization Member → staff role (basic payroll view)
+
+**Security Model:**
+- Primary access control via organization role middleware
+- Tenant isolation enforced at middleware level
+- Form requests use direct organization role checks
+- Spatie permissions available for incremental enhancements
+- Per-tenant permission database for multi-tenant isolation
+
+**Incremental Enhancement Strategy:**
+- Phase 1: Current simplified approach sufficient for launch
+- Phase 2: Add self-service, leave management, and report permissions
+- Phase 3: Add resource policies and granular controls for enterprise features
 - Non-renewed subscribers may retain read-only access up to 90 days, after which data lifecycle policy applies.
 - Data export or migration support after grace can be offered as a paid operational service.
 
@@ -370,6 +396,9 @@ Scope:
 - trial-first immediate payment onboarding
 - billing guard for payroll finalization
 - refunds within 7-day guarantee
+- simplified RBAC with 3 roles (admin, hr, staff) and 4 core permissions
+- multi-tenant role synchronization
+- organization-based access control via middleware
 
 ## 10.2 Phase 2
 
@@ -380,6 +409,9 @@ Scope:
 - leave management
 - employee self-service portal
 - stronger dunning automation and billing analytics
+- enhanced RBAC: self-service permissions, leave management permissions, report export controls
+- EmployeePolicy for self-service access control
+- incremental permission expansion from 4 to ~13 permissions
 
 ## 10.3 Phase 3
 
@@ -393,12 +425,14 @@ Scope:
 - advanced analytics
 - partner API and integrations
 - data warehouse pipeline
+- enhanced RBAC: granular permissions, approval workflows, audit trails
 
 ## 10.5 Phase 5
 
 Scope:
 - mobile app
 - USSD and WhatsApp-assisted operations
+- enterprise-grade RBAC: viewer/auditor roles, advanced delegation
 
 ---
 
@@ -434,6 +468,9 @@ Channels:
 - Payroll calculation module with configurable rates ✓
 - PDF export for reports ✓
 - Excel export for reports ✓
+- Simplified RBAC system with 3 roles and 4 core permissions ✓
+- Multi-tenant role synchronization service ✓
+- Organization-based access control middleware ✓
 
 ---
 
