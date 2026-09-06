@@ -211,7 +211,7 @@ test('owner can export nhis report with employer contribution', function () {
 
     expect($streamed)->toContain('Employer NHIS Contribution');
     expect($streamed)->toContain('EMP-NHIS-CSV-01');
-    expect($streamed)->toContain('12000');
+    expect($streamed)->toContain('NGN 12,000.00');
 });
 
 test('member is forbidden from reports export endpoint', function () {

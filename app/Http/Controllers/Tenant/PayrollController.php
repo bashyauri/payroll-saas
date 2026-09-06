@@ -104,6 +104,8 @@ class PayrollController extends Controller
             'nhis_employer_base' => 'basic_salary',
             'nhis_employer_contribution' => round($totalNhisEmployerContribution, 2),
             'employee_calculations' => $employeeCalculations,
+            'total_pension_employer' => $totals['total_pension_employer'],
+            'total_nhis_employer' => $totals['total_nhis_employer'],
         ];
 
         PayrollRun::query()->create([

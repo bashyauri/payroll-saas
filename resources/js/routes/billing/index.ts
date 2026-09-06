@@ -1,4 +1,5 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../wayfinder'
+import refund from './refund'
 import paystack from './paystack'
 /**
 * @see \App\Http\Controllers\Billing\PlanSelectionController::__invoke
@@ -136,6 +137,7 @@ checkout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 const billing = {
     plans: Object.assign(plans, plans),
 checkout: Object.assign(checkout, checkout),
+refund: Object.assign(refund, refund),
 paystack: Object.assign(paystack, paystack),
 }
 

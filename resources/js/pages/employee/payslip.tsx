@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard as employeeDashboard } from '@/routes/employee';
+import { dashboard as employeeDashboard, payslipPdf } from '@/routes/employee';
 import type { BreadcrumbItem } from '@/types';
 
 type PayslipProps = {
@@ -49,14 +49,16 @@ type PayslipProps = {
         basicSalary: number;
         housingAllowance: number;
         transportAllowance: number;
-        otherAllowances: number;
+        otherAllowance1: number;
+        otherAllowance2: number;
+        totalEarnings: number;
         totalDeductions: number;
         netPay: number;
         paye: number;
-        pensionEmployee: number;
+        pensionDeduction: number;
         pensionEmployer: number;
         nhf: number;
-        nhisEmployee: number;
+        nhisDeduction: number;
         nhisEmployer: number;
         nsitf: number;
         otherDeductions: number;
@@ -112,13 +114,23 @@ export default function Payslip({
                         </h1>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => window.print()}
+                        >
                             <Printer className="mr-2 h-4 w-4" />
                             Print
                         </Button>
-                        <Button variant="outline" size="sm">
-                            <Download className="mr-2 h-4 w-4" />
-                            Download PDF
+                        <Button 
+                            variant="outline" 
+                            size="sm"
+                            asChild
+                        >
+                            <a href={payslipPdf(payrollRun.id)} target="_blank" rel="noopener noreferrer">
+                                <Download className="mr-2 h-4 w-4" />
+                                Download PDF
+                            </a>
                         </Button>
                     </div>
                 </div>
@@ -206,8 +218,16 @@ export default function Payslip({
                             <span className="font-medium">{formatMoney(calculation.transportAllowance)}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Other Allowances</span>
-                            <span className="font-medium">{formatMoney(calculation.otherAllowances)}</span>
+                            <span className="text-muted-foreground">Other Allowance 1</span>
+                            <span className="font-medium">{formatMoney(calculation.otherAllowance1)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Other Allowance 2</span>
+                            <span className="font-medium">{formatMoney(calculation.otherAllowance2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Total Earnings</span>
+                            <span className="font-medium">{formatMoney(calculation.totalEarnings)}</span>
                         </div>
                         <Separator />
                         <div className="flex justify-between font-semibold">
@@ -232,7 +252,7 @@ export default function Payslip({
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Pension (Employee)</span>
-                            <span className="font-medium">{formatMoney(calculation.pensionEmployee)}</span>
+                            <span className="font-medium">{formatMoney(calculation.pensionDeduction)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">NHF</span>
@@ -240,7 +260,7 @@ export default function Payslip({
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">NHIS (Employee)</span>
-                            <span className="font-medium">{formatMoney(calculation.nhisEmployee)}</span>
+                            <span className="font-medium">{formatMoney(calculation.nhisDeduction)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">NSITF</span>

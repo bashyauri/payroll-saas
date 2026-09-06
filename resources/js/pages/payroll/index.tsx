@@ -1,4 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import { FileCheck2, LoaderCircle, ShieldCheck } from 'lucide-react';
 import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
@@ -64,6 +65,9 @@ export default function PayrollIndex({
         period_month: '',
     });
 
+    const [selectedYear, setSelectedYear] = useState<string>('all');
+    const [selectedMonth, setSelectedMonth] = useState<string>('all');
+
     const submit = (event: FormEvent<HTMLFormElement>): void => {
         event.preventDefault();
         form.post('/payroll/runs', {
@@ -88,6 +92,38 @@ export default function PayrollIndex({
             maximumFractionDigits: 2,
         }).format(amount);
     };
+
+    // Filter payroll runs based on selected year and month
+    const filteredPayrollRuns = payrollRuns.filter((run) => {
+        if (selectedYear === 'all' && selectedMonth === 'all') return true;
+        
+        const runDate = new Date(run.periodMonth + '-01');
+        const runYear = runDate.getFullYear().toString();
+        const runMonth = (runDate.getMonth() + 1).toString().padStart(2, '0');
+        
+        if (selectedYear !== 'all' && selectedMonth !== 'all') {
+            return runYear === selectedYear && runMonth === selectedMonth;
+        }
+        if (selectedYear !== 'all') {
+            return runYear === selectedYear;
+        }
+        if (selectedMonth !== 'all') {
+            return runMonth === selectedMonth;
+        }
+        return true;
+    });
+
+    // Get unique years and months from payroll runs
+    const availableYears = Array.from(
+        new Set(payrollRuns.map((run) => new Date(run.periodMonth + '-01').getFullYear().toString()))
+    ).sort((a, b) => b.localeCompare(a));
+
+    const availableMonths = Array.from(
+        new Set(payrollRuns.map((run) => {
+            const date = new Date(run.periodMonth + '-01');
+            return (date.getMonth() + 1).toString().padStart(2, '0');
+        }))
+    ).sort((a, b) => a.localeCompare(b));
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -183,14 +219,63 @@ export default function PayrollIndex({
                             Track each month, totals, and finalization state.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="grid gap-3">
-                        {payrollRuns.length === 0 ? (
+                    <CardContent className="space-y-4">
+                        {/* Filter Controls */}
+                        {payrollRuns.length > 0 && (
+                            <div className="flex flex-wrap gap-3">
+                                <div className="flex items-center gap-2">
+                                    <label htmlFor="year-filter" className="text-sm font-medium">
+                                        Year:
+                                    </label>
+                                    <select
+                                        id="year-filter"
+                                        value={selectedYear}
+                                        onChange={(e) => setSelectedYear(e.target.value)}
+                                        className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                    >
+                                        <option value="all">All Years</option>
+                                        {availableYears.map((year) => (
+                                            <option key={year} value={year}>
+                                                {year}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <label htmlFor="month-filter" className="text-sm font-medium">
+                                        Month:
+                                    </label>
+                                    <select
+                                        id="month-filter"
+                                        value={selectedMonth}
+                                        onChange={(e) => setSelectedMonth(e.target.value)}
+                                        className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                    >
+                                        <option value="all">All Months</option>
+                                        {availableMonths.map((month) => (
+                                            <option key={month} value={month}>
+                                                {new Date(2000, parseInt(month) - 1, 1).toLocaleString('default', { month: 'long' })}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    Showing {filteredPayrollRuns.length} of {payrollRuns.length} runs
+                                </div>
+                            </div>
+                        )}
+                        
+                        <div className="grid gap-3">
+                        {filteredPayrollRuns.length === 0 ? (
                             <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-                                No payroll runs yet. Create your first monthly
-                                run.
+                                {payrollRuns.length === 0 ? (
+                                    'No payroll runs yet. Create your first monthly run.'
+                                ) : (
+                                    'No payroll runs found for the selected filters.'
+                                )}
                             </div>
                         ) : (
-                            payrollRuns.map((run) => (
+                            filteredPayrollRuns.map((run) => (
                                 <div
                                     key={run.id}
                                     className="rounded-lg border p-4"
@@ -261,6 +346,7 @@ export default function PayrollIndex({
                                 </div>
                             ))
                         )}
+                        </div>
                     </CardContent>
                 </Card>
 

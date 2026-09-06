@@ -79,6 +79,14 @@ class PayrollCalculationService
         // Net pay
         $netPay = max($grossSalary - $totalDeductions, 0);
 
+        // Calculate employer contributions
+        $pensionEmployerRate = (float) ($settings['pension_employer_rate'] ?? 10.0);
+        $nhisEmployerRate = (float) ($settings['nhis_employer_rate'] ?? 10.0);
+        $pensionEmployeeRate = (float) ($settings['pension_employee_rate'] ?? 8.0);
+
+        $pensionEmployerContribution = ($pensionDeduction / $pensionEmployeeRate) * $pensionEmployerRate;
+        $nhisEmployerContribution = ($basicSalary * $nhisEmployerRate) / 100;
+
         return [
             'employee_id' => $employee->id,
             'employee_number' => $employee->employee_number,
@@ -92,8 +100,10 @@ class PayrollCalculationService
             'total_earnings' => $totalEarnings,
             'paye_deduction' => $payeDeduction,
             'pension_deduction' => $pensionDeduction,
+            'pension_employer' => $pensionEmployerContribution,
             'nhf_deduction' => $nhfDeduction,
             'nhis_deduction' => $nhisDeduction,
+            'nhis_employer' => $nhisEmployerContribution,
             'nsitf_deduction' => $nsitfDeduction,
             'other_deductions' => $otherDeductions,
             'total_deductions' => $totalDeductions,
@@ -124,8 +134,10 @@ class PayrollCalculationService
         $totalEarnings = 0;
         $totalPayeDeduction = 0;
         $totalPensionDeduction = 0;
+        $totalPensionEmployer = 0;
         $totalNhfDeduction = 0;
         $totalNhisDeduction = 0;
+        $totalNhisEmployer = 0;
         $totalNsitfDeduction = 0;
         $totalOtherDeductions = 0;
         $totalDeductions = 0;
@@ -136,8 +148,10 @@ class PayrollCalculationService
             $totalEarnings += $calculation['total_earnings'];
             $totalPayeDeduction += $calculation['paye_deduction'];
             $totalPensionDeduction += $calculation['pension_deduction'];
+            $totalPensionEmployer += $calculation['pension_employer'];
             $totalNhfDeduction += $calculation['nhf_deduction'];
             $totalNhisDeduction += $calculation['nhis_deduction'];
+            $totalNhisEmployer += $calculation['nhis_employer'];
             $totalNsitfDeduction += $calculation['nsitf_deduction'];
             $totalOtherDeductions += $calculation['other_deductions'];
             $totalDeductions += $calculation['total_deductions'];
@@ -149,8 +163,10 @@ class PayrollCalculationService
             'total_earnings' => $totalEarnings,
             'total_paye_deduction' => $totalPayeDeduction,
             'total_pension_deduction' => $totalPensionDeduction,
+            'total_pension_employer' => $totalPensionEmployer,
             'total_nhf_deduction' => $totalNhfDeduction,
             'total_nhis_deduction' => $totalNhisDeduction,
+            'total_nhis_employer' => $totalNhisEmployer,
             'total_nsitf_deduction' => $totalNsitfDeduction,
             'total_other_deductions' => $totalOtherDeductions,
             'total_deductions' => $totalDeductions,

@@ -39,11 +39,13 @@ class TaxDocumentsController extends Controller
                     'periodEnd' => $run->period_end,
                     'finalizedAt' => $run->finalized_at?->toIso8601String(),
                     'hasCalculation' => $employeeCalc !== null,
-                    'paye' => $employeeCalc['paye'] ?? 0,
-                    'pensionEmployee' => $employeeCalc['pension_employee'] ?? 0,
-                    'nhf' => $employeeCalc['nhf'] ?? 0,
-                    'nhisEmployee' => $employeeCalc['nhis_employee'] ?? 0,
-                    'nsitf' => $employeeCalc['nsitf'] ?? 0,
+                    'paye' => $employeeCalc['paye_deduction'] ?? 0,
+                    'pensionEmployee' => $employeeCalc['pension_deduction'] ?? 0,
+                    'pensionEmployer' => $employeeCalc['pension_employer'] ?? 0,
+                    'nhf' => $employeeCalc['nhf_deduction'] ?? 0,
+                    'nhisEmployee' => $employeeCalc['nhis_deduction'] ?? 0,
+                    'nhisEmployer' => $employeeCalc['nhis_employer'] ?? 0,
+                    'nsitf' => $employeeCalc['nsitf_deduction'] ?? 0,
                 ];
             });
 
@@ -57,8 +59,10 @@ class TaxDocumentsController extends Controller
         $ytdTotals = [
             'paye' => 0,
             'pensionEmployee' => 0,
+            'pensionEmployer' => 0,
             'nhf' => 0,
             'nhisEmployee' => 0,
+            'nhisEmployer' => 0,
             'nsitf' => 0,
             'grossSalary' => 0,
         ];
@@ -66,11 +70,13 @@ class TaxDocumentsController extends Controller
         foreach ($ytdPayrollRuns as $run) {
             $employeeCalc = data_get($run->settings_snapshot, 'computed_totals.employee_calculations.'.$employee->id);
             if ($employeeCalc) {
-                $ytdTotals['paye'] += $employeeCalc['paye'] ?? 0;
-                $ytdTotals['pensionEmployee'] += $employeeCalc['pension_employee'] ?? 0;
-                $ytdTotals['nhf'] += $employeeCalc['nhf'] ?? 0;
-                $ytdTotals['nhisEmployee'] += $employeeCalc['nhis_employee'] ?? 0;
-                $ytdTotals['nsitf'] += $employeeCalc['nsitf'] ?? 0;
+                $ytdTotals['paye'] += $employeeCalc['paye_deduction'] ?? 0;
+                $ytdTotals['pensionEmployee'] += $employeeCalc['pension_deduction'] ?? 0;
+                $ytdTotals['pensionEmployer'] += $employeeCalc['pension_employer'] ?? 0;
+                $ytdTotals['nhf'] += $employeeCalc['nhf_deduction'] ?? 0;
+                $ytdTotals['nhisEmployee'] += $employeeCalc['nhis_deduction'] ?? 0;
+                $ytdTotals['nhisEmployer'] += $employeeCalc['nhis_employer'] ?? 0;
+                $ytdTotals['nsitf'] += $employeeCalc['nsitf_deduction'] ?? 0;
                 $ytdTotals['grossSalary'] += $employeeCalc['gross_salary'] ?? 0;
             }
         }
@@ -114,25 +120,23 @@ class TaxDocumentsController extends Controller
             abort(404, 'Payroll calculation not found for this employee.');
         }
 
-        // In a real implementation, this would generate a PDF
-        // For now, return the data that would be used for PDF generation
-        return response()->json([
-            'employee' => [
-                'name' => $employee->first_name . ' ' . $employee->last_name,
-                'employeeNumber' => $employee->employee_number,
-                'taxId' => $employee->tax_identification_number,
-            ],
-            'period' => [
-                'month' => $payrollRun->period_month,
-                'start' => $payrollRun->period_start,
-                'end' => $payrollRun->period_end,
-            ],
-            'calculation' => [
-                'grossSalary' => $employeeCalc['gross_salary'] ?? 0,
-                'paye' => $employeeCalc['paye'] ?? 0,
-                'taxableIncome' => $employeeCalc['taxable_income'] ?? 0,
-            ],
+        $organization = tenant();
+
+        $pdf = \PDF::loadView('employee.paye-certificate-pdf', [
+            'organization' => $organization,
+            'payrollRun' => $payrollRun,
+            'employee' => $employee,
+            'calculation' => $employeeCalc,
+            'generatedAt' => now()->format('F j, Y, g:i a'),
         ]);
+
+        $fileName = sprintf(
+            'paye-certificate-%s-%s.pdf',
+            $employee->employee_number,
+            $payrollRun->period_month
+        );
+
+        return $pdf->download($fileName);
     }
 
     /**
@@ -148,6 +152,7 @@ class TaxDocumentsController extends Controller
         }
 
         $currentYear = now()->year;
+        $organization = tenant();
         $payrollRuns = PayrollRun::query()
             ->where('status', PayrollRun::STATUS_FINALIZED)
             ->where('period_month', 'like', $currentYear.'-%')
@@ -162,22 +167,18 @@ class TaxDocumentsController extends Controller
             if ($employeeCalc) {
                 $contributions[] = [
                     'period' => $run->period_month,
-                    'employeeContribution' => $employeeCalc['pension_employee'] ?? 0,
+                    'employeeContribution' => $employeeCalc['pension_deduction'] ?? 0,
                     'employerContribution' => $employeeCalc['pension_employer'] ?? 0,
-                    'total' => ($employeeCalc['pension_employee'] ?? 0) + ($employeeCalc['pension_employer'] ?? 0),
+                    'total' => ($employeeCalc['pension_deduction'] ?? 0) + ($employeeCalc['pension_employer'] ?? 0),
                 ];
-                $totalEmployee += $employeeCalc['pension_employee'] ?? 0;
+                $totalEmployee += $employeeCalc['pension_deduction'] ?? 0;
                 $totalEmployer += $employeeCalc['pension_employer'] ?? 0;
             }
         }
 
-        return response()->json([
-            'employee' => [
-                'name' => $employee->first_name . ' ' . $employee->last_name,
-                'employeeNumber' => $employee->employee_number,
-                'pensionPin' => $employee->pension_pin,
-                'pfaName' => $employee->pfa_name,
-            ],
+        $pdf = \PDF::loadView('employee.pension-statement-pdf', [
+            'organization' => $organization,
+            'employee' => $employee,
             'year' => $currentYear,
             'contributions' => $contributions,
             'totals' => [
@@ -185,6 +186,15 @@ class TaxDocumentsController extends Controller
                 'employer' => $totalEmployer,
                 'total' => $totalEmployee + $totalEmployer,
             ],
+            'generatedAt' => now()->format('F j, Y, g:i a'),
         ]);
+
+        $fileName = sprintf(
+            'pension-statement-%s-%d.pdf',
+            $employee->employee_number,
+            $currentYear
+        );
+
+        return $pdf->download($fileName);
     }
 }

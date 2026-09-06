@@ -1,8 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
-import profile937a89 from './profile'
-import payslip5f0ae0 from './payslip'
-import taxDocumentsC4210b from './tax-documents'
-import notifications1ce82a from './notifications'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::dashboard
  * @see app/Http/Controllers/Employee/SelfServiceController.php:19
@@ -160,6 +156,71 @@ profile.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     
     profile.form = profileForm
 /**
+* @see \App\Http\Controllers\Employee\SelfServiceController::updateProfile
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:125
+ * @route '/employee/profile'
+ */
+export const updateProfile = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: updateProfile.url(options),
+    method: 'patch',
+})
+
+updateProfile.definition = {
+    methods: ["patch"],
+    url: '/employee/profile',
+} satisfies RouteDefinition<["patch"]>
+
+/**
+* @see \App\Http\Controllers\Employee\SelfServiceController::updateProfile
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:125
+ * @route '/employee/profile'
+ */
+updateProfile.url = (options?: RouteQueryOptions) => {
+    return updateProfile.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Employee\SelfServiceController::updateProfile
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:125
+ * @route '/employee/profile'
+ */
+updateProfile.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: updateProfile.url(options),
+    method: 'patch',
+})
+
+    /**
+* @see \App\Http\Controllers\Employee\SelfServiceController::updateProfile
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:125
+ * @route '/employee/profile'
+ */
+    const updateProfileForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: updateProfile.url({
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PATCH',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Employee\SelfServiceController::updateProfile
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:125
+ * @route '/employee/profile'
+ */
+        updateProfileForm.patch = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: updateProfile.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    updateProfile.form = updateProfileForm
+/**
 * @see \App\Http\Controllers\Employee\SelfServiceController::payslip
  * @see app/Http/Controllers/Employee/SelfServiceController.php:137
  * @route '/employee/payslips/{payrollRun}'
@@ -261,247 +322,6 @@ payslip.head = (args: { payrollRun: string | number | { id: string | number } } 
         })
     
     payslip.form = payslipForm
-/**
-* @see \App\Http\Controllers\Employee\TaxDocumentsController::taxDocuments
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:17
- * @route '/employee/tax-documents'
- */
-export const taxDocuments = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: taxDocuments.url(options),
-    method: 'get',
-})
+const SelfServiceController = { dashboard, profile, updateProfile, payslip }
 
-taxDocuments.definition = {
-    methods: ["get","head"],
-    url: '/employee/tax-documents',
-} satisfies RouteDefinition<["get","head"]>
-
-/**
-* @see \App\Http\Controllers\Employee\TaxDocumentsController::taxDocuments
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:17
- * @route '/employee/tax-documents'
- */
-taxDocuments.url = (options?: RouteQueryOptions) => {
-    return taxDocuments.definition.url + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\Employee\TaxDocumentsController::taxDocuments
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:17
- * @route '/employee/tax-documents'
- */
-taxDocuments.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: taxDocuments.url(options),
-    method: 'get',
-})
-/**
-* @see \App\Http\Controllers\Employee\TaxDocumentsController::taxDocuments
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:17
- * @route '/employee/tax-documents'
- */
-taxDocuments.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: taxDocuments.url(options),
-    method: 'head',
-})
-
-    /**
-* @see \App\Http\Controllers\Employee\TaxDocumentsController::taxDocuments
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:17
- * @route '/employee/tax-documents'
- */
-    const taxDocumentsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: taxDocuments.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Employee\TaxDocumentsController::taxDocuments
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:17
- * @route '/employee/tax-documents'
- */
-        taxDocumentsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: taxDocuments.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Employee\TaxDocumentsController::taxDocuments
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:17
- * @route '/employee/tax-documents'
- */
-        taxDocumentsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: taxDocuments.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    taxDocuments.form = taxDocumentsForm
-/**
-* @see \App\Http\Controllers\Employee\LeaveBalanceController::leaveBalance
- * @see app/Http/Controllers/Employee/LeaveBalanceController.php:16
- * @route '/employee/leave-balance'
- */
-export const leaveBalance = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: leaveBalance.url(options),
-    method: 'get',
-})
-
-leaveBalance.definition = {
-    methods: ["get","head"],
-    url: '/employee/leave-balance',
-} satisfies RouteDefinition<["get","head"]>
-
-/**
-* @see \App\Http\Controllers\Employee\LeaveBalanceController::leaveBalance
- * @see app/Http/Controllers/Employee/LeaveBalanceController.php:16
- * @route '/employee/leave-balance'
- */
-leaveBalance.url = (options?: RouteQueryOptions) => {
-    return leaveBalance.definition.url + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\Employee\LeaveBalanceController::leaveBalance
- * @see app/Http/Controllers/Employee/LeaveBalanceController.php:16
- * @route '/employee/leave-balance'
- */
-leaveBalance.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: leaveBalance.url(options),
-    method: 'get',
-})
-/**
-* @see \App\Http\Controllers\Employee\LeaveBalanceController::leaveBalance
- * @see app/Http/Controllers/Employee/LeaveBalanceController.php:16
- * @route '/employee/leave-balance'
- */
-leaveBalance.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: leaveBalance.url(options),
-    method: 'head',
-})
-
-    /**
-* @see \App\Http\Controllers\Employee\LeaveBalanceController::leaveBalance
- * @see app/Http/Controllers/Employee/LeaveBalanceController.php:16
- * @route '/employee/leave-balance'
- */
-    const leaveBalanceForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: leaveBalance.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Employee\LeaveBalanceController::leaveBalance
- * @see app/Http/Controllers/Employee/LeaveBalanceController.php:16
- * @route '/employee/leave-balance'
- */
-        leaveBalanceForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: leaveBalance.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Employee\LeaveBalanceController::leaveBalance
- * @see app/Http/Controllers/Employee/LeaveBalanceController.php:16
- * @route '/employee/leave-balance'
- */
-        leaveBalanceForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: leaveBalance.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    leaveBalance.form = leaveBalanceForm
-/**
-* @see \App\Http\Controllers\Employee\NotificationController::notifications
- * @see app/Http/Controllers/Employee/NotificationController.php:17
- * @route '/employee/notifications'
- */
-export const notifications = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: notifications.url(options),
-    method: 'get',
-})
-
-notifications.definition = {
-    methods: ["get","head"],
-    url: '/employee/notifications',
-} satisfies RouteDefinition<["get","head"]>
-
-/**
-* @see \App\Http\Controllers\Employee\NotificationController::notifications
- * @see app/Http/Controllers/Employee/NotificationController.php:17
- * @route '/employee/notifications'
- */
-notifications.url = (options?: RouteQueryOptions) => {
-    return notifications.definition.url + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\Employee\NotificationController::notifications
- * @see app/Http/Controllers/Employee/NotificationController.php:17
- * @route '/employee/notifications'
- */
-notifications.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: notifications.url(options),
-    method: 'get',
-})
-/**
-* @see \App\Http\Controllers\Employee\NotificationController::notifications
- * @see app/Http/Controllers/Employee/NotificationController.php:17
- * @route '/employee/notifications'
- */
-notifications.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: notifications.url(options),
-    method: 'head',
-})
-
-    /**
-* @see \App\Http\Controllers\Employee\NotificationController::notifications
- * @see app/Http/Controllers/Employee/NotificationController.php:17
- * @route '/employee/notifications'
- */
-    const notificationsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: notifications.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Employee\NotificationController::notifications
- * @see app/Http/Controllers/Employee/NotificationController.php:17
- * @route '/employee/notifications'
- */
-        notificationsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: notifications.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Employee\NotificationController::notifications
- * @see app/Http/Controllers/Employee/NotificationController.php:17
- * @route '/employee/notifications'
- */
-        notificationsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: notifications.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    notifications.form = notificationsForm
-const employee = {
-    dashboard: Object.assign(dashboard, dashboard),
-profile: Object.assign(profile, profile937a89),
-payslip: Object.assign(payslip, payslip5f0ae0),
-taxDocuments: Object.assign(taxDocuments, taxDocumentsC4210b),
-leaveBalance: Object.assign(leaveBalance, leaveBalance),
-notifications: Object.assign(notifications, notifications1ce82a),
-}
-
-export default employee
+export default SelfServiceController

@@ -109,6 +109,8 @@ Route::middleware([
             ->name('employee.profile.update');
         Route::get('/employee/payslips/{payrollRun}', [SelfServiceController::class, 'payslip'])
             ->name('employee.payslip');
+        Route::get('/employee/payslips/{payrollRun}/pdf', [\App\Http\Controllers\Employee\PayslipPdfController::class, '__invoke'])
+            ->name('employee.payslip.pdf');
         
         // Tax Documents Routes
         Route::get('/employee/tax-documents', [\App\Http\Controllers\Employee\TaxDocumentsController::class, 'index'])
