@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard as employeeDashboard, payslipPdf } from '@/routes/employee';
+import { dashboard as employeeDashboard } from '@/routes/employee';
 import type { BreadcrumbItem } from '@/types';
 
 type PayslipProps = {
@@ -127,7 +127,7 @@ export default function Payslip({
                             size="sm"
                             asChild
                         >
-                            <a href={payslipPdf(payrollRun.id)} target="_blank" rel="noopener noreferrer">
+                            <a href={`/employee/payslips/${payrollRun.id}/pdf`} target="_blank" rel="noopener noreferrer">
                                 <Download className="mr-2 h-4 w-4" />
                                 Download PDF
                             </a>

@@ -93,6 +93,27 @@ export default function PayrollIndex({
         }).format(amount);
     };
 
+    const generateMonthOptions = () => {
+        const options = [];
+        const currentDate = new Date();
+        
+        // Generate options for current year and next year
+        for (let year = currentDate.getFullYear(); year <= currentDate.getFullYear() + 1; year++) {
+            for (let month = 0; month < 12; month++) {
+                const date = new Date(year, month, 1);
+                const value = `${year}-${String(month + 1).padStart(2, '0')}`;
+                const label = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                
+                // Only show future months and current month
+                if (date >= new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)) {
+                    options.push({ value, label });
+                }
+            }
+        }
+        
+        return options.sort((a, b) => a.value.localeCompare(b.value));
+    };
+
     // Filter payroll runs based on selected year and month
     const filteredPayrollRuns = payrollRuns.filter((run) => {
         if (selectedYear === 'all' && selectedMonth === 'all') return true;
@@ -183,9 +204,8 @@ export default function PayrollIndex({
                             >
                                 Payroll month
                             </label>
-                            <input
+                            <select
                                 id="period_month"
-                                type="month"
                                 value={form.data.period_month}
                                 onChange={(event) =>
                                     form.setData(
@@ -194,7 +214,15 @@ export default function PayrollIndex({
                                     )
                                 }
                                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            />
+                                required
+                            >
+                                <option value="">Select a month</option>
+                                {generateMonthOptions().map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
                             <InputError message={form.errors.period_month} />
                             <Button
                                 type="submit"

@@ -156,6 +156,25 @@ export default function PayrollSettings({
         });
     };
 
+    const generateMonthOptions = () => {
+        const options = [];
+        const currentDate = new Date();
+        
+        // Generate options for current year and next year
+        for (let year = currentDate.getFullYear(); year <= currentDate.getFullYear() + 1; year++) {
+            for (let month = 0; month < 12; month++) {
+                const date = new Date(year, month, 1);
+                const value = `${year}-${String(month + 1).padStart(2, '0')}`;
+                const label = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                
+                // Show all months including past ones for settings
+                options.push({ value, label });
+            }
+        }
+        
+        return options.sort((a, b) => a.value.localeCompare(b.value));
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Payroll settings" />
@@ -227,14 +246,19 @@ export default function PayrollSettings({
                                             <Label htmlFor="payroll_month">
                                                 Payroll month
                                             </Label>
-                                            <Input
+                                            <select
                                                 id="payroll_month"
                                                 name="payroll_month"
-                                                type="month"
-                                                defaultValue={
-                                                    settings.payroll_month ?? ''
-                                                }
-                                            />
+                                                defaultValue={settings.payroll_month ?? ''}
+                                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
+                                            >
+                                                <option value="">Select a month</option>
+                                                {generateMonthOptions().map((option) => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </select>
                                             <InputError
                                                 message={errors.payroll_month}
                                             />
