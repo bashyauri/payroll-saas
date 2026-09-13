@@ -29,6 +29,20 @@ class EffectivePayrollSettingsResolver
 
     public const DEFAULT_USE_STATUTORY_DEFAULT_RATES = true;
 
+    public const DEFAULT_PAYE_CONSOLIDATED_RELIEF_PERCENTAGE = 20.0;
+
+    public const DEFAULT_PAYE_CONSOLIDATED_RELIEF_MINIMUM = 200000.0;
+
+    /** @var list<array{threshold: float, rate: float}> */
+    public const DEFAULT_PAYE_TAX_BRACKETS = [
+        ['threshold' => 300000, 'rate' => 7],
+        ['threshold' => 600000, 'rate' => 11],
+        ['threshold' => 1100000, 'rate' => 15],
+        ['threshold' => 1600000, 'rate' => 19],
+        ['threshold' => 3200000, 'rate' => 21],
+        ['threshold' => PHP_FLOAT_MAX, 'rate' => 24],
+    ];
+
     public const DEFAULT_PENSION_CONTRIBUTION_BASE = 'basic_transport_housing';
 
     public const DEFAULT_NHF_CONTRIBUTION_BASE = 'basic';
@@ -81,6 +95,9 @@ class EffectivePayrollSettingsResolver
             'project_name' => $settings?->project_name ?? null,
             'employer_tax_id' => $settings?->employer_tax_id ?? null,
             'employer_pension_id' => $settings?->employer_pension_id ?? null,
+            'paye_consolidated_relief_percentage' => (float) ($settings?->paye_consolidated_relief_percentage ?? self::DEFAULT_PAYE_CONSOLIDATED_RELIEF_PERCENTAGE),
+            'paye_consolidated_relief_minimum' => (float) ($settings?->paye_consolidated_relief_minimum ?? self::DEFAULT_PAYE_CONSOLIDATED_RELIEF_MINIMUM),
+            'paye_tax_brackets' => is_array($settings?->paye_tax_brackets) ? $settings->paye_tax_brackets : self::DEFAULT_PAYE_TAX_BRACKETS,
         ]);
     }
 
@@ -118,6 +135,9 @@ class EffectivePayrollSettingsResolver
             'project_name' => isset($snapshot['project_name']) ? (string) $snapshot['project_name'] : null,
             'employer_tax_id' => isset($snapshot['employer_tax_id']) ? (string) $snapshot['employer_tax_id'] : null,
             'employer_pension_id' => isset($snapshot['employer_pension_id']) ? (string) $snapshot['employer_pension_id'] : null,
+            'paye_consolidated_relief_percentage' => (float) ($snapshot['paye_consolidated_relief_percentage'] ?? self::DEFAULT_PAYE_CONSOLIDATED_RELIEF_PERCENTAGE),
+            'paye_consolidated_relief_minimum' => (float) ($snapshot['paye_consolidated_relief_minimum'] ?? self::DEFAULT_PAYE_CONSOLIDATED_RELIEF_MINIMUM),
+            'paye_tax_brackets' => is_array($snapshot['paye_tax_brackets'] ?? null) ? $snapshot['paye_tax_brackets'] : self::DEFAULT_PAYE_TAX_BRACKETS,
         ];
     }
 }

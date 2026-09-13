@@ -38,6 +38,9 @@ class PayrollSetting extends Model
         'project_name',
         'employer_tax_id',
         'employer_pension_id',
+        'paye_consolidated_relief_percentage',
+        'paye_consolidated_relief_minimum',
+        'paye_tax_brackets',
     ];
 
     protected $casts = [
@@ -59,5 +62,8 @@ class PayrollSetting extends Model
         'other_items' => 'array',
         'enabled_deductions' => 'array',
         'report_date' => 'date',
+        'paye_consolidated_relief_percentage' => 'decimal:2',
+        'paye_consolidated_relief_minimum' => 'decimal:2',
+        'paye_tax_brackets' => 'array',
     ];
 }
