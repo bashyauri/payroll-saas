@@ -56,6 +56,11 @@ class UpdatePayrollSettingsRequest extends FormRequest
             'employer_tax_id' => ['nullable', 'string', 'max:100'],
             'employer_pension_id' => ['nullable', 'string', 'max:100'],
             'effective_from' => ['nullable', 'date_format:Y-m-d'],
+            'paye_consolidated_relief_percentage' => ['nullable', 'numeric', 'between:0,100'],
+            'paye_consolidated_relief_minimum' => ['nullable', 'numeric', 'min:0'],
+            'paye_tax_brackets' => ['nullable', 'array'],
+            'paye_tax_brackets.*.threshold' => ['nullable', 'numeric', 'min:0'],
+            'paye_tax_brackets.*.rate' => ['nullable', 'numeric', 'between:0,100'],
         ];
     }
 
@@ -80,6 +85,10 @@ class UpdatePayrollSettingsRequest extends FormRequest
             'nhis_employer_rate.between' => 'Employer NHIS rate must be between 0 and 100.',
             'nsitf_rate.between' => 'NSITF rate must be between 0 and 100.',
             'other_items.max' => 'You can only configure up to 5 custom deduction items.',
+            'paye_consolidated_relief_percentage.between' => 'PAYE consolidated relief percentage must be between 0 and 100.',
+            'paye_consolidated_relief_minimum.min' => 'PAYE consolidated relief minimum must be greater than or equal to 0.',
+            'paye_tax_brackets.*.threshold.min' => 'PAYE tax bracket threshold must be greater than or equal to 0.',
+            'paye_tax_brackets.*.rate.between' => 'PAYE tax bracket rate must be between 0 and 100.',
         ];
     }
 }

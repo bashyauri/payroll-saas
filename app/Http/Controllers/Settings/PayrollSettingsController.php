@@ -51,6 +51,9 @@ class PayrollSettingsController extends Controller
                 'project_name' => $settings['project_name'],
                 'employer_tax_id' => $settings['employer_tax_id'],
                 'employer_pension_id' => $settings['employer_pension_id'],
+                'paye_consolidated_relief_percentage' => (float) ($settings['paye_consolidated_relief_percentage'] ?? EffectivePayrollSettingsResolver::DEFAULT_PAYE_CONSOLIDATED_RELIEF_PERCENTAGE),
+                'paye_consolidated_relief_minimum' => (float) ($settings['paye_consolidated_relief_minimum'] ?? EffectivePayrollSettingsResolver::DEFAULT_PAYE_CONSOLIDATED_RELIEF_MINIMUM),
+                'paye_tax_brackets' => is_array($settings['paye_tax_brackets'] ?? null) ? $settings['paye_tax_brackets'] : EffectivePayrollSettingsResolver::DEFAULT_PAYE_TAX_BRACKETS,
                 'effective_from' => now()->toDateString(),
             ],
             'nextScheduledEffectiveFrom' => $nextScheduledVersion
@@ -117,6 +120,9 @@ class PayrollSettingsController extends Controller
             'project_name' => $validated['project_name'] ?? null,
             'employer_tax_id' => $validated['employer_tax_id'] ?? null,
             'employer_pension_id' => $validated['employer_pension_id'] ?? null,
+            'paye_consolidated_relief_percentage' => (float) ($validated['paye_consolidated_relief_percentage'] ?? EffectivePayrollSettingsResolver::DEFAULT_PAYE_CONSOLIDATED_RELIEF_PERCENTAGE),
+            'paye_consolidated_relief_minimum' => (float) ($validated['paye_consolidated_relief_minimum'] ?? EffectivePayrollSettingsResolver::DEFAULT_PAYE_CONSOLIDATED_RELIEF_MINIMUM),
+            'paye_tax_brackets' => is_array($validated['paye_tax_brackets'] ?? null) ? $validated['paye_tax_brackets'] : EffectivePayrollSettingsResolver::DEFAULT_PAYE_TAX_BRACKETS,
         ];
 
         DB::transaction(function () use ($request, $snapshot, $effectiveFrom): void {

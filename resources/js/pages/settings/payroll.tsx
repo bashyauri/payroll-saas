@@ -52,6 +52,15 @@ const DEDUCTION_OPTIONS: Array<{
     },
 ];
 
+const DEFAULT_PAYE_TAX_BRACKETS = [
+    { threshold: 300000, rate: 7 },
+    { threshold: 600000, rate: 11 },
+    { threshold: 1100000, rate: 15 },
+    { threshold: 1600000, rate: 19 },
+    { threshold: 3200000, rate: 21 },
+    { threshold: Number.MAX_SAFE_INTEGER, rate: 24 },
+];
+
 type PayrollSettingsPageProps = {
     settings: {
         basic_salary_percentage: number;
@@ -77,6 +86,9 @@ type PayrollSettingsPageProps = {
         project_name: string | null;
         employer_tax_id: string | null;
         employer_pension_id: string | null;
+        paye_consolidated_relief_percentage: number;
+        paye_consolidated_relief_minimum: number;
+        paye_tax_brackets: Array<{ threshold: number; rate: number }>;
         effective_from: string;
     };
     nextScheduledEffectiveFrom?: string | null;
@@ -98,6 +110,8 @@ const STATUTORY_DEFAULTS = {
     nhisEmployeeRate: 5,
     nhisEmployerRate: 10,
     nsitfRate: 1,
+    payeConsolidatedReliefPercentage: 20,
+    payeConsolidatedReliefMinimum: 200000,
 } as const;
 
 export default function PayrollSettings({
@@ -130,6 +144,18 @@ export default function PayrollSettings({
             'nsitf',
             'paye',
         ],
+    );
+
+    const [payeConsolidatedReliefPercentage, setPayeConsolidatedReliefPercentage] = useState(
+        settings.paye_consolidated_relief_percentage ?? STATUTORY_DEFAULTS.payeConsolidatedReliefPercentage,
+    );
+
+    const [payeConsolidatedReliefMinimum, setPayeConsolidatedReliefMinimum] = useState(
+        settings.paye_consolidated_relief_minimum ?? STATUTORY_DEFAULTS.payeConsolidatedReliefMinimum,
+    );
+
+    const [payeTaxBrackets, setPayeTaxBrackets] = useState(
+        settings.paye_tax_brackets ?? DEFAULT_PAYE_TAX_BRACKETS,
     );
 
     const toggleDeduction = (key: DeductionKey): void => {
@@ -645,6 +671,121 @@ export default function PayrollSettings({
                                 <section className="space-y-4">
                                     <Heading
                                         variant="small"
+                                        title="PAYE tax calculation"
+                                        description="Configure Nigerian PAYE tax brackets and relief allowances."
+                                    />
+
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="paye_consolidated_relief_percentage">
+                                                Consolidated relief percentage (%)
+                                            </Label>
+                                            <Input
+                                                id="paye_consolidated_relief_percentage"
+                                                name="paye_consolidated_relief_percentage"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                max="100"
+                                                defaultValue={
+                                                    settings.paye_consolidated_relief_percentage ??
+                                                    STATUTORY_DEFAULTS.payeConsolidatedReliefPercentage
+                                                }
+                                            />
+                                            <InputError
+                                                message={
+                                                    errors.paye_consolidated_relief_percentage
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="paye_consolidated_relief_minimum">
+                                                Consolidated relief minimum (₦)
+                                            </Label>
+                                            <Input
+                                                id="paye_consolidated_relief_minimum"
+                                                name="paye_consolidated_relief_minimum"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                defaultValue={
+                                                    settings.paye_consolidated_relief_minimum ??
+                                                    STATUTORY_DEFAULTS.payeConsolidatedReliefMinimum
+                                                }
+                                            />
+                                            <InputError
+                                                message={
+                                                    errors.paye_consolidated_relief_minimum
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-lg border p-4">
+                                        <div className="mb-4">
+                                            <Label>Tax brackets</Label>
+                                            <p className="text-xs text-muted-foreground">
+                                                Progressive tax rates based on annual taxable income
+                                            </p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {payeTaxBrackets.map((bracket, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="grid grid-cols-1 gap-2 md:grid-cols-2"
+                                                >
+                                                    <div className="grid gap-2">
+                                                        <Label htmlFor={`paye_tax_brackets_${index}_threshold`}>
+                                                            Threshold (₦)
+                                                        </Label>
+                                                        <Input
+                                                            id={`paye_tax_brackets_${index}_threshold`}
+                                                            name={`paye_tax_brackets[${index}][threshold]`}
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            defaultValue={bracket.threshold}
+                                                            disabled={index === payeTaxBrackets.length - 1}
+                                                        />
+                                                        <InputError
+                                                            message={
+                                                                errors[
+                                                                    `paye_tax_brackets.${index}.threshold`
+                                                                ]
+                                                            }
+                                                        />
+                                                    </div>
+                                                    <div className="grid gap-2">
+                                                        <Label htmlFor={`paye_tax_brackets_${index}_rate`}>
+                                                            Rate (%)
+                                                        </Label>
+                                                        <Input
+                                                            id={`paye_tax_brackets_${index}_rate`}
+                                                            name={`paye_tax_brackets[${index}][rate]`}
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            max="100"
+                                                            defaultValue={bracket.rate}
+                                                        />
+                                                        <InputError
+                                                            message={
+                                                                errors[
+                                                                    `paye_tax_brackets.${index}.rate`
+                                                                ]
+                                                            }
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section className="space-y-4">
+                                    <Heading
+                                        variant="small"
                                         title="Statutory deductions"
                                         description="Configure deduction rates and the salary base used for pension/NHF calculations."
                                     />
@@ -685,6 +826,32 @@ export default function PayrollSettings({
                                                     : '0'
                                             }
                                         />
+                                        <input
+                                            type="hidden"
+                                            name="paye_consolidated_relief_percentage"
+                                            value={payeConsolidatedReliefPercentage}
+                                        />
+                                        <input
+                                            type="hidden"
+                                            name="paye_consolidated_relief_minimum"
+                                            value={payeConsolidatedReliefMinimum}
+                                        />
+                                        {payeTaxBrackets.map((bracket, index) => (
+                                            <input
+                                                key={index}
+                                                type="hidden"
+                                                name={`paye_tax_brackets[${index}][threshold]`}
+                                                value={bracket.threshold}
+                                            />
+                                        ))}
+                                        {payeTaxBrackets.map((bracket, index) => (
+                                            <input
+                                                key={index}
+                                                type="hidden"
+                                                name={`paye_tax_brackets[${index}][rate]`}
+                                                value={bracket.rate}
+                                            />
+                                        ))}
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
