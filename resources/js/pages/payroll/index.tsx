@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { FileCheck2, LoaderCircle, ShieldCheck } from 'lucide-react';
+import { FileCheck2, LoaderCircle, ShieldCheck, Eye } from 'lucide-react';
 import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -360,17 +360,29 @@ export default function PayrollIndex({
                                             </span>
                                         </p>
                                     </div>
-                                    {run.status !== 'finalized' && (
+                                    <div className="mt-3 flex gap-2">
                                         <Button
+                                            asChild
                                             type="button"
                                             size="sm"
                                             variant="outline"
-                                            className="mt-3"
-                                            onClick={() => finalizeRun(run.id)}
                                         >
-                                            Finalize run
+                                            <Link href={`/payroll/runs/${run.id}`}>
+                                                <Eye className="mr-2 h-3 w-3" />
+                                                Review
+                                            </Link>
                                         </Button>
-                                    )}
+                                        {run.status !== 'finalized' && (
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => finalizeRun(run.id)}
+                                            >
+                                                Finalize run
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
                             ))
                         )}

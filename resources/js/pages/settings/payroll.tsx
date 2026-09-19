@@ -642,16 +642,13 @@ export default function PayrollSettings({
                                                         )
                                                     }
                                                 />
-                                                <input
-                                                    type="hidden"
-                                                    name={`enabled_deductions[]`}
-                                                    value={option.key}
-                                                    disabled={
-                                                        !enabledDeductions.includes(
-                                                            option.key,
-                                                        )
-                                                    }
-                                                />
+                                                {enabledDeductions.includes(option.key) && (
+                                                    <input
+                                                        type="hidden"
+                                                        name={`enabled_deductions[]`}
+                                                        value={option.key}
+                                                    />
+                                                )}
                                                 <div className="grid gap-0.5">
                                                     <Label
                                                         htmlFor={`deduction_${option.key}`}

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Organization;
 use App\Services\Payroll\EffectivePayrollSettingsResolver;
+use App\Services\Payroll\PayrollCalculationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -20,6 +21,7 @@ class ReportsController extends Controller
 {
     public function __construct(
         private readonly EffectivePayrollSettingsResolver $settingsResolver,
+        private readonly PayrollCalculationService $calculationService,
     ) {}
 
     /** @var list<string> */
@@ -385,21 +387,26 @@ class ReportsController extends Controller
                 'Total Deductions (NGN)',
                 'Net Pay (NGN)',
             ];
-            $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
+
+            // Calculate payroll for all employees using the calculation service
+            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
+
+            $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
                 $totalEarnings = (float) $employee->basic_salary
                     + (float) $employee->housing_allowance
                     + (float) $employee->transport_allowance
                     + (float) ($employee->other_allowance_1 ?? 0)
                     + (float) ($employee->other_allowance_2 ?? 0);
 
-                $totalDeductions = (float) $employee->monthly_tax_deduction
-                    + (float) $employee->monthly_pension_deduction
-                    + (float) $employee->monthly_nhf_deduction
-                    + (float) ($employee->monthly_nhis_deduction ?? 0)
-                    + (float) ($employee->monthly_nsitf_deduction ?? 0)
-                    + (float) $employee->other_monthly_deductions;
-
-                $netPay = (float) $employee->monthly_gross_salary - $totalDeductions;
+                // Get calculated values from the calculation service
+                $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
+                $payeDeduction = $calculation['paye_deduction'] ?? 0;
+                $pensionDeduction = $calculation['pension_deduction'] ?? 0;
+                $nhfDeduction = $calculation['nhf_deduction'] ?? 0;
+                $nhisDeduction = $calculation['nhis_deduction'] ?? 0;
+                $nsitfDeduction = $calculation['nsitf_deduction'] ?? 0;
+                $totalDeductions = $calculation['total_deductions'] ?? 0;
+                $netPay = $calculation['net_pay'] ?? 0;
 
                 return [
                     $employee->employee_number,
@@ -413,11 +420,11 @@ class ReportsController extends Controller
                     $formatCurrency($employee->other_allowance_1 ?? 0),
                     $formatCurrency($employee->other_allowance_2 ?? 0),
                     $formatCurrency($totalEarnings),
-                    $formatCurrency($employee->monthly_tax_deduction),
-                    $formatCurrency($employee->monthly_pension_deduction),
-                    $formatCurrency($employee->monthly_nhf_deduction),
-                    $formatCurrency($employee->monthly_nhis_deduction ?? 0),
-                    $formatCurrency($employee->monthly_nsitf_deduction ?? 0),
+                    $formatCurrency($payeDeduction),
+                    $formatCurrency($pensionDeduction),
+                    $formatCurrency($nhfDeduction),
+                    $formatCurrency($nhisDeduction),
+                    $formatCurrency($nsitfDeduction),
                     $formatCurrency($employee->other_monthly_deductions),
                     $formatCurrency($totalDeductions),
                     $formatCurrency(max($netPay, 0)),
@@ -517,12 +524,21 @@ class ReportsController extends Controller
                 'Voluntary Deductions (NGN)',
                 'Total Deductions (NGN)',
             ];
-            $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
-                $totalInvoluntary = (float) $employee->monthly_tax_deduction
-                    + (float) $employee->monthly_pension_deduction
-                    + (float) $employee->monthly_nhf_deduction
-                    + (float) ($employee->monthly_nhis_deduction ?? 0)
-                    + (float) ($employee->monthly_nsitf_deduction ?? 0);
+
+            // Calculate payroll for all employees using the calculation service
+            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
+
+            $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
+                // Get calculated values from the calculation service
+                $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
+                $payeDeduction = $calculation['paye_deduction'] ?? 0;
+                $pensionDeduction = $calculation['pension_deduction'] ?? 0;
+                $nhfDeduction = $calculation['nhf_deduction'] ?? 0;
+                $nhisDeduction = $calculation['nhis_deduction'] ?? 0;
+                $nsitfDeduction = $calculation['nsitf_deduction'] ?? 0;
+                $totalDeductions = $calculation['total_deductions'] ?? 0;
+
+                $totalInvoluntary = $payeDeduction + $pensionDeduction + $nhfDeduction + $nhisDeduction + $nsitfDeduction;
 
                 // Parse custom items for voluntary deductions
                 $customItems = $employee->custom_items ?? [];
@@ -534,21 +550,21 @@ class ReportsController extends Controller
                     }
                 }
 
-                $totalDeductions = $totalInvoluntary + $voluntaryDeductions;
+                $finalTotalDeductions = $totalInvoluntary + $voluntaryDeductions;
 
                 return [
                     $employee->employee_number,
                     trim($employee->first_name.' '.$employee->last_name),
                     (string) ($employee->department ?? ''),
-                    $formatCurrency($employee->monthly_tax_deduction),
-                    $formatCurrency($employee->monthly_pension_deduction),
-                    $formatCurrency($employee->monthly_nhf_deduction),
-                    $formatCurrency($employee->monthly_nhis_deduction ?? 0),
-                    $formatCurrency($employee->monthly_nsitf_deduction ?? 0),
+                    $formatCurrency($payeDeduction),
+                    $formatCurrency($pensionDeduction),
+                    $formatCurrency($nhfDeduction),
+                    $formatCurrency($nhisDeduction),
+                    $formatCurrency($nsitfDeduction),
                     $formatCurrency(0), // Other involuntary deductions - can be added later
                     $formatCurrency($totalInvoluntary),
                     $formatCurrency($voluntaryDeductions),
-                    $formatCurrency($totalDeductions),
+                    $formatCurrency($finalTotalDeductions),
                 ];
             })->all();
 
@@ -572,10 +588,18 @@ class ReportsController extends Controller
                 'Total Employer Liability (NGN)',
                 'Total Tax Liability (NGN)',
             ];
-            $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
+
+            // Calculate payroll for all employees using the calculation service
+            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
+
+            $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
+                // Get calculated PAYE deduction
+                $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
+                $payeDeduction = $calculation['paye_deduction'] ?? 0;
+
                 // For now, all PAYE is treated as federal tax
                 // This can be split later based on tax configuration
-                $federalTax = (float) $employee->monthly_tax_deduction;
+                $federalTax = $payeDeduction;
                 $stateTax = 0;
                 $localTax = 0;
 

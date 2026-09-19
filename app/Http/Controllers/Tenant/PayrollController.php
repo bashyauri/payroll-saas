@@ -126,6 +126,115 @@ class PayrollController extends Controller
             ->with('status', 'payroll-run-created');
     }
 
+    public function show(PayrollRun $payrollRun): Response
+    {
+        $employeeCalculations = data_get($payrollRun->settings_snapshot, 'computed_totals.employee_calculations', []);
+        $computedTotals = data_get($payrollRun->settings_snapshot, 'computed_totals', []);
+
+        // If employee calculations are not in the snapshot, recalculate them
+        if (empty($employeeCalculations)) {
+            $periodStart = CarbonImmutable::parse((string) $payrollRun->period_start);
+            $employees = Employee::query()
+                ->where('status', 'active')
+                ->get();
+
+            $settingsSnapshot = $this->settingsResolver->resolve($periodStart, 'default');
+            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settingsSnapshot);
+            $totals = $this->calculationService->calculateTotals($employeeCalculations);
+
+            $nhisEmployerRate = (float) ($settingsSnapshot['nhis_employer_rate'] ?? EffectivePayrollSettingsResolver::DEFAULT_NHIS_EMPLOYER_RATE);
+            $totalNhisEmployerContribution = (float) $employees->sum(function (Employee $employee) use ($nhisEmployerRate): float {
+                if (! $employee->apply_nhis_deduction) {
+                    return 0;
+                }
+
+                return ((float) $employee->basic_salary * $nhisEmployerRate) / 100;
+            });
+
+            $computedTotals = [
+                'nhis_employer_rate' => $nhisEmployerRate,
+                'nhis_employer_base' => 'basic_salary',
+                'nhis_employer_contribution' => round($totalNhisEmployerContribution, 2),
+                'total_pension_employer' => $totals['total_pension_employer'],
+                'total_nhis_employer' => $totals['total_nhis_employer'],
+            ];
+        }
+
+        return Inertia::render('payroll/show', [
+            'payrollRun' => [
+                'id' => $payrollRun->id,
+                'periodMonth' => $payrollRun->period_month,
+                'periodStart' => CarbonImmutable::parse((string) $payrollRun->period_start)->toDateString(),
+                'periodEnd' => CarbonImmutable::parse((string) $payrollRun->period_end)->toDateString(),
+                'status' => $payrollRun->status,
+                'employeeCount' => $payrollRun->employee_count,
+                'totalGrossSalary' => (float) $payrollRun->total_gross_salary,
+                'totalDeductions' => (float) $payrollRun->total_deductions,
+                'totalNetPay' => (float) $payrollRun->total_net_pay,
+                'createdAt' => $payrollRun->created_at?->toIso8601String(),
+                'finalizedAt' => $payrollRun->finalized_at?->toIso8601String(),
+            ],
+            'employeeCalculations' => $employeeCalculations,
+            'computedTotals' => [
+                'nhisEmployerRate' => (float) ($computedTotals['nhis_employer_rate'] ?? 0),
+                'nhisEmployerBase' => $computedTotals['nhis_employer_base'] ?? 'basic_salary',
+                'nhisEmployerContribution' => (float) ($computedTotals['nhis_employer_contribution'] ?? 0),
+                'totalPensionEmployer' => (float) ($computedTotals['total_pension_employer'] ?? 0),
+                'totalNhisEmployer' => (float) ($computedTotals['total_nhis_employer'] ?? 0),
+            ],
+        ]);
+    }
+
+    public function recalculate(PayrollRun $payrollRun): RedirectResponse
+    {
+        if ($payrollRun->status === PayrollRun::STATUS_FINALIZED) {
+            return redirect()
+                ->route('tenant.payroll.runs.show', $payrollRun)
+                ->with('status', 'payroll-run-already-finalized');
+        }
+
+        $periodStart = CarbonImmutable::parse((string) $payrollRun->period_start);
+        $employees = Employee::query()
+            ->where('status', 'active')
+            ->get();
+
+        $settingsSnapshot = $this->settingsResolver->resolve($periodStart, 'default');
+
+        // Recalculate with current employee data
+        $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settingsSnapshot);
+        $totals = $this->calculationService->calculateTotals($employeeCalculations);
+
+        $nhisEmployerRate = (float) ($settingsSnapshot['nhis_employer_rate'] ?? EffectivePayrollSettingsResolver::DEFAULT_NHIS_EMPLOYER_RATE);
+        $totalNhisEmployerContribution = (float) $employees->sum(function (Employee $employee) use ($nhisEmployerRate): float {
+            if (! $employee->apply_nhis_deduction) {
+                return 0;
+            }
+
+            return ((float) $employee->basic_salary * $nhisEmployerRate) / 100;
+        });
+
+        $settingsSnapshot['computed_totals'] = [
+            'nhis_employer_rate' => $nhisEmployerRate,
+            'nhis_employer_base' => 'basic_salary',
+            'nhis_employer_contribution' => round($totalNhisEmployerContribution, 2),
+            'employee_calculations' => $employeeCalculations,
+            'total_pension_employer' => $totals['total_pension_employer'],
+            'total_nhis_employer' => $totals['total_nhis_employer'],
+        ];
+
+        $payrollRun->update([
+            'employee_count' => $totals['employee_count'],
+            'total_gross_salary' => $totals['total_gross_salary'],
+            'total_deductions' => $totals['total_deductions'],
+            'total_net_pay' => $totals['total_net_pay'],
+            'settings_snapshot' => $settingsSnapshot,
+        ]);
+
+        return redirect()
+            ->route('tenant.payroll.runs.show', $payrollRun)
+            ->with('status', 'payroll-run-recalculated');
+    }
+
     public function finalize(PayrollRun $payrollRun): RedirectResponse
     {
         /** @var Organization $organization */
