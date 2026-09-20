@@ -672,14 +672,22 @@ class ReportsController extends Controller
 
         if ($type === 'pension') {
             $headers = ['Employee Number', 'Employee Name', 'PFA Name', 'Pension PIN', 'Gross Salary (NGN)', 'Employee Pension Deduction (NGN)'];
-            $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
+
+            // Calculate payroll for all employees using the calculation service
+            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
+
+            $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
+                // Get calculated pension deduction
+                $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
+                $pensionDeduction = $calculation['pension_deduction'] ?? 0;
+
                 return [
                     $employee->employee_number,
                     trim($employee->first_name.' '.$employee->last_name),
                     (string) ($employee->pfa_name ?? ''),
                     (string) ($employee->pension_pin ?? ''),
                     $formatCurrency($employee->monthly_gross_salary),
-                    $formatCurrency($employee->monthly_pension_deduction),
+                    $formatCurrency($pensionDeduction),
                 ];
             })->all();
 
@@ -688,17 +696,22 @@ class ReportsController extends Controller
 
         if ($type === 'nhis') {
             $headers = ['Employee Number', 'Employee Name', 'Basic Salary (NGN)', 'Employee NHIS Deduction (NGN)', 'Employer NHIS Contribution (NGN)'];
-            $rows = $employees->map(function (Employee $employee) use ($nhisEmployerRate, $formatCurrency): array {
-                $employerNhisContribution = $employee->apply_nhis_deduction
-                    ? (((float) $employee->basic_salary * $nhisEmployerRate) / 100)
-                    : 0;
+
+            // Calculate payroll for all employees using the calculation service
+            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
+
+            $rows = $employees->map(function (Employee $employee) use ($nhisEmployerRate, $formatCurrency, $employeeCalculations): array {
+                // Get calculated NHIS deduction
+                $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
+                $nhisDeduction = $calculation['nhis_deduction'] ?? 0;
+                $nhisEmployerContribution = $calculation['nhis_employer'] ?? 0;
 
                 return [
                     $employee->employee_number,
                     trim($employee->first_name.' '.$employee->last_name),
                     $formatCurrency($employee->basic_salary),
-                    $formatCurrency($employee->monthly_nhis_deduction ?? 0),
-                    $formatCurrency(round($employerNhisContribution, 2)),
+                    $formatCurrency($nhisDeduction),
+                    $formatCurrency(round($nhisEmployerContribution, 2)),
                 ];
             })->all();
 
@@ -707,13 +720,21 @@ class ReportsController extends Controller
 
         if ($type === 'paye') {
             $headers = ['Employee Number', 'Employee Name', 'Tax Identification Number', 'Gross Salary (NGN)', 'PAYE Deduction (NGN)'];
-            $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
+
+            // Calculate payroll for all employees using the calculation service
+            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
+
+            $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
+                // Get calculated PAYE deduction
+                $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
+                $payeDeduction = $calculation['paye_deduction'] ?? 0;
+
                 return [
                     $employee->employee_number,
                     trim($employee->first_name.' '.$employee->last_name),
                     (string) ($employee->tax_identification_number ?? ''),
                     $formatCurrency($employee->monthly_gross_salary),
-                    $formatCurrency($employee->monthly_tax_deduction),
+                    $formatCurrency($payeDeduction),
                 ];
             })->all();
 
@@ -722,13 +743,21 @@ class ReportsController extends Controller
 
         if ($type === 'nhf') {
             $headers = ['Employee Number', 'Employee Name', 'NHF Number', 'Gross Salary (NGN)', 'NHF Deduction (NGN)'];
-            $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
+
+            // Calculate payroll for all employees using the calculation service
+            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
+
+            $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
+                // Get calculated NHF deduction
+                $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
+                $nhfDeduction = $calculation['nhf_deduction'] ?? 0;
+
                 return [
                     $employee->employee_number,
                     trim($employee->first_name.' '.$employee->last_name),
                     (string) ($employee->nhf_number ?? ''),
                     $formatCurrency($employee->monthly_gross_salary),
-                    $formatCurrency($employee->monthly_nhf_deduction),
+                    $formatCurrency($nhfDeduction),
                 ];
             })->all();
 
@@ -736,14 +765,14 @@ class ReportsController extends Controller
         }
 
         $headers = ['Employee Number', 'Employee Name', 'Bank Name', 'Account Name', 'Account Number', 'Net Pay (NGN)'];
-        $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
-            $netPay = (float) $employee->monthly_gross_salary
-                - (float) $employee->monthly_tax_deduction
-                - (float) $employee->monthly_pension_deduction
-                - (float) $employee->monthly_nhf_deduction
-                - (float) ($employee->monthly_nhis_deduction ?? 0)
-                - (float) ($employee->monthly_nsitf_deduction ?? 0)
-                - (float) $employee->other_monthly_deductions;
+
+        // Calculate payroll for all employees using the calculation service
+        $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
+
+        $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
+            // Get calculated net pay from the calculation service
+            $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
+            $netPay = $calculation['net_pay'] ?? 0;
 
             return [
                 $employee->employee_number,
