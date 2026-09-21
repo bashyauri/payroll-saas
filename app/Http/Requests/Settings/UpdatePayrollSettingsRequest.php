@@ -58,6 +58,7 @@ class UpdatePayrollSettingsRequest extends FormRequest
             'effective_from' => ['nullable', 'date_format:Y-m-d'],
             'paye_consolidated_relief_percentage' => ['nullable', 'numeric', 'between:0,100'],
             'paye_consolidated_relief_minimum' => ['nullable', 'numeric', 'min:0'],
+            'paye_calculation_period' => ['nullable', 'string', 'in:annual,monthly'],
             'paye_tax_brackets' => ['nullable', 'array'],
             'paye_tax_brackets.*.threshold' => ['nullable', 'numeric', 'min:0'],
             'paye_tax_brackets.*.rate' => ['nullable', 'numeric', 'between:0,100'],

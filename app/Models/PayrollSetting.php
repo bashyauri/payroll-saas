@@ -40,6 +40,7 @@ class PayrollSetting extends Model
         'employer_pension_id',
         'paye_consolidated_relief_percentage',
         'paye_consolidated_relief_minimum',
+        'paye_calculation_period',
         'paye_tax_brackets',
     ];
 
@@ -64,6 +65,7 @@ class PayrollSetting extends Model
         'report_date' => 'date',
         'paye_consolidated_relief_percentage' => 'decimal:2',
         'paye_consolidated_relief_minimum' => 'decimal:2',
+        'paye_calculation_period' => 'string',
         'paye_tax_brackets' => 'array',
     ];
 }

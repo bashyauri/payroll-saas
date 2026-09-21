@@ -717,6 +717,24 @@ export default function PayrollSettings({
                                                 }
                                             />
                                         </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="paye_calculation_period">
+                                                PAYE calculation period
+                                            </Label>
+                                            <select
+                                                id="paye_calculation_period"
+                                                name="paye_calculation_period"
+                                                defaultValue={settings.paye_calculation_period ?? 'annual'}
+                                                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                            >
+                                                <option value="annual">Annual (Nigerian standard)</option>
+                                                <option value="monthly">Monthly (alternative)</option>
+                                            </select>
+                                            <p className="text-xs text-muted-foreground">
+                                                Nigerian PAYE typically uses annual income calculation. Monthly calculation is an alternative method.
+                                            </p>
+                                        </div>
                                     </div>
 
                                     <div className="rounded-lg border p-4">

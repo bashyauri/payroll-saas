@@ -107,6 +107,8 @@ class PayrollController extends Controller
             'total_pension_employer' => $totals['total_pension_employer'],
             'total_nhis_employer' => $totals['total_nhis_employer'],
         ];
+        
+        $settingsSnapshot['paye_calculation_period'] = $settings['paye_calculation_period'] ?? 'annual';
 
         PayrollRun::query()->create([
             'period_month' => $periodMonth,
@@ -221,6 +223,8 @@ class PayrollController extends Controller
             'total_pension_employer' => $totals['total_pension_employer'],
             'total_nhis_employer' => $totals['total_nhis_employer'],
         ];
+        
+        $settingsSnapshot['paye_calculation_period'] = $settings['paye_calculation_period'] ?? 'annual';
 
         $payrollRun->update([
             'employee_count' => $totals['employee_count'],

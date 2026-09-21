@@ -33,6 +33,8 @@ class EffectivePayrollSettingsResolver
 
     public const DEFAULT_PAYE_CONSOLIDATED_RELIEF_MINIMUM = 200000.0;
 
+    public const DEFAULT_PAYE_CALCULATION_PERIOD = 'annual';
+
     /** @var list<array{threshold: float, rate: float}> */
     public const DEFAULT_PAYE_TAX_BRACKETS = [
         ['threshold' => 300000, 'rate' => 7],
@@ -97,6 +99,7 @@ class EffectivePayrollSettingsResolver
             'employer_pension_id' => $settings?->employer_pension_id ?? null,
             'paye_consolidated_relief_percentage' => (float) ($settings?->paye_consolidated_relief_percentage ?? self::DEFAULT_PAYE_CONSOLIDATED_RELIEF_PERCENTAGE),
             'paye_consolidated_relief_minimum' => (float) ($settings?->paye_consolidated_relief_minimum ?? self::DEFAULT_PAYE_CONSOLIDATED_RELIEF_MINIMUM),
+            'paye_calculation_period' => (string) ($settings?->paye_calculation_period ?? self::DEFAULT_PAYE_CALCULATION_PERIOD),
             'paye_tax_brackets' => is_array($settings?->paye_tax_brackets) && count($settings->paye_tax_brackets) > 0 ? $settings->paye_tax_brackets : self::DEFAULT_PAYE_TAX_BRACKETS,
         ]);
     }
@@ -137,6 +140,7 @@ class EffectivePayrollSettingsResolver
             'employer_pension_id' => isset($snapshot['employer_pension_id']) ? (string) $snapshot['employer_pension_id'] : null,
             'paye_consolidated_relief_percentage' => (float) ($snapshot['paye_consolidated_relief_percentage'] ?? self::DEFAULT_PAYE_CONSOLIDATED_RELIEF_PERCENTAGE),
             'paye_consolidated_relief_minimum' => (float) ($snapshot['paye_consolidated_relief_minimum'] ?? self::DEFAULT_PAYE_CONSOLIDATED_RELIEF_MINIMUM),
+            'paye_calculation_period' => (string) ($snapshot['paye_calculation_period'] ?? self::DEFAULT_PAYE_CALCULATION_PERIOD),
             'paye_tax_brackets' => is_array($snapshot['paye_tax_brackets'] ?? null) && count($snapshot['paye_tax_brackets'] ?? []) > 0 ? $snapshot['paye_tax_brackets'] : self::DEFAULT_PAYE_TAX_BRACKETS,
         ];
     }
