@@ -80,9 +80,30 @@ Route::middleware([
         Route::post('payroll/runs/{payrollRun}/recalculate', [PayrollController::class, 'recalculate'])
             ->middleware('organization.role:owner,admin')
             ->name('tenant.payroll.runs.recalculate');
+        Route::patch('payroll/runs/{payrollRun}/employees/{employee}', [PayrollController::class, 'updateEmployeeCalculation'])
+            ->middleware('organization.role:owner,admin')
+            ->name('tenant.payroll.runs.employees.update');
+        Route::post('payroll/runs/{payrollRun}/submit-approval', [PayrollController::class, 'submitApproval'])
+            ->middleware('organization.role:owner,admin')
+            ->name('tenant.payroll.runs.submit-approval');
+        Route::post('payroll/runs/{payrollRun}/approve', [PayrollController::class, 'approve'])
+            ->middleware('organization.role:owner,admin')
+            ->name('tenant.payroll.runs.approve');
+        Route::post('payroll/runs/{payrollRun}/reject', [PayrollController::class, 'reject'])
+            ->middleware('organization.role:owner,admin')
+            ->name('tenant.payroll.runs.reject');
         Route::post('payroll/runs/{payrollRun}/finalize', [PayrollController::class, 'finalize'])
             ->middleware('organization.role:owner,admin')
             ->name('tenant.payroll.runs.finalize');
+        Route::post('payroll/runs/{payrollRun}/request-void', [PayrollController::class, 'requestVoid'])
+            ->middleware('organization.role:owner,admin')
+            ->name('tenant.payroll.runs.request-void');
+        Route::post('payroll/runs/{payrollRun}/approve-void', [PayrollController::class, 'approveVoid'])
+            ->middleware('organization.role:owner')
+            ->name('tenant.payroll.runs.approve-void');
+        Route::post('payroll/runs/{payrollRun}/reject-void', [PayrollController::class, 'rejectVoid'])
+            ->middleware('organization.role:owner')
+            ->name('tenant.payroll.runs.reject-void');
 
         Route::get('reports', ReportsController::class)
             ->middleware('organization.role:owner,admin')

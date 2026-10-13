@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Organization;
+use App\Models\PayrollRun;
 use App\Services\Payroll\EffectivePayrollSettingsResolver;
 use App\Services\Payroll\PayrollCalculationService;
 use Illuminate\Http\Request;
@@ -148,16 +149,36 @@ class ReportsController extends Controller
         }
 
         $organization = tenant();
+        $payrollRunId = $request->query('payroll_run');
+        $payrollRun = null;
+
+        if ($payrollRunId) {
+            $payrollRun = PayrollRun::query()->whereKey($payrollRunId)->first();
+            if (! $payrollRun || $payrollRun->status === PayrollRun::STATUS_VOIDED) {
+                abort(404, 'Payroll run not found or has been voided.');
+            }
+        }
+
         $employees = Employee::query()
             ->orderBy('last_name', 'asc')
             ->orderBy('first_name', 'asc')
             ->get();
 
-        [$headers, $rows] = $this->buildReportRows($type, $employees);
+        [$headers, $rows] = $this->buildReportRows($type, $employees, $payrollRun);
 
         // Check if organization is in trial period
         $subscription = $organization->subscriptions()->latest()->first();
         $isTrial = $subscription && $subscription->trial_end_date && now()->lessThan($subscription->trial_end_date);
+
+        $availableRuns = PayrollRun::query()
+            ->where('status', PayrollRun::STATUS_FINALIZED)
+            ->orderByDesc('period_month')
+            ->get()
+            ->map(fn (PayrollRun $r): array => [
+                'id' => $r->id,
+                'periodMonth' => $r->period_month,
+            ])
+            ->all();
 
         $reportLabels = [
             'payroll-register' => 'Payroll Register',
@@ -179,6 +200,8 @@ class ReportsController extends Controller
             ],
             'reportType' => $type,
             'reportLabel' => $reportLabels[$type] ?? 'Report',
+            'selectedRunId' => $payrollRun?->id,
+            'availableRuns' => $availableRuns,
             'headers' => $headers,
             'rows' => $rows,
             'isTrial' => $isTrial,
@@ -193,6 +216,15 @@ class ReportsController extends Controller
             abort(422, 'Unsupported report type.');
         }
 
+        $payrollRunId = $request->query('payroll_run');
+        $payrollRun = null;
+        if ($payrollRunId) {
+            $payrollRun = PayrollRun::query()->whereKey($payrollRunId)->first();
+            if (! $payrollRun || $payrollRun->status === PayrollRun::STATUS_VOIDED) {
+                abort(404, 'Payroll run not found or has been voided.');
+            }
+        }
+
         $employees = Employee::query()
             ->orderBy('last_name', 'asc')
             ->orderBy('first_name', 'asc')
@@ -204,7 +236,7 @@ class ReportsController extends Controller
             now()->format('Ymd-His')
         );
 
-        [$headers, $rows] = $this->buildReportRows($type, $employees);
+        [$headers, $rows] = $this->buildReportRows($type, $employees, $payrollRun);
 
         return response()->streamDownload(function () use ($headers, $rows): void {
             $output = fopen('php://output', 'w');
@@ -233,13 +265,22 @@ class ReportsController extends Controller
             abort(422, 'Unsupported report type.');
         }
 
+        $payrollRunId = $request->query('payroll_run');
+        $payrollRun = null;
+        if ($payrollRunId) {
+            $payrollRun = PayrollRun::query()->whereKey($payrollRunId)->first();
+            if (! $payrollRun || $payrollRun->status === PayrollRun::STATUS_VOIDED) {
+                abort(404, 'Payroll run not found or has been voided.');
+            }
+        }
+
         $organization = tenant();
         $employees = Employee::query()
             ->orderBy('last_name', 'asc')
             ->orderBy('first_name', 'asc')
             ->get();
 
-        [$headers, $rows] = $this->buildReportRows($type, $employees);
+        [$headers, $rows] = $this->buildReportRows($type, $employees, $payrollRun);
 
         $reportLabels = [
             'payroll-register' => 'Payroll Register',
@@ -281,13 +322,22 @@ class ReportsController extends Controller
             abort(422, 'Unsupported report type.');
         }
 
+        $payrollRunId = $request->query('payroll_run');
+        $payrollRun = null;
+        if ($payrollRunId) {
+            $payrollRun = PayrollRun::query()->whereKey($payrollRunId)->first();
+            if (! $payrollRun || $payrollRun->status === PayrollRun::STATUS_VOIDED) {
+                abort(404, 'Payroll run not found or has been voided.');
+            }
+        }
+
         $organization = tenant();
         $employees = Employee::query()
             ->orderBy('last_name', 'asc')
             ->orderBy('first_name', 'asc')
             ->get();
 
-        [$headers, $rows] = $this->buildReportRows($type, $employees);
+        [$headers, $rows] = $this->buildReportRows($type, $employees, $payrollRun);
 
         $reportLabels = [
             'payroll-register' => 'Payroll Register',
@@ -356,13 +406,25 @@ class ReportsController extends Controller
      * @param  Collection<int, Employee>  $employees
      * @return array{0: list<string>, 1: list<list<string|float>>}
      */
-    private function buildReportRows(string $type, $employees): array
+    private function buildReportRows(string $type, $employees, ?PayrollRun $payrollRun = null): array
     {
+        if ($payrollRun && $payrollRun->status === PayrollRun::STATUS_VOIDED) {
+            abort(422, 'Cannot generate reports for a voided payroll run.');
+        }
+
         $settings = $this->settingsResolver->resolve(now(), 'default');
         $nhisEmployerRate = (float) ($settings['nhis_employer_rate'] ?? EffectivePayrollSettingsResolver::DEFAULT_NHIS_EMPLOYER_RATE);
 
         // Helper function to format currency with comma separators
         $formatCurrency = fn ($amount): string => 'NGN ' . number_format((float) $amount, 2, '.', ',');
+
+        // Calculate or retrieve payroll for employees
+        $employeeCalculations = $payrollRun
+            ? data_get($payrollRun->settings_snapshot, 'computed_totals.employee_calculations', [])
+            : [];
+        if (empty($employeeCalculations)) {
+            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
+        }
 
         // Payroll Register - Master report
         if ($type === 'payroll-register') {

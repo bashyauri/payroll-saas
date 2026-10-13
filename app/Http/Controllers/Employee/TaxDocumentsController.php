@@ -30,7 +30,8 @@ class TaxDocumentsController extends Controller
             ->limit(12) // Last 12 months
             ->get()
             ->map(function (PayrollRun $run) use ($employee) {
-                $employeeCalc = data_get($run->settings_snapshot, 'computed_totals.employee_calculations.'.$employee->id);
+                $employeeCalc = data_get($run->settings_snapshot, 'computed_totals.employee_calculations.'.$employee->id)
+                    ?? collect(data_get($run->settings_snapshot, 'computed_totals.employee_calculations', []))->firstWhere('employee_id', $employee->id);
                 
                 return [
                     'id' => $run->id,
@@ -68,7 +69,8 @@ class TaxDocumentsController extends Controller
         ];
 
         foreach ($ytdPayrollRuns as $run) {
-            $employeeCalc = data_get($run->settings_snapshot, 'computed_totals.employee_calculations.'.$employee->id);
+            $employeeCalc = data_get($run->settings_snapshot, 'computed_totals.employee_calculations.'.$employee->id)
+                ?? collect(data_get($run->settings_snapshot, 'computed_totals.employee_calculations', []))->firstWhere('employee_id', $employee->id);
             if ($employeeCalc) {
                 $ytdTotals['paye'] += $employeeCalc['paye_deduction'] ?? 0;
                 $ytdTotals['pensionEmployee'] += $employeeCalc['pension_deduction'] ?? 0;
@@ -114,7 +116,8 @@ class TaxDocumentsController extends Controller
             abort(403, 'Tax documents are only available for finalized payroll runs.');
         }
 
-        $employeeCalc = data_get($payrollRun->settings_snapshot, 'computed_totals.employee_calculations.'.$employee->id);
+        $employeeCalc = data_get($payrollRun->settings_snapshot, 'computed_totals.employee_calculations.'.$employee->id)
+            ?? collect(data_get($payrollRun->settings_snapshot, 'computed_totals.employee_calculations', []))->firstWhere('employee_id', $employee->id);
 
         if (! $employeeCalc) {
             abort(404, 'Payroll calculation not found for this employee.');
@@ -163,7 +166,8 @@ class TaxDocumentsController extends Controller
         $totalEmployer = 0;
 
         foreach ($payrollRuns as $run) {
-            $employeeCalc = data_get($run->settings_snapshot, 'computed_totals.employee_calculations.'.$employee->id);
+            $employeeCalc = data_get($run->settings_snapshot, 'computed_totals.employee_calculations.'.$employee->id)
+                ?? collect(data_get($run->settings_snapshot, 'computed_totals.employee_calculations', []))->firstWhere('employee_id', $employee->id);
             if ($employeeCalc) {
                 $contributions[] = [
                     'period' => $run->period_month,

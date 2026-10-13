@@ -25,7 +25,8 @@ class PayslipPdfController extends Controller
             abort(403, 'Payslips are only available for finalized payroll runs.');
         }
 
-        $employeeCalc = data_get($payrollRun->settings_snapshot, 'computed_totals.employee_calculations.'.$employee->id);
+        $employeeCalc = data_get($payrollRun->settings_snapshot, 'computed_totals.employee_calculations.'.$employee->id)
+            ?? collect(data_get($payrollRun->settings_snapshot, 'computed_totals.employee_calculations', []))->firstWhere('employee_id', $employee->id);
 
         if (! $employeeCalc) {
             abort(404, 'Payslip calculation not found for this employee in this payroll run.');

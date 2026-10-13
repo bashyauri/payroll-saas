@@ -10,25 +10,26 @@ class PayeCalculator
      * Calculate PAYE (Pay As You Earn) tax deduction.
      * This implements the Nigerian PAYE tax calculation based on NTA 2025.
      */
-    public function calculate(Employee $employee, array $settings): float
+    public function calculate(Employee $employee, array $settings, ?float $grossSalaryOverride = null): float
     {
         // Check if PAYE should be calculated on annual or monthly basis
         $payeCalculationPeriod = (string) ($settings['paye_calculation_period'] ?? 'annual');
 
         if ($payeCalculationPeriod === 'monthly') {
-            return $this->calculateMonthly($employee, $settings);
+            return $this->calculateMonthly($employee, $settings, $grossSalaryOverride);
         }
 
-        return $this->calculateAnnual($employee, $settings);
+        return $this->calculateAnnual($employee, $settings, $grossSalaryOverride);
     }
 
     /**
      * Calculate PAYE on annual income basis (Nigerian standard)
      */
-    private function calculateAnnual(Employee $employee, array $settings): float
+    private function calculateAnnual(Employee $employee, array $settings, ?float $grossSalaryOverride = null): float
     {
         // Convert monthly salary to annual for PAYE calculation
-        $annualGrossSalary = (float) $employee->monthly_gross_salary * 12;
+        $gross = $grossSalaryOverride !== null ? $grossSalaryOverride : (float) $employee->monthly_gross_salary;
+        $annualGrossSalary = $gross * 12;
 
         // Consolidated relief allowance - configurable from settings
         $consolidatedReliefPercentage = (float) ($settings['paye_consolidated_relief_percentage'] ?? 20);
@@ -83,9 +84,9 @@ class PayeCalculator
     /**
      * Calculate PAYE on monthly income basis (alternative method)
      */
-    private function calculateMonthly(Employee $employee, array $settings): float
+    private function calculateMonthly(Employee $employee, array $settings, ?float $grossSalaryOverride = null): float
     {
-        $monthlyGrossSalary = (float) $employee->monthly_gross_salary;
+        $monthlyGrossSalary = $grossSalaryOverride !== null ? $grossSalaryOverride : (float) $employee->monthly_gross_salary;
 
         // For monthly calculation, divide annual relief amounts by 12
         $consolidatedReliefPercentage = (float) ($settings['paye_consolidated_relief_percentage'] ?? 20);

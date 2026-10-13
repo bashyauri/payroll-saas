@@ -1,8 +1,9 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { FileCheck2, LoaderCircle, ShieldCheck, Eye } from 'lucide-react';
+import { FileCheck2, LoaderCircle, ShieldCheck, Eye, CheckCircle2, ShieldAlert } from 'lucide-react';
 import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -20,6 +21,7 @@ type PayrollPageProps = {
         name: string;
         domain: string | null;
     };
+    userRole?: string;
     settingsSummary: {
         pensionEmployeeRate: number;
         pensionEmployerRate: number;
@@ -39,7 +41,11 @@ type PayrollPageProps = {
         totalNetPay: number;
         nhisEmployerContribution: number;
         createdAt: string | null;
+        submittedAt?: string | null;
+        approvedAt?: string | null;
         finalizedAt: string | null;
+        voidRequestedAt?: string | null;
+        voidedAt?: string | null;
     }>;
     status?: string | null;
 };
@@ -57,6 +63,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function PayrollIndex({
     organization,
+    userRole = 'member',
     settingsSummary,
     payrollRuns,
     status,
@@ -65,8 +72,10 @@ export default function PayrollIndex({
         period_month: '',
     });
 
+    const isOwner = userRole === 'owner';
     const [selectedYear, setSelectedYear] = useState<string>('all');
     const [selectedMonth, setSelectedMonth] = useState<string>('all');
+    const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
     const submit = (event: FormEvent<HTMLFormElement>): void => {
         event.preventDefault();
@@ -76,13 +85,15 @@ export default function PayrollIndex({
     };
 
     const finalizeRun = (runId: string): void => {
-        router.post(
-            `/payroll/runs/${runId}/finalize`,
-            {},
-            {
-                preserveScroll: true,
-            },
-        );
+        if (confirm('Are you sure you want to finalize this payroll run?')) {
+            router.post(
+                `/payroll/runs/${runId}/finalize`,
+                {},
+                {
+                    preserveScroll: true,
+                },
+            );
+        }
     };
 
     const formatMoney = (amount: number): string => {
@@ -93,29 +104,72 @@ export default function PayrollIndex({
         }).format(amount);
     };
 
+    const getStatusBadge = (runStatus: string) => {
+        switch (runStatus) {
+            case 'draft':
+                return (
+                    <Badge variant="outline" className="border-amber-500 text-amber-600 bg-amber-50 dark:bg-amber-950/30">
+                        Draft (In Review)
+                    </Badge>
+                );
+            case 'pending_approval':
+                return (
+                    <Badge variant="outline" className="border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-950/30">
+                        Pending Approval
+                    </Badge>
+                );
+            case 'approved':
+                return (
+                    <Badge variant="outline" className="border-emerald-500 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30">
+                        Approved
+                    </Badge>
+                );
+            case 'finalized':
+                return (
+                    <Badge variant="outline" className="border-green-600 text-green-700 bg-green-50 dark:bg-green-950/30">
+                        Finalized
+                    </Badge>
+                );
+            case 'void_requested':
+                return (
+                    <Badge variant="outline" className="border-orange-500 text-orange-600 bg-orange-50 dark:bg-orange-950/30">
+                        Void Requested
+                    </Badge>
+                );
+            case 'voided':
+                return (
+                    <Badge variant="destructive" className="bg-red-600 text-white">
+                        VOIDED
+                    </Badge>
+                );
+            default:
+                return <Badge variant="outline">{runStatus}</Badge>;
+        }
+    };
+
     const generateMonthOptions = () => {
         const options = [];
         const currentDate = new Date();
         
-        // Generate options for current year and next year
-        for (let year = currentDate.getFullYear(); year <= currentDate.getFullYear() + 1; year++) {
+        // Generate options for previous, current and next year
+        for (let year = currentDate.getFullYear() - 1; year <= currentDate.getFullYear() + 1; year++) {
             for (let month = 0; month < 12; month++) {
                 const date = new Date(year, month, 1);
                 const value = `${year}-${String(month + 1).padStart(2, '0')}`;
                 const label = date.toLocaleString('default', { month: 'long', year: 'numeric' });
-                
-                // Only show future months and current month
-                if (date >= new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)) {
-                    options.push({ value, label });
-                }
+                options.push({ value, label });
             }
         }
         
-        return options.sort((a, b) => a.value.localeCompare(b.value));
+        return options.sort((a, b) => b.value.localeCompare(a.value));
     };
 
-    // Filter payroll runs based on selected year and month
+    // Filter payroll runs based on selected year, month, and status
     const filteredPayrollRuns = payrollRuns.filter((run) => {
+        if (selectedStatus !== 'all' && run.status !== selectedStatus) {
+            return false;
+        }
+
         if (selectedYear === 'all' && selectedMonth === 'all') return true;
         
         const runDate = new Date(run.periodMonth + '-01');
@@ -134,7 +188,6 @@ export default function PayrollIndex({
         return true;
     });
 
-    // Get unique years and months from payroll runs
     const availableYears = Array.from(
         new Set(payrollRuns.map((run) => new Date(run.periodMonth + '-01').getFullYear().toString()))
     ).sort((a, b) => b.localeCompare(a));
@@ -154,11 +207,10 @@ export default function PayrollIndex({
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-xl">
                             <FileCheck2 className="h-5 w-5" />
-                            Payroll workspace
+                            Payroll Workspace & Ledger
                         </CardTitle>
                         <CardDescription>
-                            Run payroll and statutory workflows for{' '}
-                            {organization.name}.
+                            Run payroll, adjust inclusions, manage multi-step approvals, and maintain audit-compliant history for {organization.name}.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm text-muted-foreground">
@@ -169,8 +221,7 @@ export default function PayrollIndex({
                             </span>
                         </p>
                         <p>
-                            Create a monthly run, review totals, and finalize
-                            once billing checks pass.
+                            Workflows follow strict enterprise controls: Draft Review &rarr; Approval Submission &rarr; Authorization &rarr; Finalization. Finalized runs can only be voided via strict authorization.
                         </p>
                     </CardContent>
                 </Card>
@@ -178,19 +229,35 @@ export default function PayrollIndex({
                 {status === 'payroll-run-created' && (
                     <Card className="border-emerald-200 bg-emerald-50/40 dark:border-emerald-700 dark:bg-emerald-950/20">
                         <CardContent className="pt-6 text-sm text-emerald-900 dark:text-emerald-100">
-                            Payroll run created successfully.
+                            Payroll run created successfully. Review and adjust employee details below.
                         </CardContent>
                     </Card>
                 )}
 
+                {status === 'payroll-run-finalized' && (
+                    <Card className="border-emerald-200 bg-emerald-50/40 dark:border-emerald-700 dark:bg-emerald-950/20">
+                        <CardContent className="pt-6 text-sm text-emerald-900 dark:text-emerald-100">
+                            Payroll run finalized successfully. Payslips are now available.
+                        </CardContent>
+                    </Card>
+                )}
+
+                {status === 'payroll-run-voided' && (
+                    <Card className="border-red-200 bg-red-50/60 dark:border-red-800 dark:bg-red-950/30">
+                        <CardContent className="pt-6 text-sm text-red-900 dark:text-red-200 font-medium">
+                            Payroll run was voided. It is excluded from all reports and payslip calculations while retaining compliance audit trail.
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Create Payroll Run Card */}
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-base">
-                            Create payroll run
+                            Create Monthly Payroll Run
                         </CardTitle>
                         <CardDescription>
-                            Select a payroll month to create a draft run with
-                            immutable settings snapshot and totals.
+                            Select a month to generate a draft payroll run with pre-calculated statutory deductions.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -229,37 +296,59 @@ export default function PayrollIndex({
                                 disabled={form.processing}
                                 className="w-full sm:w-auto"
                             >
-                                {form.processing && (
+                                {form.processing ? (
                                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                    <FileCheck2 className="mr-2 h-4 w-4" />
                                 )}
-                                Create draft run
+                                Generate Draft Run
                             </Button>
                         </form>
                     </CardContent>
                 </Card>
 
+                {/* Ledger & History */}
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-base">
-                            Payroll runs ledger
+                            Payroll Runs Ledger
                         </CardTitle>
                         <CardDescription>
-                            Track each month, totals, and finalization state.
+                            Review historical runs, audit status, and manage approval state.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {/* Filter Controls */}
                         {payrollRuns.length > 0 && (
-                            <div className="flex flex-wrap gap-3">
+                            <div className="flex flex-wrap items-center gap-3 border-b pb-3">
                                 <div className="flex items-center gap-2">
-                                    <label htmlFor="year-filter" className="text-sm font-medium">
+                                    <label htmlFor="status-filter" className="text-xs font-semibold text-muted-foreground uppercase">
+                                        Status:
+                                    </label>
+                                    <select
+                                        id="status-filter"
+                                        value={selectedStatus}
+                                        onChange={(e) => setSelectedStatus(e.target.value)}
+                                        className="h-8 rounded-md border border-input bg-background px-2 py-1 text-xs"
+                                    >
+                                        <option value="all">All Statuses</option>
+                                        <option value="draft">Draft (Review)</option>
+                                        <option value="pending_approval">Pending Approval</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="finalized">Finalized</option>
+                                        <option value="void_requested">Void Requested</option>
+                                        <option value="voided">Voided</option>
+                                    </select>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <label htmlFor="year-filter" className="text-xs font-semibold text-muted-foreground uppercase">
                                         Year:
                                     </label>
                                     <select
                                         id="year-filter"
                                         value={selectedYear}
                                         onChange={(e) => setSelectedYear(e.target.value)}
-                                        className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                        className="h-8 rounded-md border border-input bg-background px-2 py-1 text-xs"
                                     >
                                         <option value="all">All Years</option>
                                         {availableYears.map((year) => (
@@ -270,14 +359,14 @@ export default function PayrollIndex({
                                     </select>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <label htmlFor="month-filter" className="text-sm font-medium">
+                                    <label htmlFor="month-filter" className="text-xs font-semibold text-muted-foreground uppercase">
                                         Month:
                                     </label>
                                     <select
                                         id="month-filter"
                                         value={selectedMonth}
                                         onChange={(e) => setSelectedMonth(e.target.value)}
-                                        className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                        className="h-8 rounded-md border border-input bg-background px-2 py-1 text-xs"
                                     >
                                         <option value="all">All Months</option>
                                         {availableMonths.map((month) => (
@@ -287,7 +376,7 @@ export default function PayrollIndex({
                                         ))}
                                     </select>
                                 </div>
-                                <div className="text-sm text-muted-foreground">
+                                <div className="text-xs text-muted-foreground ml-auto">
                                     Showing {filteredPayrollRuns.length} of {payrollRuns.length} runs
                                 </div>
                             </div>
@@ -295,32 +384,35 @@ export default function PayrollIndex({
                         
                         <div className="grid gap-3">
                         {filteredPayrollRuns.length === 0 ? (
-                            <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+                            <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground text-center">
                                 {payrollRuns.length === 0 ? (
-                                    'No payroll runs yet. Create your first monthly run.'
+                                    'No payroll runs yet. Create your first monthly run above.'
                                 ) : (
-                                    'No payroll runs found for the selected filters.'
+                                    'No payroll runs match the selected filters.'
                                 )}
                             </div>
                         ) : (
                             filteredPayrollRuns.map((run) => (
                                 <div
                                     key={run.id}
-                                    className="rounded-lg border p-4"
+                                    className={`rounded-lg border p-4 transition-colors ${
+                                        run.status === 'voided'
+                                            ? 'bg-red-50/30 border-red-200 dark:bg-red-950/10'
+                                            : run.status === 'void_requested'
+                                            ? 'bg-orange-50/30 border-orange-200 dark:bg-orange-950/10'
+                                            : ''
+                                    }`}
                                 >
                                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                         <div>
-                                            <p className="font-medium text-foreground">
+                                            <p className="font-semibold text-foreground text-base">
                                                 {run.periodMonth}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
-                                                {run.periodStart} to{' '}
-                                                {run.periodEnd}
+                                                {run.periodStart} to {run.periodEnd}
                                             </p>
                                         </div>
-                                        <div className="text-xs tracking-wide text-muted-foreground uppercase">
-                                            {run.status}
-                                        </div>
+                                        <div>{getStatusBadge(run.status)}</div>
                                     </div>
                                     <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
                                         <p>
@@ -332,35 +424,31 @@ export default function PayrollIndex({
                                         <p>
                                             Gross:{' '}
                                             <span className="font-medium text-foreground">
-                                                {formatMoney(
-                                                    run.totalGrossSalary,
-                                                )}
+                                                {formatMoney(run.totalGrossSalary)}
                                             </span>
                                         </p>
                                         <p>
                                             Deductions:{' '}
                                             <span className="font-medium text-foreground">
-                                                {formatMoney(
-                                                    run.totalDeductions,
-                                                )}
+                                                {formatMoney(run.totalDeductions)}
                                             </span>
                                         </p>
                                         <p>
                                             Net pay:{' '}
-                                            <span className="font-medium text-foreground">
+                                            <span className={`font-semibold ${
+                                                run.status === 'voided' ? 'line-through text-muted-foreground' : 'text-emerald-600 dark:text-emerald-400'
+                                            }`}>
                                                 {formatMoney(run.totalNetPay)}
                                             </span>
                                         </p>
-                                        <p>
+                                        <p className="sm:col-span-2">
                                             NHIS employer contribution:{' '}
                                             <span className="font-medium text-foreground">
-                                                {formatMoney(
-                                                    run.nhisEmployerContribution,
-                                                )}
+                                                {formatMoney(run.nhisEmployerContribution)}
                                             </span>
                                         </p>
                                     </div>
-                                    <div className="mt-3 flex gap-2">
+                                    <div className="mt-4 flex flex-wrap gap-2 pt-2 border-t">
                                         <Button
                                             asChild
                                             type="button"
@@ -368,18 +456,31 @@ export default function PayrollIndex({
                                             variant="outline"
                                         >
                                             <Link href={`/payroll/runs/${run.id}`}>
-                                                <Eye className="mr-2 h-3 w-3" />
-                                                Review
+                                                <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                                <span>Review & Audit</span>
                                             </Link>
                                         </Button>
-                                        {run.status !== 'finalized' && (
+
+                                        {run.status === 'approved' && (
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                onClick={() => finalizeRun(run.id)}
+                                            >
+                                                <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                                                <span>Finalize Run</span>
+                                            </Button>
+                                        )}
+
+                                        {run.status === 'draft' && isOwner && (
                                             <Button
                                                 type="button"
                                                 size="sm"
                                                 variant="outline"
                                                 onClick={() => finalizeRun(run.id)}
                                             >
-                                                Finalize run
+                                                <span>Direct Finalize</span>
                                             </Button>
                                         )}
                                     </div>

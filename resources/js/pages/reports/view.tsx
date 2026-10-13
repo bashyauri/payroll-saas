@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,11 @@ type ReportViewProps = {
     };
     reportType: string;
     reportLabel: string;
+    selectedRunId?: string | null;
+    availableRuns?: Array<{
+        id: string;
+        periodMonth: string;
+    }>;
     headers: string[];
     rows: (string | number)[][];
     isTrial: boolean;
@@ -36,15 +41,19 @@ export default function ReportView({
     organization,
     reportType,
     reportLabel,
+    selectedRunId,
+    availableRuns = [],
     headers,
     rows,
     isTrial,
 }: ReportViewProps) {
+    const runQuery = selectedRunId ? `&payroll_run=${selectedRunId}` : '';
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${reportLabel} - View`} />
             <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-4 md:p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <Link href="/reports" className="flex items-center text-sm text-muted-foreground hover:text-foreground mb-2">
                             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -55,25 +64,49 @@ export default function ReportView({
                             {organization.name} - {rows.length} records
                         </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                        {availableRuns.length > 0 && (
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-medium text-muted-foreground">Period:</span>
+                                <select
+                                    value={selectedRunId ?? ''}
+                                    onChange={(e) => {
+                                        const runId = e.target.value;
+                                        const url = runId
+                                            ? `/reports/view?type=${reportType}&payroll_run=${runId}`
+                                            : `/reports/view?type=${reportType}`;
+                                        router.visit(url);
+                                    }}
+                                    className="h-9 rounded-md border border-input bg-background px-2.5 py-1 text-xs"
+                                >
+                                    <option value="">Current Active Snapshot</option>
+                                    {availableRuns.map((run) => (
+                                        <option key={run.id} value={run.id}>
+                                            Finalized: {run.periodMonth}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
                         {!isTrial && (
                             <>
-                                <Button asChild variant="outline">
-                                    <a href={`/reports/export?type=${reportType}`} target="_blank" rel="noopener noreferrer">
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Export CSV
+                                <Button asChild variant="outline" size="sm">
+                                    <a href={`/reports/export?type=${reportType}${runQuery}`} target="_blank" rel="noopener noreferrer">
+                                        <Download className="mr-1.5 h-3.5 w-3.5" />
+                                        CSV
                                     </a>
                                 </Button>
-                                <Button asChild variant="outline">
-                                    <a href={`/reports/export-pdf?type=${reportType}`} target="_blank" rel="noopener noreferrer">
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Export PDF
+                                <Button asChild variant="outline" size="sm">
+                                    <a href={`/reports/export-pdf?type=${reportType}${runQuery}`} target="_blank" rel="noopener noreferrer">
+                                        <Download className="mr-1.5 h-3.5 w-3.5" />
+                                        PDF
                                     </a>
                                 </Button>
-                                <Button asChild>
-                                    <a href={`/reports/export-excel?type=${reportType}`} target="_blank" rel="noopener noreferrer">
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Export Excel
+                                <Button asChild size="sm">
+                                    <a href={`/reports/export-excel?type=${reportType}${runQuery}`} target="_blank" rel="noopener noreferrer">
+                                        <Download className="mr-1.5 h-3.5 w-3.5" />
+                                        Excel
                                     </a>
                                 </Button>
                             </>
@@ -107,7 +140,7 @@ export default function ReportView({
                                 </thead>
                                 <tbody>
                                     {rows.map((row, rowIndex) => (
-                                        <tr key={rowIndex} className="border-t">
+                                        <tr key={rowIndex} className="border-t hover:bg-muted/40">
                                             {row.map((cell, cellIndex) => (
                                                 <td key={cellIndex} className="px-4 py-3">
                                                     {cell}
