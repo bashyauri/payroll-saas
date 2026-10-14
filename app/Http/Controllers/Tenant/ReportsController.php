@@ -598,19 +598,14 @@ class ReportsController extends Controller
                 $nhfDeduction = $calculation['nhf_deduction'] ?? 0;
                 $nhisDeduction = $calculation['nhis_deduction'] ?? 0;
                 $nsitfDeduction = $calculation['nsitf_deduction'] ?? 0;
-                $totalDeductions = $calculation['total_deductions'] ?? 0;
+                // other_monthly_deductions is tracked separately in the calculation result
+                $otherMonthlyDeductions = $calculation['other_deductions'] ?? $calculation['base_other_deductions'] ?? (float) $employee->other_monthly_deductions;
 
-                $totalInvoluntary = $payeDeduction + $pensionDeduction + $nhfDeduction + $nhisDeduction + $nsitfDeduction;
+                $totalInvoluntary = $payeDeduction + $pensionDeduction + $nhfDeduction + $nhisDeduction + $nsitfDeduction + $otherMonthlyDeductions;
 
-                // Parse custom items for voluntary deductions
-                $customItems = $employee->custom_items ?? [];
-                $voluntaryDeductions = 0;
-
-                foreach ($customItems as $item) {
-                    if (isset($item['type']) && isset($item['amount']) && isset($item['is_deduction']) && $item['is_deduction']) {
-                        $voluntaryDeductions += (float) $item['amount'];
-                    }
-                }
+                // Parse custom items for voluntary deductions (additional one-off deductions)
+                $additionalDeductions = $calculation['additional_deductions'] ?? [];
+                $voluntaryDeductions = array_sum(array_column($additionalDeductions, 'amount'));
 
                 $finalTotalDeductions = $totalInvoluntary + $voluntaryDeductions;
 
@@ -623,7 +618,7 @@ class ReportsController extends Controller
                     $formatCurrency($nhfDeduction),
                     $formatCurrency($nhisDeduction),
                     $formatCurrency($nsitfDeduction),
-                    $formatCurrency(0), // Other involuntary deductions - can be added later
+                    $formatCurrency($otherMonthlyDeductions),
                     $formatCurrency($totalInvoluntary),
                     $formatCurrency($voluntaryDeductions),
                     $formatCurrency($finalTotalDeductions),

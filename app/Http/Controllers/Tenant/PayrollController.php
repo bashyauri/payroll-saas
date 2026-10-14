@@ -360,7 +360,7 @@ class PayrollController extends Controller
             'total_nhis_employer' => $totals['total_nhis_employer'],
         ];
 
-        $settingsSnapshot['paye_calculation_period'] = $settings['paye_calculation_period'] ?? 'annual';
+        $settingsSnapshot['paye_calculation_period'] = $settingsSnapshot['paye_calculation_period'] ?? 'annual';
 
         $user = request()->user();
         $auditTrail = data_get($payrollRun->settings_snapshot, 'audit_trail', []);
