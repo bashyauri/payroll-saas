@@ -281,3 +281,110 @@ test('strict void workflow: request void and owner approve void', function () {
 
     $reportResponse->assertNotFound();
 });
+
+test('deductions report reflects pending run adjustments and item names', function () {
+    /** @var TestCase $this */
+    [$user, $organization] = createWorkflowTenant('owner');
+
+    Tenancy::initialize($organization);
+
+    $employee = Employee::query()->create([
+        'employee_number' => 'EMP-1010',
+        'first_name' => 'Ibrahim',
+        'last_name' => 'Haruna',
+        'work_email' => 'ibrahim.haruna@example.com',
+        'bank_name' => 'GTBank',
+        'bank_account_name' => 'Ibrahim Haruna',
+        'bank_account_number' => '0123456789',
+        'monthly_gross_salary' => 138000,
+        'basic_salary' => 90000,
+        'housing_allowance' => 32000,
+        'transport_allowance' => 16000,
+        'salary_input_mode' => 'breakdown',
+        'salary_amount_period' => 'monthly',
+        'status' => 'active',
+        'apply_paye_deduction' => true,
+        'apply_pension_deduction' => true,
+        'apply_nhf_deduction' => true,
+        'apply_nhis_deduction' => true,
+    ]);
+
+    $run = PayrollRun::query()->create([
+        'period_month' => '2026-10',
+        'period_start' => '2026-10-01',
+        'period_end' => '2026-10-31',
+        'status' => PayrollRun::STATUS_DRAFT,
+        'employee_count' => 1,
+        'total_gross_salary' => 138000,
+        'total_deductions' => 0,
+        'total_net_pay' => 138000,
+        'settings_snapshot' => [
+            'computed_totals' => [
+                'employee_calculations' => [],
+            ],
+            'employee_overrides' => [],
+        ],
+        'created_by_user_id' => (string) $user->id,
+    ]);
+
+    Tenancy::end();
+
+    // Adjust employee in the draft run with a 1,500 deduction named "Staff Welfare Loan"
+    $adjustResponse = $this
+        ->actingAs($user)
+        ->patch('http://'.$organization->slug.'.payrollsaas.test/payroll/runs/'.$run->id.'/employees/'.$employee->id, [
+            'basic_salary' => 90000,
+            'housing_allowance' => 32000,
+            'transport_allowance' => 16000,
+            'additional_deductions' => [
+                ['name' => 'Staff Welfare Loan', 'amount' => 1500],
+            ],
+        ]);
+
+    $adjustResponse->assertRedirect('http://'.$organization->slug.'.payrollsaas.test/payroll/runs/'.$run->id);
+
+    // Submit payroll for approval (it is now pending!)
+    $submitResponse = $this
+        ->actingAs($user)
+        ->post('http://'.$organization->slug.'.payrollsaas.test/payroll/runs/'.$run->id.'/submit-approval', [
+            'notes' => 'Submitted October payroll for review.',
+        ]);
+
+    $submitResponse->assertRedirect('http://'.$organization->slug.'.payrollsaas.test/payroll/runs/'.$run->id);
+    expect($run->fresh()->status)->toBe(PayrollRun::STATUS_PENDING_APPROVAL);
+
+    // View deductions report without payroll_run query param (should default to the active/pending run)
+    $reportView = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/reports/view?type=deductions');
+
+    $reportView->assertOk();
+    $page = $reportView->original->getData()['page'];
+    $props = $page['props'];
+
+    expect($props['selectedRunId'])->toBe($run->id);
+    expect($props['headers'])->toContain('Voluntary Deduction Items');
+    expect($props['headers'])->toContain('Voluntary Deductions (NGN)');
+
+    $employeeRow = collect($props['rows'])->firstWhere(0, 'EMP-1010');
+    expect($employeeRow)->not->toBeNull();
+
+    // Check that the deduction name and amount appear in the row
+    $itemNamesIndex = array_search('Voluntary Deduction Items', $props['headers']);
+    $amountIndex = array_search('Voluntary Deductions (NGN)', $props['headers']);
+
+    expect($employeeRow[$itemNamesIndex])->toContain('Staff Welfare Loan');
+    expect($employeeRow[$itemNamesIndex])->toContain('1,500.00');
+    expect($employeeRow[$amountIndex])->toContain('1,500.00');
+
+    // Also verify CSV export includes the adjustment and item name
+    $csvExport = $this
+        ->actingAs($user)
+        ->get('http://'.$organization->slug.'.payrollsaas.test/reports/export?type=deductions');
+
+    $csvExport->assertOk();
+    $csvContent = $csvExport->streamedContent();
+    expect($csvContent)->toContain('Staff Welfare Loan (NGN 1,500.00)');
+    expect($csvContent)->toContain('NGN 1,500.00');
+});
+

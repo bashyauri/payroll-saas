@@ -13,9 +13,12 @@ type ReportViewProps = {
     reportType: string;
     reportLabel: string;
     selectedRunId?: string | null;
+    selectedRunStatus?: string | null;
+    selectedRunMonth?: string | null;
     availableRuns?: Array<{
         id: string;
         periodMonth: string;
+        status?: string;
     }>;
     headers: string[];
     rows: (string | number)[][];
@@ -37,17 +40,49 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-/** Columns beyond the first 3 (employee#, name, dept/title) are numeric — right-align them */
-function cellClass(colIndex: number): string {
-    return colIndex >= 3
-        ? 'px-4 py-3 text-right font-mono text-xs tabular-nums'
-        : 'px-4 py-3';
+/** Determines if a column is numeric currency based on header text */
+function isNumericColumn(header: string): boolean {
+    if (!header) return false;
+    const lower = header.toLowerCase();
+    if (
+        lower.includes('item') ||
+        lower.includes('breakdown') ||
+        lower.includes('name') ||
+        lower.includes('number') ||
+        lower.includes('department') ||
+        lower.includes('title') ||
+        lower.includes('location') ||
+        lower.includes('pin') ||
+        lower.includes('pfa') ||
+        lower.includes('type')
+    ) {
+        return false;
+    }
+    return (
+        lower.includes('(ngn)') ||
+        lower.includes('total') ||
+        lower.includes('salary') ||
+        lower.includes('pay') ||
+        lower.includes('deduction') ||
+        lower.includes('allowance') ||
+        lower.includes('bonus') ||
+        lower.includes('overtime') ||
+        lower.includes('cost') ||
+        lower.includes('match') ||
+        lower.includes('liability')
+    );
 }
 
-function thClass(colIndex: number): string {
-    return colIndex >= 3
-        ? 'px-4 py-3 text-right font-medium text-xs'
-        : 'px-4 py-3 text-left font-medium';
+function cellClass(header: string): string {
+    return isNumericColumn(header)
+        ? 'px-4 py-3 text-right font-mono text-xs tabular-nums whitespace-nowrap'
+        : 'px-4 py-3 text-left text-xs';
+}
+
+function thClass(header: string): string {
+    return isNumericColumn(header)
+        ? 'px-4 py-3 text-right font-medium text-xs whitespace-nowrap'
+        : 'px-4 py-3 text-left font-medium text-xs whitespace-nowrap';
 }
 
 export default function ReportView({
@@ -55,12 +90,14 @@ export default function ReportView({
     reportType,
     reportLabel,
     selectedRunId,
+    selectedRunStatus,
+    selectedRunMonth,
     availableRuns = [],
     headers,
     rows,
     isTrial,
 }: ReportViewProps) {
-    const runQuery = selectedRunId ? `&payroll_run=${selectedRunId}` : '';
+    const runQuery = selectedRunId ? `&payroll_run=${selectedRunId}` : (selectedRunMonth ? '' : '&payroll_run=snapshot');
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -73,33 +110,40 @@ export default function ReportView({
                             Back to Reports
                         </Link>
                         <h1 className="text-2xl font-bold">{reportLabel}</h1>
-                        <p className="text-muted-foreground">
+                        <p className="text-muted-foreground text-xs mt-1">
                             {organization.name} &mdash;{' '}
-                            {selectedRunId
-                                ? `Finalized payroll run`
-                                : 'Current active employee snapshot'}{' '}
+                            {selectedRunId ? (
+                                <span>
+                                    Payroll Run: <strong className="font-semibold text-foreground">{selectedRunMonth}</strong>{' '}
+                                    <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted border ml-1">
+                                        {selectedRunStatus ?? 'Active'}
+                                    </span>
+                                </span>
+                            ) : (
+                                <span>Current Active Employee Base (Live Snapshot)</span>
+                            )}{' '}
                             &mdash; {rows.length} record{rows.length !== 1 ? 's' : ''}
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                        {/* Period selector — always visible */}
+                        {/* Period selector */}
                         <div className="flex items-center gap-1.5">
                             <span className="text-xs font-medium text-muted-foreground">Period:</span>
                             <select
-                                value={selectedRunId ?? ''}
+                                value={selectedRunId ?? 'snapshot'}
                                 onChange={(e) => {
-                                    const runId = e.target.value;
-                                    const url = runId
-                                        ? `/reports/view?type=${reportType}&payroll_run=${runId}`
-                                        : `/reports/view?type=${reportType}`;
+                                    const val = e.target.value;
+                                    const url = val && val !== 'snapshot'
+                                        ? `/reports/view?type=${reportType}&payroll_run=${val}`
+                                        : `/reports/view?type=${reportType}&payroll_run=snapshot`;
                                     router.visit(url);
                                 }}
                                 className="h-9 rounded-md border border-input bg-background px-2.5 py-1 text-xs"
                             >
-                                <option value="">Current Snapshot (Live)</option>
+                                <option value="snapshot">Current Snapshot (Live Base)</option>
                                 {availableRuns.map((run) => (
                                     <option key={run.id} value={run.id}>
-                                        Finalized: {run.periodMonth}
+                                        {run.periodMonth} {run.status ? `(${run.status})` : ''}
                                     </option>
                                 ))}
                             </select>
@@ -157,7 +201,7 @@ export default function ReportView({
                                     <thead className="bg-muted">
                                         <tr>
                                             {headers.map((header, index) => (
-                                                <th key={index} className={thClass(index)}>
+                                                <th key={index} className={thClass(header)}>
                                                     {header}
                                                 </th>
                                             ))}
@@ -167,7 +211,7 @@ export default function ReportView({
                                         {rows.map((row, rowIndex) => (
                                             <tr key={rowIndex} className="border-t hover:bg-muted/40">
                                                 {row.map((cell, cellIndex) => (
-                                                    <td key={cellIndex} className={cellClass(cellIndex)}>
+                                                    <td key={cellIndex} className={cellClass(headers[cellIndex])}>
                                                         {cell}
                                                     </td>
                                                 ))}
@@ -178,7 +222,7 @@ export default function ReportView({
                                     {rows.length > 1 && (
                                         <tfoot className="border-t-2 bg-muted/60 font-semibold">
                                             <tr>
-                                                {headers.map((_, colIndex) => {
+                                                {headers.map((header, colIndex) => {
                                                     if (colIndex === 0) {
                                                         return (
                                                             <td key={colIndex} className="px-4 py-3 text-xs font-bold uppercase tracking-wide">
@@ -186,12 +230,12 @@ export default function ReportView({
                                                             </td>
                                                         );
                                                     }
-                                                    if (colIndex < 3) {
+                                                    if (!isNumericColumn(header)) {
                                                         return <td key={colIndex} className="px-4 py-3" />;
                                                     }
                                                     // Sum numeric columns — strip "NGN " prefix and commas
                                                     const total = rows.reduce((sum, row) => {
-                                                        const raw = String(row[colIndex]).replace(/[^0-9.-]/g, '');
+                                                        const raw = String(row[colIndex] ?? '').replace(/[^0-9.-]/g, '');
                                                         return sum + (parseFloat(raw) || 0);
                                                     }, 0);
                                                     return (

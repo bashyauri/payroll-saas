@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::view
- * @see app/Http/Controllers/Tenant/ReportsController.php:143
+ * @see app/Http/Controllers/Tenant/ReportsController.php:167
  * @route '/reports/view'
  */
 export const view = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ view.definition = {
 
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::view
- * @see app/Http/Controllers/Tenant/ReportsController.php:143
+ * @see app/Http/Controllers/Tenant/ReportsController.php:167
  * @route '/reports/view'
  */
 view.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ view.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::view
- * @see app/Http/Controllers/Tenant/ReportsController.php:143
+ * @see app/Http/Controllers/Tenant/ReportsController.php:167
  * @route '/reports/view'
  */
 view.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -112,7 +112,7 @@ view.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::view
- * @see app/Http/Controllers/Tenant/ReportsController.php:143
+ * @see app/Http/Controllers/Tenant/ReportsController.php:167
  * @route '/reports/view'
  */
 view.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -122,7 +122,7 @@ view.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Tenant\ReportsController::view
- * @see app/Http/Controllers/Tenant/ReportsController.php:143
+ * @see app/Http/Controllers/Tenant/ReportsController.php:167
  * @route '/reports/view'
  */
     const viewForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -132,7 +132,7 @@ view.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Tenant\ReportsController::view
- * @see app/Http/Controllers/Tenant/ReportsController.php:143
+ * @see app/Http/Controllers/Tenant/ReportsController.php:167
  * @route '/reports/view'
  */
         viewForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -141,7 +141,7 @@ view.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Tenant\ReportsController::view
- * @see app/Http/Controllers/Tenant/ReportsController.php:143
+ * @see app/Http/Controllers/Tenant/ReportsController.php:167
  * @route '/reports/view'
  */
         viewForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -157,7 +157,7 @@ view.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     view.form = viewForm
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportMethod
- * @see app/Http/Controllers/Tenant/ReportsController.php:211
+ * @see app/Http/Controllers/Tenant/ReportsController.php:230
  * @route '/reports/export'
  */
 export const exportMethod = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -172,7 +172,7 @@ exportMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportMethod
- * @see app/Http/Controllers/Tenant/ReportsController.php:211
+ * @see app/Http/Controllers/Tenant/ReportsController.php:230
  * @route '/reports/export'
  */
 exportMethod.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ exportMethod.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportMethod
- * @see app/Http/Controllers/Tenant/ReportsController.php:211
+ * @see app/Http/Controllers/Tenant/ReportsController.php:230
  * @route '/reports/export'
  */
 exportMethod.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -190,7 +190,7 @@ exportMethod.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportMethod
- * @see app/Http/Controllers/Tenant/ReportsController.php:211
+ * @see app/Http/Controllers/Tenant/ReportsController.php:230
  * @route '/reports/export'
  */
 exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -200,7 +200,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportMethod
- * @see app/Http/Controllers/Tenant/ReportsController.php:211
+ * @see app/Http/Controllers/Tenant/ReportsController.php:230
  * @route '/reports/export'
  */
     const exportMethodForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -210,7 +210,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportMethod
- * @see app/Http/Controllers/Tenant/ReportsController.php:211
+ * @see app/Http/Controllers/Tenant/ReportsController.php:230
  * @route '/reports/export'
  */
         exportMethodForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -219,7 +219,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportMethod
- * @see app/Http/Controllers/Tenant/ReportsController.php:211
+ * @see app/Http/Controllers/Tenant/ReportsController.php:230
  * @route '/reports/export'
  */
         exportMethodForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -235,7 +235,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     exportMethod.form = exportMethodForm
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportPdf
- * @see app/Http/Controllers/Tenant/ReportsController.php:260
+ * @see app/Http/Controllers/Tenant/ReportsController.php:272
  * @route '/reports/export-pdf'
  */
 export const exportPdf = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -250,7 +250,7 @@ exportPdf.definition = {
 
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportPdf
- * @see app/Http/Controllers/Tenant/ReportsController.php:260
+ * @see app/Http/Controllers/Tenant/ReportsController.php:272
  * @route '/reports/export-pdf'
  */
 exportPdf.url = (options?: RouteQueryOptions) => {
@@ -259,7 +259,7 @@ exportPdf.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportPdf
- * @see app/Http/Controllers/Tenant/ReportsController.php:260
+ * @see app/Http/Controllers/Tenant/ReportsController.php:272
  * @route '/reports/export-pdf'
  */
 exportPdf.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -268,7 +268,7 @@ exportPdf.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportPdf
- * @see app/Http/Controllers/Tenant/ReportsController.php:260
+ * @see app/Http/Controllers/Tenant/ReportsController.php:272
  * @route '/reports/export-pdf'
  */
 exportPdf.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -278,7 +278,7 @@ exportPdf.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportPdf
- * @see app/Http/Controllers/Tenant/ReportsController.php:260
+ * @see app/Http/Controllers/Tenant/ReportsController.php:272
  * @route '/reports/export-pdf'
  */
     const exportPdfForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -288,7 +288,7 @@ exportPdf.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportPdf
- * @see app/Http/Controllers/Tenant/ReportsController.php:260
+ * @see app/Http/Controllers/Tenant/ReportsController.php:272
  * @route '/reports/export-pdf'
  */
         exportPdfForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -297,7 +297,7 @@ exportPdf.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportPdf
- * @see app/Http/Controllers/Tenant/ReportsController.php:260
+ * @see app/Http/Controllers/Tenant/ReportsController.php:272
  * @route '/reports/export-pdf'
  */
         exportPdfForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -313,7 +313,7 @@ exportPdf.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     exportPdf.form = exportPdfForm
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportExcel
- * @see app/Http/Controllers/Tenant/ReportsController.php:317
+ * @see app/Http/Controllers/Tenant/ReportsController.php:322
  * @route '/reports/export-excel'
  */
 export const exportExcel = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -328,7 +328,7 @@ exportExcel.definition = {
 
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportExcel
- * @see app/Http/Controllers/Tenant/ReportsController.php:317
+ * @see app/Http/Controllers/Tenant/ReportsController.php:322
  * @route '/reports/export-excel'
  */
 exportExcel.url = (options?: RouteQueryOptions) => {
@@ -337,7 +337,7 @@ exportExcel.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportExcel
- * @see app/Http/Controllers/Tenant/ReportsController.php:317
+ * @see app/Http/Controllers/Tenant/ReportsController.php:322
  * @route '/reports/export-excel'
  */
 exportExcel.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -346,7 +346,7 @@ exportExcel.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportExcel
- * @see app/Http/Controllers/Tenant/ReportsController.php:317
+ * @see app/Http/Controllers/Tenant/ReportsController.php:322
  * @route '/reports/export-excel'
  */
 exportExcel.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -356,7 +356,7 @@ exportExcel.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportExcel
- * @see app/Http/Controllers/Tenant/ReportsController.php:317
+ * @see app/Http/Controllers/Tenant/ReportsController.php:322
  * @route '/reports/export-excel'
  */
     const exportExcelForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -366,7 +366,7 @@ exportExcel.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportExcel
- * @see app/Http/Controllers/Tenant/ReportsController.php:317
+ * @see app/Http/Controllers/Tenant/ReportsController.php:322
  * @route '/reports/export-excel'
  */
         exportExcelForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -375,7 +375,7 @@ exportExcel.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Tenant\ReportsController::exportExcel
- * @see app/Http/Controllers/Tenant/ReportsController.php:317
+ * @see app/Http/Controllers/Tenant/ReportsController.php:322
  * @route '/reports/export-excel'
  */
         exportExcelForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

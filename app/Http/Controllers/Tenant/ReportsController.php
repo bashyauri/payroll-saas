@@ -140,6 +140,30 @@ class ReportsController extends Controller
         ]);
     }
 
+    private function resolvePayrollRun(Request $request): ?PayrollRun
+    {
+        $payrollRunId = $request->query('payroll_run');
+
+        if ($payrollRunId && $payrollRunId !== 'snapshot') {
+            $payrollRun = PayrollRun::query()->whereKey($payrollRunId)->first();
+            if (! $payrollRun || $payrollRun->status === PayrollRun::STATUS_VOIDED) {
+                abort(404, 'Payroll run not found or has been voided.');
+            }
+
+            return $payrollRun;
+        }
+
+        if ($payrollRunId === 'snapshot') {
+            return null;
+        }
+
+        // When no specific run is queried, default to the latest active/non-voided payroll run
+        return PayrollRun::query()
+            ->where('status', '!=', PayrollRun::STATUS_VOIDED)
+            ->orderByDesc('created_at')
+            ->first();
+    }
+
     public function view(Request $request): Response
     {
         $type = (string) $request->query('type', 'pension');
@@ -149,15 +173,7 @@ class ReportsController extends Controller
         }
 
         $organization = tenant();
-        $payrollRunId = $request->query('payroll_run');
-        $payrollRun = null;
-
-        if ($payrollRunId) {
-            $payrollRun = PayrollRun::query()->whereKey($payrollRunId)->first();
-            if (! $payrollRun || $payrollRun->status === PayrollRun::STATUS_VOIDED) {
-                abort(404, 'Payroll run not found or has been voided.');
-            }
-        }
+        $payrollRun = $this->resolvePayrollRun($request);
 
         $employees = Employee::query()
             ->orderBy('last_name', 'asc')
@@ -171,12 +187,13 @@ class ReportsController extends Controller
         $isTrial = $subscription && $subscription->trial_end_date && now()->lessThan($subscription->trial_end_date);
 
         $availableRuns = PayrollRun::query()
-            ->where('status', PayrollRun::STATUS_FINALIZED)
-            ->orderByDesc('period_month')
+            ->where('status', '!=', PayrollRun::STATUS_VOIDED)
+            ->orderByDesc('created_at')
             ->get()
             ->map(fn (PayrollRun $r): array => [
                 'id' => $r->id,
                 'periodMonth' => $r->period_month,
+                'status' => ucfirst(str_replace('_', ' ', $r->status)),
             ])
             ->all();
 
@@ -201,6 +218,8 @@ class ReportsController extends Controller
             'reportType' => $type,
             'reportLabel' => $reportLabels[$type] ?? 'Report',
             'selectedRunId' => $payrollRun?->id,
+            'selectedRunStatus' => $payrollRun ? ucfirst(str_replace('_', ' ', $payrollRun->status)) : null,
+            'selectedRunMonth' => $payrollRun?->period_month,
             'availableRuns' => $availableRuns,
             'headers' => $headers,
             'rows' => $rows,
@@ -216,14 +235,7 @@ class ReportsController extends Controller
             abort(422, 'Unsupported report type.');
         }
 
-        $payrollRunId = $request->query('payroll_run');
-        $payrollRun = null;
-        if ($payrollRunId) {
-            $payrollRun = PayrollRun::query()->whereKey($payrollRunId)->first();
-            if (! $payrollRun || $payrollRun->status === PayrollRun::STATUS_VOIDED) {
-                abort(404, 'Payroll run not found or has been voided.');
-            }
-        }
+        $payrollRun = $this->resolvePayrollRun($request);
 
         $employees = Employee::query()
             ->orderBy('last_name', 'asc')
@@ -265,14 +277,7 @@ class ReportsController extends Controller
             abort(422, 'Unsupported report type.');
         }
 
-        $payrollRunId = $request->query('payroll_run');
-        $payrollRun = null;
-        if ($payrollRunId) {
-            $payrollRun = PayrollRun::query()->whereKey($payrollRunId)->first();
-            if (! $payrollRun || $payrollRun->status === PayrollRun::STATUS_VOIDED) {
-                abort(404, 'Payroll run not found or has been voided.');
-            }
-        }
+        $payrollRun = $this->resolvePayrollRun($request);
 
         $organization = tenant();
         $employees = Employee::query()
@@ -322,14 +327,7 @@ class ReportsController extends Controller
             abort(422, 'Unsupported report type.');
         }
 
-        $payrollRunId = $request->query('payroll_run');
-        $payrollRun = null;
-        if ($payrollRunId) {
-            $payrollRun = PayrollRun::query()->whereKey($payrollRunId)->first();
-            if (! $payrollRun || $payrollRun->status === PayrollRun::STATUS_VOIDED) {
-                abort(404, 'Payroll run not found or has been voided.');
-            }
-        }
+        $payrollRun = $this->resolvePayrollRun($request);
 
         $organization = tenant();
         $employees = Employee::query()
@@ -450,25 +448,23 @@ class ReportsController extends Controller
                 'Net Pay (NGN)',
             ];
 
-            // Calculate payroll for all employees using the calculation service
-            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
-
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
-                $totalEarnings = (float) $employee->basic_salary
-                    + (float) $employee->housing_allowance
-                    + (float) $employee->transport_allowance
-                    + (float) ($employee->other_allowance_1 ?? 0)
-                    + (float) ($employee->other_allowance_2 ?? 0);
-
-                // Get calculated values from the calculation service
                 $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
-                $payeDeduction = $calculation['paye_deduction'] ?? 0;
-                $pensionDeduction = $calculation['pension_deduction'] ?? 0;
-                $nhfDeduction = $calculation['nhf_deduction'] ?? 0;
-                $nhisDeduction = $calculation['nhis_deduction'] ?? 0;
-                $nsitfDeduction = $calculation['nsitf_deduction'] ?? 0;
-                $totalDeductions = $calculation['total_deductions'] ?? 0;
-                $netPay = $calculation['net_pay'] ?? 0;
+                $basicSalary = (float) ($calculation['basic_salary'] ?? $employee->basic_salary);
+                $housing = (float) ($calculation['housing_allowance'] ?? $employee->housing_allowance);
+                $transport = (float) ($calculation['transport_allowance'] ?? $employee->transport_allowance);
+                $other1 = (float) ($calculation['other_allowance_1'] ?? $employee->other_allowance_1 ?? 0);
+                $other2 = (float) ($calculation['other_allowance_2'] ?? $employee->other_allowance_2 ?? 0);
+                $totalEarnings = (float) ($calculation['total_earnings'] ?? ($basicSalary + $housing + $transport + $other1 + $other2));
+
+                $payeDeduction = (float) ($calculation['paye_deduction'] ?? 0);
+                $pensionDeduction = (float) ($calculation['pension_deduction'] ?? 0);
+                $nhfDeduction = (float) ($calculation['nhf_deduction'] ?? 0);
+                $nhisDeduction = (float) ($calculation['nhis_deduction'] ?? 0);
+                $nsitfDeduction = (float) ($calculation['nsitf_deduction'] ?? 0);
+                $otherDeductions = (float) ($calculation['other_deductions'] ?? $calculation['base_other_deductions'] ?? $employee->other_monthly_deductions ?? 0);
+                $totalDeductions = (float) ($calculation['total_deductions'] ?? ($payeDeduction + $pensionDeduction + $nhfDeduction + $nhisDeduction + $nsitfDeduction + $otherDeductions));
+                $netPay = (float) ($calculation['net_pay'] ?? max($totalEarnings - $totalDeductions, 0));
 
                 return [
                     $employee->employee_number,
@@ -476,18 +472,18 @@ class ReportsController extends Controller
                     (string) ($employee->department ?? ''),
                     (string) ($employee->job_title ?? ''),
                     $formatCurrency($employee->monthly_gross_salary),
-                    $formatCurrency($employee->basic_salary),
-                    $formatCurrency($employee->housing_allowance),
-                    $formatCurrency($employee->transport_allowance),
-                    $formatCurrency($employee->other_allowance_1 ?? 0),
-                    $formatCurrency($employee->other_allowance_2 ?? 0),
+                    $formatCurrency($basicSalary),
+                    $formatCurrency($housing),
+                    $formatCurrency($transport),
+                    $formatCurrency($other1),
+                    $formatCurrency($other2),
                     $formatCurrency($totalEarnings),
                     $formatCurrency($payeDeduction),
                     $formatCurrency($pensionDeduction),
                     $formatCurrency($nhfDeduction),
                     $formatCurrency($nhisDeduction),
                     $formatCurrency($nsitfDeduction),
-                    $formatCurrency($employee->other_monthly_deductions),
+                    $formatCurrency($otherDeductions),
                     $formatCurrency($totalDeductions),
                     $formatCurrency(max($netPay, 0)),
                 ];
@@ -514,14 +510,17 @@ class ReportsController extends Controller
                 'PTO Pay (NGN)',
                 'Total Earnings (NGN)',
             ];
-            $rows = $employees->map(function (Employee $employee) use ($formatCurrency): array {
-                $totalRegularPay = (float) $employee->basic_salary
-                    + (float) $employee->housing_allowance
-                    + (float) $employee->transport_allowance
-                    + (float) ($employee->other_allowance_1 ?? 0)
-                    + (float) ($employee->other_allowance_2 ?? 0);
+            $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
+                $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
+                $basicSalary = (float) ($calculation['basic_salary'] ?? $employee->basic_salary);
+                $housing = (float) ($calculation['housing_allowance'] ?? $employee->housing_allowance);
+                $transport = (float) ($calculation['transport_allowance'] ?? $employee->transport_allowance);
+                $other1 = (float) ($calculation['other_allowance_1'] ?? $employee->other_allowance_1 ?? 0);
+                $other2 = (float) ($calculation['other_allowance_2'] ?? $employee->other_allowance_2 ?? 0);
 
-                // Parse custom items for overtime, bonus, commission, PTO
+                $totalRegularPay = $basicSalary + $housing + $transport + $other1 + $other2;
+
+                // Parse custom items or additional payments from calculation
                 $customItems = $employee->custom_items ?? [];
                 $overtimePay = 0;
                 $bonus = 0;
@@ -547,17 +546,17 @@ class ReportsController extends Controller
                     }
                 }
 
-                $totalEarnings = $totalRegularPay + $overtimePay + $bonus + $commission + $ptoPay;
+                $totalEarnings = (float) ($calculation['total_earnings'] ?? ($totalRegularPay + $overtimePay + $bonus + $commission + $ptoPay));
 
                 return [
                     $employee->employee_number,
                     trim($employee->first_name.' '.$employee->last_name),
                     (string) ($employee->department ?? ''),
-                    $formatCurrency($employee->basic_salary),
-                    $formatCurrency($employee->housing_allowance),
-                    $formatCurrency($employee->transport_allowance),
-                    $formatCurrency($employee->other_allowance_1 ?? 0),
-                    $formatCurrency($employee->other_allowance_2 ?? 0),
+                    $formatCurrency($basicSalary),
+                    $formatCurrency($housing),
+                    $formatCurrency($transport),
+                    $formatCurrency($other1),
+                    $formatCurrency($other2),
                     $formatCurrency($totalRegularPay),
                     $formatCurrency($overtimePay),
                     $formatCurrency($bonus),
@@ -583,31 +582,51 @@ class ReportsController extends Controller
                 'NSITF Deduction (NGN) (Involuntary)',
                 'Other Involuntary Deductions (NGN)',
                 'Total Involuntary Deductions (NGN)',
+                'Voluntary Deduction Items',
                 'Voluntary Deductions (NGN)',
                 'Total Deductions (NGN)',
             ];
 
-            // Calculate payroll for all employees using the calculation service
-            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
-
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
-                // Get calculated values from the calculation service
+                // Get calculated values from the calculation service or payroll run snapshot
                 $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
-                $payeDeduction = $calculation['paye_deduction'] ?? 0;
-                $pensionDeduction = $calculation['pension_deduction'] ?? 0;
-                $nhfDeduction = $calculation['nhf_deduction'] ?? 0;
-                $nhisDeduction = $calculation['nhis_deduction'] ?? 0;
-                $nsitfDeduction = $calculation['nsitf_deduction'] ?? 0;
-                // other_monthly_deductions is tracked separately in the calculation result
-                $otherMonthlyDeductions = $calculation['other_deductions'] ?? $calculation['base_other_deductions'] ?? (float) $employee->other_monthly_deductions;
+                $payeDeduction = (float) ($calculation['paye_deduction'] ?? 0);
+                $pensionDeduction = (float) ($calculation['pension_deduction'] ?? 0);
+                $nhfDeduction = (float) ($calculation['nhf_deduction'] ?? 0);
+                $nhisDeduction = (float) ($calculation['nhis_deduction'] ?? 0);
+                $nsitfDeduction = (float) ($calculation['nsitf_deduction'] ?? 0);
+                $otherMonthlyDeductions = (float) ($calculation['other_deductions'] ?? $calculation['base_other_deductions'] ?? $employee->other_monthly_deductions ?? 0);
 
                 $totalInvoluntary = $payeDeduction + $pensionDeduction + $nhfDeduction + $nhisDeduction + $nsitfDeduction + $otherMonthlyDeductions;
 
-                // Parse custom items for voluntary deductions (additional one-off deductions)
+                // Additional voluntary deductions from payroll run calculation or employee custom items
                 $additionalDeductions = $calculation['additional_deductions'] ?? [];
-                $voluntaryDeductions = array_sum(array_column($additionalDeductions, 'amount'));
+                if (empty($additionalDeductions) && ! empty($employee->custom_items)) {
+                    foreach ($employee->custom_items as $item) {
+                        if (! empty($item['is_deduction']) && ! empty($item['amount'])) {
+                            $additionalDeductions[] = [
+                                'name' => $item['name'] ?? $item['type'] ?? 'Voluntary Deduction',
+                                'amount' => (float) $item['amount'],
+                            ];
+                        }
+                    }
+                }
 
-                $finalTotalDeductions = $totalInvoluntary + $voluntaryDeductions;
+                if (! empty($additionalDeductions)) {
+                    $itemNames = collect($additionalDeductions)
+                        ->map(function ($d) use ($formatCurrency) {
+                            $name = trim((string) ($d['name'] ?? 'Voluntary Deduction'));
+                            $amt = (float) ($d['amount'] ?? 0);
+                            return $name . ' (' . $formatCurrency($amt) . ')';
+                        })
+                        ->implode(', ');
+                    $voluntaryDeductions = (float) ($calculation['total_additional_deductions'] ?? array_sum(array_column($additionalDeductions, 'amount')));
+                } else {
+                    $itemNames = '-';
+                    $voluntaryDeductions = (float) ($calculation['total_additional_deductions'] ?? 0);
+                }
+
+                $finalTotalDeductions = (float) ($calculation['total_deductions'] ?? ($totalInvoluntary + $voluntaryDeductions));
 
                 return [
                     $employee->employee_number,
@@ -620,6 +639,7 @@ class ReportsController extends Controller
                     $formatCurrency($nsitfDeduction),
                     $formatCurrency($otherMonthlyDeductions),
                     $formatCurrency($totalInvoluntary),
+                    $itemNames,
                     $formatCurrency($voluntaryDeductions),
                     $formatCurrency($finalTotalDeductions),
                 ];
@@ -646,13 +666,10 @@ class ReportsController extends Controller
                 'Total Tax Liability (NGN)',
             ];
 
-            // Calculate payroll for all employees using the calculation service
-            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
-
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
                 // Get calculated PAYE deduction
                 $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
-                $payeDeduction = $calculation['paye_deduction'] ?? 0;
+                $payeDeduction = (float) ($calculation['paye_deduction'] ?? 0);
 
                 // For now, all PAYE is treated as federal tax
                 // This can be split later based on tax configuration
@@ -730,13 +747,10 @@ class ReportsController extends Controller
         if ($type === 'pension') {
             $headers = ['Employee Number', 'Employee Name', 'PFA Name', 'Pension PIN', 'Gross Salary (NGN)', 'Employee Pension Deduction (NGN)'];
 
-            // Calculate payroll for all employees using the calculation service
-            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
-
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
                 // Get calculated pension deduction
                 $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
-                $pensionDeduction = $calculation['pension_deduction'] ?? 0;
+                $pensionDeduction = (float) ($calculation['pension_deduction'] ?? 0);
 
                 return [
                     $employee->employee_number,
@@ -754,14 +768,11 @@ class ReportsController extends Controller
         if ($type === 'nhis') {
             $headers = ['Employee Number', 'Employee Name', 'Basic Salary (NGN)', 'Employee NHIS Deduction (NGN)', 'Employer NHIS Contribution (NGN)'];
 
-            // Calculate payroll for all employees using the calculation service
-            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
-
             $rows = $employees->map(function (Employee $employee) use ($nhisEmployerRate, $formatCurrency, $employeeCalculations): array {
                 // Get calculated NHIS deduction
                 $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
-                $nhisDeduction = $calculation['nhis_deduction'] ?? 0;
-                $nhisEmployerContribution = $calculation['nhis_employer'] ?? 0;
+                $nhisDeduction = (float) ($calculation['nhis_deduction'] ?? 0);
+                $nhisEmployerContribution = (float) ($calculation['nhis_employer'] ?? 0);
 
                 return [
                     $employee->employee_number,
@@ -778,13 +789,10 @@ class ReportsController extends Controller
         if ($type === 'paye') {
             $headers = ['Employee Number', 'Employee Name', 'Tax Identification Number', 'Gross Salary (NGN)', 'PAYE Deduction (NGN)'];
 
-            // Calculate payroll for all employees using the calculation service
-            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
-
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
                 // Get calculated PAYE deduction
                 $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
-                $payeDeduction = $calculation['paye_deduction'] ?? 0;
+                $payeDeduction = (float) ($calculation['paye_deduction'] ?? 0);
 
                 return [
                     $employee->employee_number,
@@ -801,13 +809,10 @@ class ReportsController extends Controller
         if ($type === 'nhf') {
             $headers = ['Employee Number', 'Employee Name', 'NHF Number', 'Gross Salary (NGN)', 'NHF Deduction (NGN)'];
 
-            // Calculate payroll for all employees using the calculation service
-            $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
-
             $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
                 // Get calculated NHF deduction
                 $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
-                $nhfDeduction = $calculation['nhf_deduction'] ?? 0;
+                $nhfDeduction = (float) ($calculation['nhf_deduction'] ?? 0);
 
                 return [
                     $employee->employee_number,
@@ -823,13 +828,10 @@ class ReportsController extends Controller
 
         $headers = ['Employee Number', 'Employee Name', 'Bank Name', 'Account Name', 'Account Number', 'Net Pay (NGN)'];
 
-        // Calculate payroll for all employees using the calculation service
-        $employeeCalculations = $this->calculationService->calculateForEmployees($employees, $settings);
-
         $rows = $employees->map(function (Employee $employee) use ($formatCurrency, $employeeCalculations): array {
             // Get calculated net pay from the calculation service
             $calculation = collect($employeeCalculations)->firstWhere('employee_id', $employee->id);
-            $netPay = $calculation['net_pay'] ?? 0;
+            $netPay = (float) ($calculation['net_pay'] ?? 0);
 
             return [
                 $employee->employee_number,
