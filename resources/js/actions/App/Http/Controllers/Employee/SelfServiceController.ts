@@ -79,7 +79,7 @@ dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     dashboard.form = dashboardForm
 /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::profile
- * @see app/Http/Controllers/Employee/SelfServiceController.php:83
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:84
  * @route '/employee/profile'
  */
 export const profile = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ profile.definition = {
 
 /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::profile
- * @see app/Http/Controllers/Employee/SelfServiceController.php:83
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:84
  * @route '/employee/profile'
  */
 profile.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ profile.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::profile
- * @see app/Http/Controllers/Employee/SelfServiceController.php:83
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:84
  * @route '/employee/profile'
  */
 profile.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -112,7 +112,7 @@ profile.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::profile
- * @see app/Http/Controllers/Employee/SelfServiceController.php:83
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:84
  * @route '/employee/profile'
  */
 profile.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -122,7 +122,7 @@ profile.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::profile
- * @see app/Http/Controllers/Employee/SelfServiceController.php:83
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:84
  * @route '/employee/profile'
  */
     const profileForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -132,7 +132,7 @@ profile.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::profile
- * @see app/Http/Controllers/Employee/SelfServiceController.php:83
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:84
  * @route '/employee/profile'
  */
         profileForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -141,7 +141,7 @@ profile.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::profile
- * @see app/Http/Controllers/Employee/SelfServiceController.php:83
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:84
  * @route '/employee/profile'
  */
         profileForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -157,7 +157,7 @@ profile.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     profile.form = profileForm
 /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::updateProfile
- * @see app/Http/Controllers/Employee/SelfServiceController.php:125
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:126
  * @route '/employee/profile'
  */
 export const updateProfile = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -172,7 +172,7 @@ updateProfile.definition = {
 
 /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::updateProfile
- * @see app/Http/Controllers/Employee/SelfServiceController.php:125
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:126
  * @route '/employee/profile'
  */
 updateProfile.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ updateProfile.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::updateProfile
- * @see app/Http/Controllers/Employee/SelfServiceController.php:125
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:126
  * @route '/employee/profile'
  */
 updateProfile.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -191,7 +191,7 @@ updateProfile.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> =>
 
     /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::updateProfile
- * @see app/Http/Controllers/Employee/SelfServiceController.php:125
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:126
  * @route '/employee/profile'
  */
     const updateProfileForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -206,7 +206,7 @@ updateProfile.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> =>
 
             /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::updateProfile
- * @see app/Http/Controllers/Employee/SelfServiceController.php:125
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:126
  * @route '/employee/profile'
  */
         updateProfileForm.patch = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -222,10 +222,10 @@ updateProfile.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> =>
     updateProfile.form = updateProfileForm
 /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::payslip
- * @see app/Http/Controllers/Employee/SelfServiceController.php:137
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-export const payslip = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const payslip = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: payslip.url(args, options),
     method: 'get',
 })
@@ -237,10 +237,10 @@ payslip.definition = {
 
 /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::payslip
- * @see app/Http/Controllers/Employee/SelfServiceController.php:137
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-payslip.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+payslip.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -270,48 +270,48 @@ payslip.url = (args: { payrollRun: string | number | { id: string | number } } |
 
 /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::payslip
- * @see app/Http/Controllers/Employee/SelfServiceController.php:137
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-payslip.get = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+payslip.get = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: payslip.url(args, options),
     method: 'get',
 })
 /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::payslip
- * @see app/Http/Controllers/Employee/SelfServiceController.php:137
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-payslip.head = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+payslip.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: payslip.url(args, options),
     method: 'head',
 })
 
     /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::payslip
- * @see app/Http/Controllers/Employee/SelfServiceController.php:137
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-    const payslipForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const payslipForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: payslip.url(args, options),
         method: 'get',
     })
 
             /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::payslip
- * @see app/Http/Controllers/Employee/SelfServiceController.php:137
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-        payslipForm.get = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        payslipForm.get = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: payslip.url(args, options),
             method: 'get',
         })
             /**
 * @see \App\Http\Controllers\Employee\SelfServiceController::payslip
- * @see app/Http/Controllers/Employee/SelfServiceController.php:137
+ * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-        payslipForm.head = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        payslipForm.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: payslip.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',

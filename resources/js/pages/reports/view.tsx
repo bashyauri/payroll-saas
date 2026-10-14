@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, Download } from 'lucide-react';
+import { ArrowLeft, Download, FileX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
@@ -37,6 +37,19 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+/** Columns beyond the first 3 (employee#, name, dept/title) are numeric — right-align them */
+function cellClass(colIndex: number): string {
+    return colIndex >= 3
+        ? 'px-4 py-3 text-right font-mono text-xs tabular-nums'
+        : 'px-4 py-3';
+}
+
+function thClass(colIndex: number): string {
+    return colIndex >= 3
+        ? 'px-4 py-3 text-right font-medium text-xs'
+        : 'px-4 py-3 text-left font-medium';
+}
+
 export default function ReportView({
     organization,
     reportType,
@@ -61,33 +74,36 @@ export default function ReportView({
                         </Link>
                         <h1 className="text-2xl font-bold">{reportLabel}</h1>
                         <p className="text-muted-foreground">
-                            {organization.name} - {rows.length} records
+                            {organization.name} &mdash;{' '}
+                            {selectedRunId
+                                ? `Finalized payroll run`
+                                : 'Current active employee snapshot'}{' '}
+                            &mdash; {rows.length} record{rows.length !== 1 ? 's' : ''}
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                        {availableRuns.length > 0 && (
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-xs font-medium text-muted-foreground">Period:</span>
-                                <select
-                                    value={selectedRunId ?? ''}
-                                    onChange={(e) => {
-                                        const runId = e.target.value;
-                                        const url = runId
-                                            ? `/reports/view?type=${reportType}&payroll_run=${runId}`
-                                            : `/reports/view?type=${reportType}`;
-                                        router.visit(url);
-                                    }}
-                                    className="h-9 rounded-md border border-input bg-background px-2.5 py-1 text-xs"
-                                >
-                                    <option value="">Current Active Snapshot</option>
-                                    {availableRuns.map((run) => (
-                                        <option key={run.id} value={run.id}>
-                                            Finalized: {run.periodMonth}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
+                        {/* Period selector — always visible */}
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-medium text-muted-foreground">Period:</span>
+                            <select
+                                value={selectedRunId ?? ''}
+                                onChange={(e) => {
+                                    const runId = e.target.value;
+                                    const url = runId
+                                        ? `/reports/view?type=${reportType}&payroll_run=${runId}`
+                                        : `/reports/view?type=${reportType}`;
+                                    router.visit(url);
+                                }}
+                                className="h-9 rounded-md border border-input bg-background px-2.5 py-1 text-xs"
+                            >
+                                <option value="">Current Snapshot (Live)</option>
+                                {availableRuns.map((run) => (
+                                    <option key={run.id} value={run.id}>
+                                        Finalized: {run.periodMonth}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
                         {!isTrial && (
                             <>
@@ -127,30 +143,69 @@ export default function ReportView({
 
                 <Card>
                     <CardContent className="p-0">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead className="bg-muted">
-                                    <tr>
-                                        {headers.map((header, index) => (
-                                            <th key={index} className="px-4 py-3 text-left font-medium">
-                                                {header}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {rows.map((row, rowIndex) => (
-                                        <tr key={rowIndex} className="border-t hover:bg-muted/40">
-                                            {row.map((cell, cellIndex) => (
-                                                <td key={cellIndex} className="px-4 py-3">
-                                                    {cell}
-                                                </td>
+                        {rows.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground gap-3">
+                                <FileX className="h-10 w-10 opacity-40" />
+                                <p className="text-sm font-medium">No data available</p>
+                                <p className="text-xs max-w-xs">
+                                    There are no records to display for this report. Ensure employees are active and a payroll run has been processed.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-muted">
+                                        <tr>
+                                            {headers.map((header, index) => (
+                                                <th key={index} className={thClass(index)}>
+                                                    {header}
+                                                </th>
                                             ))}
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        {rows.map((row, rowIndex) => (
+                                            <tr key={rowIndex} className="border-t hover:bg-muted/40">
+                                                {row.map((cell, cellIndex) => (
+                                                    <td key={cellIndex} className={cellClass(cellIndex)}>
+                                                        {cell}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                    {/* Totals footer row — sums string currency values in numeric columns */}
+                                    {rows.length > 1 && (
+                                        <tfoot className="border-t-2 bg-muted/60 font-semibold">
+                                            <tr>
+                                                {headers.map((_, colIndex) => {
+                                                    if (colIndex === 0) {
+                                                        return (
+                                                            <td key={colIndex} className="px-4 py-3 text-xs font-bold uppercase tracking-wide">
+                                                                Totals
+                                                            </td>
+                                                        );
+                                                    }
+                                                    if (colIndex < 3) {
+                                                        return <td key={colIndex} className="px-4 py-3" />;
+                                                    }
+                                                    // Sum numeric columns — strip "NGN " prefix and commas
+                                                    const total = rows.reduce((sum, row) => {
+                                                        const raw = String(row[colIndex]).replace(/[^0-9.-]/g, '');
+                                                        return sum + (parseFloat(raw) || 0);
+                                                    }, 0);
+                                                    return (
+                                                        <td key={colIndex} className="px-4 py-3 text-right font-mono text-xs tabular-nums">
+                                                            NGN {total.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </td>
+                                                    );
+                                                })}
+                                            </tr>
+                                        </tfoot>
+                                    )}
+                                </table>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>

@@ -79,10 +79,10 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::payeCertificate
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:104
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:106
  * @route '/employee/tax-documents/paye-certificate/{payrollRun}'
  */
-export const payeCertificate = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const payeCertificate = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: payeCertificate.url(args, options),
     method: 'get',
 })
@@ -94,10 +94,10 @@ payeCertificate.definition = {
 
 /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::payeCertificate
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:104
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:106
  * @route '/employee/tax-documents/paye-certificate/{payrollRun}'
  */
-payeCertificate.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+payeCertificate.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -127,48 +127,48 @@ payeCertificate.url = (args: { payrollRun: string | number | { id: string | numb
 
 /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::payeCertificate
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:104
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:106
  * @route '/employee/tax-documents/paye-certificate/{payrollRun}'
  */
-payeCertificate.get = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+payeCertificate.get = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: payeCertificate.url(args, options),
     method: 'get',
 })
 /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::payeCertificate
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:104
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:106
  * @route '/employee/tax-documents/paye-certificate/{payrollRun}'
  */
-payeCertificate.head = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+payeCertificate.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: payeCertificate.url(args, options),
     method: 'head',
 })
 
     /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::payeCertificate
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:104
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:106
  * @route '/employee/tax-documents/paye-certificate/{payrollRun}'
  */
-    const payeCertificateForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const payeCertificateForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: payeCertificate.url(args, options),
         method: 'get',
     })
 
             /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::payeCertificate
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:104
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:106
  * @route '/employee/tax-documents/paye-certificate/{payrollRun}'
  */
-        payeCertificateForm.get = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        payeCertificateForm.get = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: payeCertificate.url(args, options),
             method: 'get',
         })
             /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::payeCertificate
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:104
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:106
  * @route '/employee/tax-documents/paye-certificate/{payrollRun}'
  */
-        payeCertificateForm.head = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        payeCertificateForm.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: payeCertificate.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
@@ -181,7 +181,7 @@ payeCertificate.head = (args: { payrollRun: string | number | { id: string | num
     payeCertificate.form = payeCertificateForm
 /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::pensionStatement
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:145
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:148
  * @route '/employee/tax-documents/pension-statement'
  */
 export const pensionStatement = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -196,7 +196,7 @@ pensionStatement.definition = {
 
 /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::pensionStatement
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:145
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:148
  * @route '/employee/tax-documents/pension-statement'
  */
 pensionStatement.url = (options?: RouteQueryOptions) => {
@@ -205,7 +205,7 @@ pensionStatement.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::pensionStatement
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:145
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:148
  * @route '/employee/tax-documents/pension-statement'
  */
 pensionStatement.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -214,7 +214,7 @@ pensionStatement.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => 
 })
 /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::pensionStatement
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:145
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:148
  * @route '/employee/tax-documents/pension-statement'
  */
 pensionStatement.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -224,7 +224,7 @@ pensionStatement.head = (options?: RouteQueryOptions): RouteDefinition<'head'> =
 
     /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::pensionStatement
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:145
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:148
  * @route '/employee/tax-documents/pension-statement'
  */
     const pensionStatementForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -234,7 +234,7 @@ pensionStatement.head = (options?: RouteQueryOptions): RouteDefinition<'head'> =
 
             /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::pensionStatement
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:145
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:148
  * @route '/employee/tax-documents/pension-statement'
  */
         pensionStatementForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -243,7 +243,7 @@ pensionStatement.head = (options?: RouteQueryOptions): RouteDefinition<'head'> =
         })
             /**
 * @see \App\Http\Controllers\Employee\TaxDocumentsController::pensionStatement
- * @see app/Http/Controllers/Employee/TaxDocumentsController.php:145
+ * @see app/Http/Controllers/Employee/TaxDocumentsController.php:148
  * @route '/employee/tax-documents/pension-statement'
  */
         pensionStatementForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

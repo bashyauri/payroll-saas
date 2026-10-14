@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-export const pdf = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const pdf = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: pdf.url(args, options),
     method: 'get',
 })
@@ -19,7 +19,7 @@ pdf.definition = {
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-pdf.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+pdf.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -52,7 +52,7 @@ pdf.url = (args: { payrollRun: string | number | { id: string | number } } | [pa
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-pdf.get = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+pdf.get = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: pdf.url(args, options),
     method: 'get',
 })
@@ -61,7 +61,7 @@ pdf.get = (args: { payrollRun: string | number | { id: string | number } } | [pa
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-pdf.head = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+pdf.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: pdf.url(args, options),
     method: 'head',
 })
@@ -71,7 +71,7 @@ pdf.head = (args: { payrollRun: string | number | { id: string | number } } | [p
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-    const pdfForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const pdfForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: pdf.url(args, options),
         method: 'get',
     })
@@ -81,7 +81,7 @@ pdf.head = (args: { payrollRun: string | number | { id: string | number } } | [p
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-        pdfForm.get = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        pdfForm.get = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: pdf.url(args, options),
             method: 'get',
         })
@@ -90,7 +90,7 @@ pdf.head = (args: { payrollRun: string | number | { id: string | number } } | [p
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-        pdfForm.head = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        pdfForm.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: pdf.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
