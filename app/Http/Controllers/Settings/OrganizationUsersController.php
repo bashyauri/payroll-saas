@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Throwable;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -44,6 +45,7 @@ class OrganizationUsersController extends Controller
                     'expiresAt' => $invite->expires_at->toDateString(),
                 ]),
             'status' => session('status'),
+            'invitationUrl' => session('invitationUrl'),
         ]);
     }
 
@@ -83,9 +85,17 @@ class OrganizationUsersController extends Controller
         $centralDomain = (string) (config('tenancy.central_domains.0') ?? parse_url((string) config('app.url'), PHP_URL_HOST) ?? 'localhost');
         $scheme = app()->isProduction() ? 'https' : 'http';
         $inviteUrl = $scheme.'://'.$centralDomain.'/invitations/'.$token;
-        Mail::raw("You have been invited to join {$organization->name} as {$validated['role']}. Accept the invitation and create your account here: {$inviteUrl}\n\nThis link expires in 7 days.", function ($message) use ($email, $organization): void {
-            $message->to($email)->subject('Invitation to join '.$organization->name);
-        });
+        try {
+            Mail::raw("You have been invited to join {$organization->name} as {$validated['role']}. Accept the invitation and create your account here: {$inviteUrl}\n\nThis link expires in 7 days.", function ($message) use ($email, $organization): void {
+                $message->to($email)->subject('Invitation to join '.$organization->name);
+            });
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()
+                ->with('status', 'organization-invitation-mail-failed')
+                ->with('invitationUrl', $inviteUrl);
+        }
 
         return back()->with('status', 'organization-invitation-sent');
     }

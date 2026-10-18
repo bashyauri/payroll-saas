@@ -11,11 +11,12 @@ import type { BreadcrumbItem } from '@/types';
 type Member = { id: string; name: string; email: string; role: string };
 const roleLabels: Record<string, string> = { admin: 'Administrator', hr: 'HR', member: 'Member', preparer: 'Preparer', reviewer: 'Reviewer', authorizer: 'Authorizer', approver: 'Approver' };
 
-export default function OrganizationUsers({ members, roles, invitations, status }: { members: Member[]; roles: string[]; invitations: Array<{ id: string; email: string; role: string; expiresAt: string }>; status?: string }) {
+export default function OrganizationUsers({ members, roles, invitations, status, invitationUrl }: { members: Member[]; roles: string[]; invitations: Array<{ id: string; email: string; role: string; expiresAt: string }>; status?: string; invitationUrl?: string | null }) {
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Users & roles', href: '/settings/users' }];
     return <AppLayout breadcrumbs={breadcrumbs}><Head title="Users & roles" /><SettingsLayout>
         <Heading variant="small" title="Users & roles" description="Invite colleagues to this organization and assign internal control roles." />
         {status === 'organization-invitation-sent' && <p className="text-sm text-emerald-700">Invitation sent. It expires in 7 days.</p>}
+        {status === 'organization-invitation-mail-failed' && invitationUrl && <div className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"><p>Email delivery failed. The invitation is still valid for 7 days. Copy this link and share it with the user:</p><div className="flex flex-wrap items-center gap-2"><Input readOnly value={invitationUrl} className="min-w-0 flex-1 bg-white" /><Button type="button" variant="outline" onClick={() => navigator.clipboard.writeText(invitationUrl)}>Copy invitation link</Button></div></div>}
         {status === 'organization-user-added' && <p className="text-sm text-emerald-700">Account added to the organization.</p>}
         {(status === 'organization-user-updated' || status === 'organization-user-removed') && <p className="text-sm text-emerald-700">Changes saved.</p>}
         <Form action="/settings/users" method="post" className="space-y-4 rounded-lg border p-4">
