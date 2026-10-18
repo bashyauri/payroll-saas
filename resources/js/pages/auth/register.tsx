@@ -11,12 +11,16 @@ import AuthLayout from '@/layouts/auth-layout';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 
-export default function Register() {
+export default function Register({ invitation, invitedEmail }: { invitation?: string | null; invitedEmail?: string | null }) {
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirmation, setShowPasswordConfirmation] =
         useState(false);
 
-    const steps = [
+    const steps = invitation ? [
+        { number: 1, title: 'Accept Invite', completed: true },
+        { number: 2, title: 'Verify Email', completed: false },
+        { number: 3, title: 'Open Workspace', completed: false },
+    ] : [
         { number: 1, title: 'Sign Up', completed: true },
         { number: 2, title: 'Verify Email', completed: false },
         { number: 3, title: 'Choose Plan', completed: false },
@@ -25,10 +29,10 @@ export default function Register() {
 
     return (
         <AuthLayout
-            title="Create your account"
-            description="Get started with your Nigerian payroll solution"
+            title={invitation ? 'Join your organization' : 'Create your account'}
+            description={invitation ? 'Create an account to access your invited workspace.' : 'Get started with your Nigerian payroll solution'}
         >
-            <Head title="Register" />
+            <Head title={invitation ? 'Accept organization invitation' : 'Register'} />
 
             {/* Step Indicator - Mobile optimized */}
             <div className="mb-8 flex justify-between gap-2 sm:gap-3">
@@ -60,14 +64,14 @@ export default function Register() {
             </div>
 
             {/* Quick Info Banner */}
-            <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 sm:p-4 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
+            {!invitation && <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 sm:p-4 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
                 <p className="font-medium">
                     7-Day Money-Back Guarantee • Secure Payment via Paystack
                 </p>
                 <p className="text-xs opacity-90 sm:text-sm">
                     You'll complete payment after email verification to activate your subscription.
                 </p>
-            </div>
+            </div>}
 
             <Form
                 {...store.form()}
@@ -77,6 +81,7 @@ export default function Register() {
             >
                 {({ processing, errors }) => (
                     <>
+                        {invitation && <input type="hidden" name="invitation" value={invitation} />}
                         <div className="grid gap-6">
                             <div className="grid gap-2">
                                 <Label
@@ -89,7 +94,7 @@ export default function Register() {
                                     id="name"
                                     type="text"
                                     required
-                                    autoFocus
+                                    autoFocus={!invitation}
                                     tabIndex={1}
                                     autoComplete="name"
                                     name="name"
@@ -116,6 +121,8 @@ export default function Register() {
                                     tabIndex={2}
                                     autoComplete="email"
                                     name="email"
+                                    defaultValue={invitedEmail ?? ''}
+                                    readOnly={Boolean(invitedEmail)}
                                     placeholder="your.email@company.com"
                                     className="text-base sm:text-sm"
                                 />
@@ -227,9 +234,7 @@ export default function Register() {
                                 disabled={processing}
                             >
                                 {processing && <Spinner />}
-                                {processing
-                                    ? 'Creating account...'
-                                    : 'Create Account & Continue'}
+                                {processing ? 'Creating account...' : invitation ? 'Accept Invitation & Create Account' : 'Create Account & Continue'}
                             </Button>
                         </div>
 

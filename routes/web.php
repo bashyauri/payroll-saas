@@ -6,6 +6,7 @@ use App\Http\Controllers\Billing\PaystackWebhookController;
 use App\Http\Controllers\Billing\PlanSelectionController;
 use App\Http\Controllers\Billing\RefundController;
 use App\Http\Controllers\Onboarding\ContinueOnboardingController;
+use App\Http\Controllers\OrganizationInvitationController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -29,5 +30,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::get('billing/paystack/callback', PaystackCallbackController::class)->name('billing.paystack.callback');
 Route::post('billing/paystack/webhook', PaystackWebhookController::class)->name('billing.paystack.webhook');
+
+Route::get('invitations/{token}', OrganizationInvitationController::class)->name('organization-invitations.accept');
 
 require __DIR__.'/settings.php';

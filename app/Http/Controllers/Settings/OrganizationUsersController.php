@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Models\OrganizationUser;
+use App\Models\OrganizationInvitation;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,6 +31,18 @@ class OrganizationUsersController extends Controller
         return Inertia::render('settings/users', [
             'members' => $members,
             'roles' => self::ROLES,
+            'invitations' => OrganizationInvitation::query()
+                ->where('organization_id', $organization->id)
+                ->whereNull('accepted_at')
+                ->where('expires_at', '>', now())
+                ->orderByDesc('created_at')
+                ->get(['id', 'email', 'role', 'expires_at'])
+                ->map(fn ($invite): array => [
+                    'id' => $invite->id,
+                    'email' => $invite->email,
+                    'role' => $invite->role,
+                    'expiresAt' => $invite->expires_at->toDateString(),
+                ]),
             'status' => session('status'),
         ]);
     }
@@ -35,23 +50,44 @@ class OrganizationUsersController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'email' => ['required', 'email', 'max:255', Rule::exists(config('tenancy.database.central_connection').'.users', 'email')],
+            'email' => ['required', 'email', 'max:255'],
             'role' => ['required', Rule::in(self::ROLES)],
-        ], ['email.exists' => 'This email must belong to an existing account before it can be added.']);
-
-        $user = DB::connection(config('tenancy.database.central_connection'))
-            ->table('users')->where('email', $validated['email'])->first();
-        abort_unless($user, 422, 'User account not found.');
+        ]);
 
         $organization = tenant();
-        $alreadyMember = $organization->users()->where('users.id', $user->id)->exists();
-        if ($alreadyMember) {
-            return back()->withErrors(['email' => 'This user already belongs to the organization.']);
+        $email = mb_strtolower($validated['email']);
+        $user = User::query()->whereRaw('LOWER(email) = ?', [$email])->first();
+
+        if ($user) {
+            if ($organization->users()->where('users.id', $user->id)->exists()) {
+                return back()->withErrors(['email' => 'This user already belongs to the organization.']);
+            }
+
+            $organization->users()->attach($user->id, ['role' => $validated['role']]);
+
+            return back()->with('status', 'organization-user-added');
         }
 
-        $organization->users()->attach($user->id, ['role' => $validated['role']]);
+        $token = Str::random(64);
+        $invitation = OrganizationInvitation::query()->firstOrNew([
+            'organization_id' => $organization->id,
+            'email' => $email,
+            'accepted_at' => null,
+        ]);
+        $invitation->fill([
+            'role' => $validated['role'],
+            'token_hash' => hash('sha256', $token),
+            'expires_at' => now()->addDays(7),
+        ])->save();
 
-        return back()->with('status', 'organization-user-added');
+        $centralDomain = (string) (config('tenancy.central_domains.0') ?? parse_url((string) config('app.url'), PHP_URL_HOST) ?? 'localhost');
+        $scheme = app()->isProduction() ? 'https' : 'http';
+        $inviteUrl = $scheme.'://'.$centralDomain.'/invitations/'.$token;
+        Mail::raw("You have been invited to join {$organization->name} as {$validated['role']}. Accept the invitation and create your account here: {$inviteUrl}\n\nThis link expires in 7 days.", function ($message) use ($email, $organization): void {
+            $message->to($email)->subject('Invitation to join '.$organization->name);
+        });
+
+        return back()->with('status', 'organization-invitation-sent');
     }
 
     public function update(Request $request, string $userId): RedirectResponse
