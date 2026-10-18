@@ -1,6 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import { ArrowLeft, Download, FileX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
@@ -98,6 +100,9 @@ export default function ReportView({
     isTrial,
 }: ReportViewProps) {
     const runQuery = selectedRunId ? `&payroll_run=${selectedRunId}` : (selectedRunMonth ? '' : '&payroll_run=snapshot');
+    const [orientation, setOrientation] = useState('auto');
+    const wideReport = headers.length > 7 || headers.reduce((sum, h) => sum + h.length, 0) > 88;
+    const pdfQuery = `${runQuery}&orientation=${orientation}`;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -158,11 +163,16 @@ export default function ReportView({
                                     </a>
                                 </Button>
                                 <Button asChild variant="outline" size="sm">
-                                    <a href={`/reports/export-pdf?type=${reportType}${runQuery}`} target="_blank" rel="noopener noreferrer">
+                                    <a href={`/reports/export-pdf?type=${reportType}${pdfQuery}`} target="_blank" rel="noopener noreferrer">
                                         <Download className="mr-1.5 h-3.5 w-3.5" />
                                         PDF
                                     </a>
                                 </Button>
+                                <label className="flex items-center gap-2 text-xs text-muted-foreground">PDF layout
+                                    <select value={orientation} onChange={event => setOrientation(event.target.value)} className="h-9 rounded-md border bg-background px-2 text-foreground">
+                                        <option value="auto">Auto</option><option value="landscape">Landscape</option><option value="portrait">Portrait</option>
+                                    </select>
+                                </label>
                                 <Button asChild size="sm">
                                     <a href={`/reports/export-excel?type=${reportType}${runQuery}`} target="_blank" rel="noopener noreferrer">
                                         <Download className="mr-1.5 h-3.5 w-3.5" />
@@ -184,6 +194,8 @@ export default function ReportView({
                         </CardHeader>
                     </Card>
                 )}
+
+                {wideReport && !isTrial && <Alert className="border-amber-300 bg-amber-50 text-amber-950"><AlertTitle>This report may exceed the page margins</AlertTitle><AlertDescription className="flex flex-wrap items-center justify-between gap-3 text-amber-900"><span>Use Landscape or download a compact version with shortened column headings.</span><Button asChild size="sm" variant="outline"><a href={`/reports/export-pdf?type=${reportType}${pdfQuery}&abridged=1`} target="_blank" rel="noopener noreferrer">Download compact PDF</a></Button></AlertDescription></Alert>}
 
                 <Card>
                     <CardContent className="p-0">

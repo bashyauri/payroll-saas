@@ -63,6 +63,7 @@ class HandleInertiaRequests extends Middleware
             OrganizationUser::ROLE_ADMIN,
             OrganizationUser::ROLE_HR,
         ], true);
+        $canWorkPayroll = in_array((string) $organizationRole, ['owner', 'admin', 'preparer', 'reviewer', 'authorizer', 'approver'], true);
 
         $isReadOnly = $resolvedOrganization
             ? in_array((string) $resolvedOrganization->billing_status, [
@@ -78,7 +79,7 @@ class HandleInertiaRequests extends Middleware
             : ($user ? Gate::forUser($user)->allows('tenant.add-employee') : false);
 
         $canFinalizePayroll = $resolvedOrganization
-            ? $isOwnerOrAdmin && ! $isReadOnly
+            ? in_array((string) $organizationRole, ['owner', 'admin', 'authorizer'], true) && ! $isReadOnly
             : ($user ? Gate::forUser($user)->allows('tenant.finalize-payroll') : false);
 
         $canManageWorkspace = $resolvedOrganization
@@ -108,6 +109,7 @@ class HandleInertiaRequests extends Middleware
                     'finalizePayroll' => $canFinalizePayroll,
                     'manageWorkspace' => $canManageWorkspace,
                     'managePayrollSettings' => $canManagePayrollSettings,
+                    'workPayroll' => $canWorkPayroll,
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

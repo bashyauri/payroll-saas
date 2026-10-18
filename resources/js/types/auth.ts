@@ -19,6 +19,7 @@ export type Auth = {
         finalizePayroll: boolean;
         manageWorkspace: boolean;
         managePayrollSettings: boolean;
+        workPayroll: boolean;
     };
 };
 

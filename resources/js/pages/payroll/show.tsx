@@ -145,7 +145,10 @@ export default function PayrollShow({
     status,
 }: PayrollShowProps) {
     const isOwner = userRole === 'owner';
-    const isAdminOrOwner = userRole === 'owner' || userRole === 'admin';
+    const isAdminOrOwner = ['owner', 'admin'].includes(userRole);
+    const canPrepare = isAdminOrOwner || userRole === 'preparer';
+    const canReview = isAdminOrOwner || userRole === 'reviewer' || userRole === 'approver';
+    const canAuthorize = isAdminOrOwner || userRole === 'authorizer';
 
     // State for loading
     const [isProcessing, setIsProcessing] = useState(false);
@@ -505,7 +508,7 @@ export default function PayrollShow({
                     {/* Action Buttons */}
                     <div className="flex flex-wrap gap-2">
                         {/* Draft state actions */}
-                        {payrollRun.status === 'draft' && (
+                        {payrollRun.status === 'draft' && canPrepare && (
                             <>
                                 <Button
                                     variant="outline"
@@ -541,7 +544,7 @@ export default function PayrollShow({
                         )}
 
                         {/* Pending approval state actions */}
-                        {payrollRun.status === 'pending_approval' && isAdminOrOwner && (
+                        {payrollRun.status === 'pending_approval' && canReview && (
                             <>
                                 <Button
                                     variant="outline"
@@ -564,7 +567,7 @@ export default function PayrollShow({
                         )}
 
                         {/* Approved state actions */}
-                        {payrollRun.status === 'approved' && isAdminOrOwner && (
+                        {payrollRun.status === 'approved' && canAuthorize && (
                             <Button
                                 className="bg-emerald-600 hover:bg-emerald-700 text-white"
                                 onClick={handleFinalize}

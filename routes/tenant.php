@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Employee\SelfServiceController;
 use App\Http\Controllers\Settings\PayrollSettingsController;
+use App\Http\Controllers\Settings\OrganizationProfileController;
+use App\Http\Controllers\Settings\OrganizationUsersController;
 use App\Http\Controllers\Settings\WorkspaceController;
 use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\Tenant\EmployeeController;
@@ -61,6 +63,19 @@ Route::middleware([
             ->middleware('organization.role:owner,admin')
             ->name('workspace.update');
 
+        Route::get('settings/organization', [OrganizationProfileController::class, 'edit'])
+            ->middleware('organization.role:owner,admin')->name('organization-profile.edit');
+        Route::patch('settings/organization', [OrganizationProfileController::class, 'update'])
+            ->middleware('organization.role:owner,admin')->name('organization-profile.update');
+        Route::get('settings/users', [OrganizationUsersController::class, 'index'])
+            ->middleware('organization.role:owner,admin')->name('organization-users.index');
+        Route::post('settings/users', [OrganizationUsersController::class, 'store'])
+            ->middleware('organization.role:owner,admin')->name('organization-users.store');
+        Route::patch('settings/users/{userId}', [OrganizationUsersController::class, 'update'])
+            ->middleware('organization.role:owner,admin')->name('organization-users.update');
+        Route::delete('settings/users/{userId}', [OrganizationUsersController::class, 'destroy'])
+            ->middleware('organization.role:owner,admin')->name('organization-users.destroy');
+
         Route::get('settings/payroll', [PayrollSettingsController::class, 'edit'])
             ->middleware('organization.role:owner,admin')
             ->name('payroll.settings.edit');
@@ -69,31 +84,31 @@ Route::middleware([
             ->name('payroll.settings.update');
 
         Route::get('payroll', PayrollController::class)
-            ->middleware('organization.role:owner,admin')
+            ->middleware('organization.role:owner,admin,preparer,reviewer,authorizer,approver')
             ->name('tenant.payroll.index');
         Route::post('payroll/runs', [PayrollController::class, 'store'])
-            ->middleware('organization.role:owner,admin')
+            ->middleware('organization.role:owner,admin,preparer')
             ->name('tenant.payroll.runs.store');
         Route::get('payroll/runs/{payrollRun}', [PayrollController::class, 'show'])
-            ->middleware('organization.role:owner,admin')
+            ->middleware('organization.role:owner,admin,preparer,reviewer,authorizer,approver')
             ->name('tenant.payroll.runs.show');
         Route::post('payroll/runs/{payrollRun}/recalculate', [PayrollController::class, 'recalculate'])
-            ->middleware('organization.role:owner,admin')
+            ->middleware('organization.role:owner,admin,preparer')
             ->name('tenant.payroll.runs.recalculate');
         Route::patch('payroll/runs/{payrollRun}/employees/{employee}', [PayrollController::class, 'updateEmployeeCalculation'])
-            ->middleware('organization.role:owner,admin')
+            ->middleware('organization.role:owner,admin,preparer')
             ->name('tenant.payroll.runs.employees.update');
         Route::post('payroll/runs/{payrollRun}/submit-approval', [PayrollController::class, 'submitApproval'])
-            ->middleware('organization.role:owner,admin')
+            ->middleware('organization.role:owner,admin,preparer')
             ->name('tenant.payroll.runs.submit-approval');
         Route::post('payroll/runs/{payrollRun}/approve', [PayrollController::class, 'approve'])
-            ->middleware('organization.role:owner,admin')
+            ->middleware('organization.role:owner,admin,reviewer,approver')
             ->name('tenant.payroll.runs.approve');
         Route::post('payroll/runs/{payrollRun}/reject', [PayrollController::class, 'reject'])
-            ->middleware('organization.role:owner,admin')
+            ->middleware('organization.role:owner,admin,reviewer,approver')
             ->name('tenant.payroll.runs.reject');
         Route::post('payroll/runs/{payrollRun}/finalize', [PayrollController::class, 'finalize'])
-            ->middleware('organization.role:owner,admin')
+            ->middleware('organization.role:owner,admin,authorizer')
             ->name('tenant.payroll.runs.finalize');
         Route::post('payroll/runs/{payrollRun}/request-void', [PayrollController::class, 'requestVoid'])
             ->middleware('organization.role:owner,admin')

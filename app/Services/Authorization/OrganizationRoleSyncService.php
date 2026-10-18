@@ -83,6 +83,10 @@ class OrganizationRoleSyncService
             OrganizationUser::ROLE_OWNER, OrganizationUser::ROLE_ADMIN => 'admin',
             OrganizationUser::ROLE_HR => 'hr',
             OrganizationUser::ROLE_MEMBER => 'staff',
+            'preparer' => 'preparer',
+            'reviewer' => 'reviewer',
+            'authorizer' => 'authorizer',
+            'approver' => 'approver',
             default => 'staff',
         };
     }

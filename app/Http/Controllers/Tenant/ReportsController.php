@@ -302,13 +302,50 @@ class ReportsController extends Controller
 
         $reportLabel = $reportLabels[$type] ?? 'Report';
 
+        $orientation = (string) $request->query('orientation', 'auto');
+        if (! in_array($orientation, ['auto', 'portrait', 'landscape'], true)) {
+            $orientation = 'auto';
+        }
+        $isAbridged = $request->boolean('abridged');
+        if ($isAbridged) {
+            $shortHeaders = [
+                'Employee Number' => 'Emp. No.', 'Employee Name' => 'Employee',
+                'Tax Identification Number' => 'Tax ID', 'Account Number' => 'Account No.',
+                'Account Name' => 'Account Name', 'Pension Fund Administrator' => 'PFA',
+                'Pension PIN' => 'Pension PIN', 'Gross Salary (NGN)' => 'Gross (NGN)',
+                'Net Pay (NGN)' => 'Net (NGN)', 'PAYE Deduction (NGN)' => 'PAYE (NGN)',
+                'Employee Pension (NGN)' => 'Emp. Pension', 'Employer Pension (NGN)' => 'Er. Pension',
+                'Department' => 'Dept.', 'Job Title' => 'Job',
+                'Basic Salary (NGN)' => 'Basic (NGN)', 'Housing Allowance (NGN)' => 'Housing (NGN)',
+                'Transport Allowance (NGN)' => 'Transport (NGN)', 'Other Allowance 1 (NGN)' => 'Other 1 (NGN)',
+                'Other Allowance 2 (NGN)' => 'Other 2 (NGN)', 'Total Earnings (NGN)' => 'Earnings (NGN)',
+                'PAYE Tax (NGN)' => 'PAYE (NGN)', 'Pension Deduction (NGN)' => 'Pension (NGN)',
+                'NHF Deduction (NGN)' => 'NHF (NGN)', 'NHIS Deduction (NGN)' => 'NHIS (NGN)',
+                'NSITF Deduction (NGN)' => 'NSITF (NGN)', 'Other Deductions (NGN)' => 'Other Ded. (NGN)',
+                'Total Deductions (NGN)' => 'Deductions (NGN)',
+                'Employee Pension Deduction (NGN)' => 'Emp. Pension (NGN)',
+                'Employer NHIS Contribution (NGN)' => 'Er. NHIS (NGN)',
+                'Employee NHIS Deduction (NGN)' => 'Emp. NHIS (NGN)',
+                'Tax Identification Number' => 'Tax ID', 'PFA Name' => 'PFA',
+            ];
+            $headers = array_map(fn ($header) => $shortHeaders[$header] ?? (mb_strlen($header) > 18 ? mb_substr($header, 0, 15).'…' : $header), $headers);
+        }
+
+        $periodLabel = $payrollRun?->period_month ?? 'Current employee snapshot';
+        $estimatedWidth = array_sum(array_map(fn ($header) => mb_strlen((string) $header), $headers));
+        $resolvedOrientation = $orientation === 'auto'
+            ? (($isAbridged ? count($headers) > 9 : count($headers) > 6 || $estimatedWidth > 72) ? 'landscape' : 'portrait')
+            : $orientation;
+
         $pdf = \PDF::loadView('reports.pdf', [
             'organization' => $organization,
             'reportLabel' => $reportLabel,
+            'periodLabel' => $periodLabel,
             'headers' => $headers,
             'rows' => $rows,
             'generatedAt' => now()->format('F j, Y, g:i a'),
-        ]);
+            'abridged' => $isAbridged,
+        ])->setPaper('a4', $resolvedOrientation);
 
         $fileName = sprintf(
             '%s-report-%s.pdf',

@@ -50,6 +50,9 @@ export function AppSidebar() {
                   },
               ]
             : []),
+        ...(!can?.managePayrollSettings && can?.workPayroll
+            ? [{ title: 'Payroll', href: '/payroll', icon: FileText }]
+            : []),
         {
             title: 'Settings',
             href: editProfile(),

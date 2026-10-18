@@ -4,25 +4,26 @@
     <meta charset="utf-8">
     <title>{{ $reportLabel }}</title>
     <style>
+        @page { margin: 24px 28px 36px; }
         body {
             font-family: DejaVu Sans, Arial, sans-serif;
-            font-size: 12px;
-            margin: 20px;
+            font-size: 10px;
+            margin: 0;
             color: #333;
         }
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 14px;
             border-bottom: 2px solid #333;
-            padding-bottom: 20px;
+            padding-bottom: 10px;
         }
         .header h1 {
-            font-size: 24px;
+            font-size: 18px;
             margin: 0 0 10px 0;
             color: #1a1a1a;
         }
         .header h2 {
-            font-size: 18px;
+            font-size: 14px;
             margin: 0 0 5px 0;
             color: #666;
         }
@@ -31,23 +32,27 @@
             color: #888;
             font-size: 11px;
         }
+        .org-details { font-size: 9px; color: #555; margin-top: 5px; }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 10px;
+            table-layout: fixed;
         }
         th {
             background-color: #f5f5f5;
             font-weight: bold;
             text-align: left;
-            padding: 8px;
+            padding: 5px 4px;
             border: 1px solid #ddd;
-            font-size: 11px;
+            font-size: 8px;
+            overflow-wrap: anywhere;
         }
         td {
-            padding: 8px;
+            padding: 5px 4px;
             border: 1px solid #ddd;
-            font-size: 11px;
+            font-size: 8px;
+            overflow-wrap: anywhere;
         }
         tr:nth-child(even) {
             background-color: #f9f9f9;
@@ -66,7 +71,9 @@
     <div class="header">
         <h1>{{ $organization->name }}</h1>
         <h2>{{ $reportLabel }}</h2>
-        <p>Generated: {{ $generatedAt }}</p>
+        <p>Period: {{ $periodLabel }} &nbsp;|&nbsp; Generated: {{ $generatedAt }}</p>
+        <p class="org-details">{{ collect([$organization->address, $organization->phone, $organization->email, $organization->tax_id ? 'Tax ID: '.$organization->tax_id : null, $organization->website])->filter()->implode(' | ') }}</p>
+        @if($abridged)<p>Abridged print layout: headings shortened to fit the page.</p>@endif
     </div>
 
     <table>
@@ -90,7 +97,7 @@
 
     <div class="footer">
         <p>Total Records: {{ count($rows) }}</p>
-        <p>This document is computer-generated and valid without signature.</p>
+        <p>Prepared for {{ $organization->name }}. This document is computer-generated and valid without signature.</p>
     </div>
 </body>
 </html>

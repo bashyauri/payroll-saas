@@ -17,6 +17,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
     const { auth } = usePage().props;
     const canManagePayrollSettings = auth?.can?.managePayrollSettings ?? false;
+    const canManageWorkspace = auth?.can?.manageWorkspace ?? false;
 
     const sidebarNavItems: NavItem[] = [
         {
@@ -53,6 +54,10 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                   },
               ]
             : []),
+        ...(canManageWorkspace ? [
+            { title: 'Organization', href: '/settings/organization', icon: null },
+            { title: 'Users & roles', href: '/settings/users', icon: null },
+        ] : []),
     ];
 
     // When server-side rendering, we only render the layout on the client...

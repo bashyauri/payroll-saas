@@ -17,6 +17,11 @@ class Organization extends BaseTenant implements TenantWithDatabase
 
     protected $fillable = [
         'name',
+        'address',
+        'phone',
+        'email',
+        'tax_id',
+        'website',
         'slug',
         'billing_status',
         'billing_status_updated_at',
