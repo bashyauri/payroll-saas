@@ -137,7 +137,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
  * @see app/Http/Controllers/Tenant/PayrollController.php:156
  * @route '/payroll/runs/{payrollRun}'
  */
-export const show = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -152,7 +152,7 @@ show.definition = {
  * @see app/Http/Controllers/Tenant/PayrollController.php:156
  * @route '/payroll/runs/{payrollRun}'
  */
-show.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
+show.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -185,7 +185,7 @@ show.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string 
  * @see app/Http/Controllers/Tenant/PayrollController.php:156
  * @route '/payroll/runs/{payrollRun}'
  */
-show.get = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -194,7 +194,7 @@ show.get = (args: { payrollRun: string | { id: string } } | [payrollRun: string 
  * @see app/Http/Controllers/Tenant/PayrollController.php:156
  * @route '/payroll/runs/{payrollRun}'
  */
-show.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -204,7 +204,7 @@ show.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string
  * @see app/Http/Controllers/Tenant/PayrollController.php:156
  * @route '/payroll/runs/{payrollRun}'
  */
-    const showForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const showForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: show.url(args, options),
         method: 'get',
     })
@@ -214,7 +214,7 @@ show.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string
  * @see app/Http/Controllers/Tenant/PayrollController.php:156
  * @route '/payroll/runs/{payrollRun}'
  */
-        showForm.get = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.get = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, options),
             method: 'get',
         })
@@ -223,7 +223,7 @@ show.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string
  * @see app/Http/Controllers/Tenant/PayrollController.php:156
  * @route '/payroll/runs/{payrollRun}'
  */
-        showForm.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.head = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
@@ -239,7 +239,7 @@ show.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string
  * @see app/Http/Controllers/Tenant/PayrollController.php:320
  * @route '/payroll/runs/{payrollRun}/recalculate'
  */
-export const recalculate = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const recalculate = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: recalculate.url(args, options),
     method: 'post',
 })
@@ -254,7 +254,7 @@ recalculate.definition = {
  * @see app/Http/Controllers/Tenant/PayrollController.php:320
  * @route '/payroll/runs/{payrollRun}/recalculate'
  */
-recalculate.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
+recalculate.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -287,7 +287,7 @@ recalculate.url = (args: { payrollRun: string | { id: string } } | [payrollRun: 
  * @see app/Http/Controllers/Tenant/PayrollController.php:320
  * @route '/payroll/runs/{payrollRun}/recalculate'
  */
-recalculate.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+recalculate.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: recalculate.url(args, options),
     method: 'post',
 })
@@ -297,7 +297,7 @@ recalculate.post = (args: { payrollRun: string | { id: string } } | [payrollRun:
  * @see app/Http/Controllers/Tenant/PayrollController.php:320
  * @route '/payroll/runs/{payrollRun}/recalculate'
  */
-    const recalculateForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const recalculateForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: recalculate.url(args, options),
         method: 'post',
     })
@@ -307,7 +307,7 @@ recalculate.post = (args: { payrollRun: string | { id: string } } | [payrollRun:
  * @see app/Http/Controllers/Tenant/PayrollController.php:320
  * @route '/payroll/runs/{payrollRun}/recalculate'
  */
-        recalculateForm.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        recalculateForm.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: recalculate.url(args, options),
             method: 'post',
         })
@@ -318,7 +318,7 @@ recalculate.post = (args: { payrollRun: string | { id: string } } | [payrollRun:
  * @see app/Http/Controllers/Tenant/PayrollController.php:234
  * @route '/payroll/runs/{payrollRun}/employees/{employee}'
  */
-export const updateEmployeeCalculation = (args: { payrollRun: string | { id: string }, employee: string | { id: string } } | [payrollRun: string | { id: string }, employee: string | { id: string } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+export const updateEmployeeCalculation = (args: { payrollRun: string | number | { id: string | number }, employee: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number }, employee: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: updateEmployeeCalculation.url(args, options),
     method: 'patch',
 })
@@ -333,7 +333,7 @@ updateEmployeeCalculation.definition = {
  * @see app/Http/Controllers/Tenant/PayrollController.php:234
  * @route '/payroll/runs/{payrollRun}/employees/{employee}'
  */
-updateEmployeeCalculation.url = (args: { payrollRun: string | { id: string }, employee: string | { id: string } } | [payrollRun: string | { id: string }, employee: string | { id: string } ], options?: RouteQueryOptions) => {
+updateEmployeeCalculation.url = (args: { payrollRun: string | number | { id: string | number }, employee: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number }, employee: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
                     payrollRun: args[0],
@@ -363,7 +363,7 @@ updateEmployeeCalculation.url = (args: { payrollRun: string | { id: string }, em
  * @see app/Http/Controllers/Tenant/PayrollController.php:234
  * @route '/payroll/runs/{payrollRun}/employees/{employee}'
  */
-updateEmployeeCalculation.patch = (args: { payrollRun: string | { id: string }, employee: string | { id: string } } | [payrollRun: string | { id: string }, employee: string | { id: string } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+updateEmployeeCalculation.patch = (args: { payrollRun: string | number | { id: string | number }, employee: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number }, employee: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: updateEmployeeCalculation.url(args, options),
     method: 'patch',
 })
@@ -373,7 +373,7 @@ updateEmployeeCalculation.patch = (args: { payrollRun: string | { id: string }, 
  * @see app/Http/Controllers/Tenant/PayrollController.php:234
  * @route '/payroll/runs/{payrollRun}/employees/{employee}'
  */
-    const updateEmployeeCalculationForm = (args: { payrollRun: string | { id: string }, employee: string | { id: string } } | [payrollRun: string | { id: string }, employee: string | { id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const updateEmployeeCalculationForm = (args: { payrollRun: string | number | { id: string | number }, employee: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number }, employee: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: updateEmployeeCalculation.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'PATCH',
@@ -388,7 +388,7 @@ updateEmployeeCalculation.patch = (args: { payrollRun: string | { id: string }, 
  * @see app/Http/Controllers/Tenant/PayrollController.php:234
  * @route '/payroll/runs/{payrollRun}/employees/{employee}'
  */
-        updateEmployeeCalculationForm.patch = (args: { payrollRun: string | { id: string }, employee: string | { id: string } } | [payrollRun: string | { id: string }, employee: string | { id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateEmployeeCalculationForm.patch = (args: { payrollRun: string | number | { id: string | number }, employee: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number }, employee: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: updateEmployeeCalculation.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PATCH',
@@ -404,7 +404,7 @@ updateEmployeeCalculation.patch = (args: { payrollRun: string | { id: string }, 
  * @see app/Http/Controllers/Tenant/PayrollController.php:390
  * @route '/payroll/runs/{payrollRun}/submit-approval'
  */
-export const submitApproval = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const submitApproval = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: submitApproval.url(args, options),
     method: 'post',
 })
@@ -419,7 +419,7 @@ submitApproval.definition = {
  * @see app/Http/Controllers/Tenant/PayrollController.php:390
  * @route '/payroll/runs/{payrollRun}/submit-approval'
  */
-submitApproval.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
+submitApproval.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -452,7 +452,7 @@ submitApproval.url = (args: { payrollRun: string | { id: string } } | [payrollRu
  * @see app/Http/Controllers/Tenant/PayrollController.php:390
  * @route '/payroll/runs/{payrollRun}/submit-approval'
  */
-submitApproval.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+submitApproval.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: submitApproval.url(args, options),
     method: 'post',
 })
@@ -462,7 +462,7 @@ submitApproval.post = (args: { payrollRun: string | { id: string } } | [payrollR
  * @see app/Http/Controllers/Tenant/PayrollController.php:390
  * @route '/payroll/runs/{payrollRun}/submit-approval'
  */
-    const submitApprovalForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const submitApprovalForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: submitApproval.url(args, options),
         method: 'post',
     })
@@ -472,7 +472,7 @@ submitApproval.post = (args: { payrollRun: string | { id: string } } | [payrollR
  * @see app/Http/Controllers/Tenant/PayrollController.php:390
  * @route '/payroll/runs/{payrollRun}/submit-approval'
  */
-        submitApprovalForm.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        submitApprovalForm.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: submitApproval.url(args, options),
             method: 'post',
         })
@@ -483,7 +483,7 @@ submitApproval.post = (args: { payrollRun: string | { id: string } } | [payrollR
  * @see app/Http/Controllers/Tenant/PayrollController.php:423
  * @route '/payroll/runs/{payrollRun}/approve'
  */
-export const approve = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const approve = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: approve.url(args, options),
     method: 'post',
 })
@@ -498,7 +498,7 @@ approve.definition = {
  * @see app/Http/Controllers/Tenant/PayrollController.php:423
  * @route '/payroll/runs/{payrollRun}/approve'
  */
-approve.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
+approve.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -531,7 +531,7 @@ approve.url = (args: { payrollRun: string | { id: string } } | [payrollRun: stri
  * @see app/Http/Controllers/Tenant/PayrollController.php:423
  * @route '/payroll/runs/{payrollRun}/approve'
  */
-approve.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+approve.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: approve.url(args, options),
     method: 'post',
 })
@@ -541,7 +541,7 @@ approve.post = (args: { payrollRun: string | { id: string } } | [payrollRun: str
  * @see app/Http/Controllers/Tenant/PayrollController.php:423
  * @route '/payroll/runs/{payrollRun}/approve'
  */
-    const approveForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const approveForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: approve.url(args, options),
         method: 'post',
     })
@@ -551,7 +551,7 @@ approve.post = (args: { payrollRun: string | { id: string } } | [payrollRun: str
  * @see app/Http/Controllers/Tenant/PayrollController.php:423
  * @route '/payroll/runs/{payrollRun}/approve'
  */
-        approveForm.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        approveForm.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: approve.url(args, options),
             method: 'post',
         })
@@ -562,7 +562,7 @@ approve.post = (args: { payrollRun: string | { id: string } } | [payrollRun: str
  * @see app/Http/Controllers/Tenant/PayrollController.php:458
  * @route '/payroll/runs/{payrollRun}/reject'
  */
-export const reject = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const reject = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: reject.url(args, options),
     method: 'post',
 })
@@ -577,7 +577,7 @@ reject.definition = {
  * @see app/Http/Controllers/Tenant/PayrollController.php:458
  * @route '/payroll/runs/{payrollRun}/reject'
  */
-reject.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
+reject.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -610,7 +610,7 @@ reject.url = (args: { payrollRun: string | { id: string } } | [payrollRun: strin
  * @see app/Http/Controllers/Tenant/PayrollController.php:458
  * @route '/payroll/runs/{payrollRun}/reject'
  */
-reject.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+reject.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: reject.url(args, options),
     method: 'post',
 })
@@ -620,7 +620,7 @@ reject.post = (args: { payrollRun: string | { id: string } } | [payrollRun: stri
  * @see app/Http/Controllers/Tenant/PayrollController.php:458
  * @route '/payroll/runs/{payrollRun}/reject'
  */
-    const rejectForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const rejectForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: reject.url(args, options),
         method: 'post',
     })
@@ -630,7 +630,7 @@ reject.post = (args: { payrollRun: string | { id: string } } | [payrollRun: stri
  * @see app/Http/Controllers/Tenant/PayrollController.php:458
  * @route '/payroll/runs/{payrollRun}/reject'
  */
-        rejectForm.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        rejectForm.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: reject.url(args, options),
             method: 'post',
         })
@@ -641,7 +641,7 @@ reject.post = (args: { payrollRun: string | { id: string } } | [payrollRun: stri
  * @see app/Http/Controllers/Tenant/PayrollController.php:497
  * @route '/payroll/runs/{payrollRun}/finalize'
  */
-export const finalize = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const finalize = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: finalize.url(args, options),
     method: 'post',
 })
@@ -656,7 +656,7 @@ finalize.definition = {
  * @see app/Http/Controllers/Tenant/PayrollController.php:497
  * @route '/payroll/runs/{payrollRun}/finalize'
  */
-finalize.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
+finalize.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -689,7 +689,7 @@ finalize.url = (args: { payrollRun: string | { id: string } } | [payrollRun: str
  * @see app/Http/Controllers/Tenant/PayrollController.php:497
  * @route '/payroll/runs/{payrollRun}/finalize'
  */
-finalize.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+finalize.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: finalize.url(args, options),
     method: 'post',
 })
@@ -699,7 +699,7 @@ finalize.post = (args: { payrollRun: string | { id: string } } | [payrollRun: st
  * @see app/Http/Controllers/Tenant/PayrollController.php:497
  * @route '/payroll/runs/{payrollRun}/finalize'
  */
-    const finalizeForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const finalizeForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: finalize.url(args, options),
         method: 'post',
     })
@@ -709,7 +709,7 @@ finalize.post = (args: { payrollRun: string | { id: string } } | [payrollRun: st
  * @see app/Http/Controllers/Tenant/PayrollController.php:497
  * @route '/payroll/runs/{payrollRun}/finalize'
  */
-        finalizeForm.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        finalizeForm.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: finalize.url(args, options),
             method: 'post',
         })
@@ -720,7 +720,7 @@ finalize.post = (args: { payrollRun: string | { id: string } } | [payrollRun: st
  * @see app/Http/Controllers/Tenant/PayrollController.php:550
  * @route '/payroll/runs/{payrollRun}/request-void'
  */
-export const requestVoid = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const requestVoid = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: requestVoid.url(args, options),
     method: 'post',
 })
@@ -735,7 +735,7 @@ requestVoid.definition = {
  * @see app/Http/Controllers/Tenant/PayrollController.php:550
  * @route '/payroll/runs/{payrollRun}/request-void'
  */
-requestVoid.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
+requestVoid.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -768,7 +768,7 @@ requestVoid.url = (args: { payrollRun: string | { id: string } } | [payrollRun: 
  * @see app/Http/Controllers/Tenant/PayrollController.php:550
  * @route '/payroll/runs/{payrollRun}/request-void'
  */
-requestVoid.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+requestVoid.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: requestVoid.url(args, options),
     method: 'post',
 })
@@ -778,7 +778,7 @@ requestVoid.post = (args: { payrollRun: string | { id: string } } | [payrollRun:
  * @see app/Http/Controllers/Tenant/PayrollController.php:550
  * @route '/payroll/runs/{payrollRun}/request-void'
  */
-    const requestVoidForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const requestVoidForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: requestVoid.url(args, options),
         method: 'post',
     })
@@ -788,7 +788,7 @@ requestVoid.post = (args: { payrollRun: string | { id: string } } | [payrollRun:
  * @see app/Http/Controllers/Tenant/PayrollController.php:550
  * @route '/payroll/runs/{payrollRun}/request-void'
  */
-        requestVoidForm.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        requestVoidForm.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: requestVoid.url(args, options),
             method: 'post',
         })
@@ -799,7 +799,7 @@ requestVoid.post = (args: { payrollRun: string | { id: string } } | [payrollRun:
  * @see app/Http/Controllers/Tenant/PayrollController.php:589
  * @route '/payroll/runs/{payrollRun}/approve-void'
  */
-export const approveVoid = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const approveVoid = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: approveVoid.url(args, options),
     method: 'post',
 })
@@ -814,7 +814,7 @@ approveVoid.definition = {
  * @see app/Http/Controllers/Tenant/PayrollController.php:589
  * @route '/payroll/runs/{payrollRun}/approve-void'
  */
-approveVoid.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
+approveVoid.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -847,7 +847,7 @@ approveVoid.url = (args: { payrollRun: string | { id: string } } | [payrollRun: 
  * @see app/Http/Controllers/Tenant/PayrollController.php:589
  * @route '/payroll/runs/{payrollRun}/approve-void'
  */
-approveVoid.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+approveVoid.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: approveVoid.url(args, options),
     method: 'post',
 })
@@ -857,7 +857,7 @@ approveVoid.post = (args: { payrollRun: string | { id: string } } | [payrollRun:
  * @see app/Http/Controllers/Tenant/PayrollController.php:589
  * @route '/payroll/runs/{payrollRun}/approve-void'
  */
-    const approveVoidForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const approveVoidForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: approveVoid.url(args, options),
         method: 'post',
     })
@@ -867,7 +867,7 @@ approveVoid.post = (args: { payrollRun: string | { id: string } } | [payrollRun:
  * @see app/Http/Controllers/Tenant/PayrollController.php:589
  * @route '/payroll/runs/{payrollRun}/approve-void'
  */
-        approveVoidForm.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        approveVoidForm.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: approveVoid.url(args, options),
             method: 'post',
         })
@@ -878,7 +878,7 @@ approveVoid.post = (args: { payrollRun: string | { id: string } } | [payrollRun:
  * @see app/Http/Controllers/Tenant/PayrollController.php:641
  * @route '/payroll/runs/{payrollRun}/reject-void'
  */
-export const rejectVoid = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const rejectVoid = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: rejectVoid.url(args, options),
     method: 'post',
 })
@@ -893,7 +893,7 @@ rejectVoid.definition = {
  * @see app/Http/Controllers/Tenant/PayrollController.php:641
  * @route '/payroll/runs/{payrollRun}/reject-void'
  */
-rejectVoid.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
+rejectVoid.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -926,7 +926,7 @@ rejectVoid.url = (args: { payrollRun: string | { id: string } } | [payrollRun: s
  * @see app/Http/Controllers/Tenant/PayrollController.php:641
  * @route '/payroll/runs/{payrollRun}/reject-void'
  */
-rejectVoid.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+rejectVoid.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: rejectVoid.url(args, options),
     method: 'post',
 })
@@ -936,7 +936,7 @@ rejectVoid.post = (args: { payrollRun: string | { id: string } } | [payrollRun: 
  * @see app/Http/Controllers/Tenant/PayrollController.php:641
  * @route '/payroll/runs/{payrollRun}/reject-void'
  */
-    const rejectVoidForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const rejectVoidForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: rejectVoid.url(args, options),
         method: 'post',
     })
@@ -946,7 +946,7 @@ rejectVoid.post = (args: { payrollRun: string | { id: string } } | [payrollRun: 
  * @see app/Http/Controllers/Tenant/PayrollController.php:641
  * @route '/payroll/runs/{payrollRun}/reject-void'
  */
-        rejectVoidForm.post = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        rejectVoidForm.post = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: rejectVoid.url(args, options),
             method: 'post',
         })

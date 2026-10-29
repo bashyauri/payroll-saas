@@ -1,8 +1,8 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../../wayfinder'
 /**
-* @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:20
- * @route '/settings/payroll'
+* @see \App\Http\Controllers\Settings\OrganizationProfileController::edit
+ * @see app/Http/Controllers/Settings/OrganizationProfileController.php:15
+ * @route '/settings/organization'
  */
 export const edit = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: edit.url(options),
@@ -11,31 +11,31 @@ export const edit = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 edit.definition = {
     methods: ["get","head"],
-    url: '/settings/payroll',
+    url: '/settings/organization',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
-* @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:20
- * @route '/settings/payroll'
+* @see \App\Http\Controllers\Settings\OrganizationProfileController::edit
+ * @see app/Http/Controllers/Settings/OrganizationProfileController.php:15
+ * @route '/settings/organization'
  */
 edit.url = (options?: RouteQueryOptions) => {
     return edit.definition.url + queryParams(options)
 }
 
 /**
-* @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:20
- * @route '/settings/payroll'
+* @see \App\Http\Controllers\Settings\OrganizationProfileController::edit
+ * @see app/Http/Controllers/Settings/OrganizationProfileController.php:15
+ * @route '/settings/organization'
  */
 edit.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: edit.url(options),
     method: 'get',
 })
 /**
-* @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:20
- * @route '/settings/payroll'
+* @see \App\Http\Controllers\Settings\OrganizationProfileController::edit
+ * @see app/Http/Controllers/Settings/OrganizationProfileController.php:15
+ * @route '/settings/organization'
  */
 edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: edit.url(options),
@@ -43,9 +43,9 @@ edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 })
 
     /**
-* @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:20
- * @route '/settings/payroll'
+* @see \App\Http\Controllers\Settings\OrganizationProfileController::edit
+ * @see app/Http/Controllers/Settings/OrganizationProfileController.php:15
+ * @route '/settings/organization'
  */
     const editForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: edit.url(options),
@@ -53,18 +53,18 @@ edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     })
 
             /**
-* @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:20
- * @route '/settings/payroll'
+* @see \App\Http\Controllers\Settings\OrganizationProfileController::edit
+ * @see app/Http/Controllers/Settings/OrganizationProfileController.php:15
+ * @route '/settings/organization'
  */
         editForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: edit.url(options),
             method: 'get',
         })
             /**
-* @see \App\Http\Controllers\Settings\PayrollSettingsController::edit
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:20
- * @route '/settings/payroll'
+* @see \App\Http\Controllers\Settings\OrganizationProfileController::edit
+ * @see app/Http/Controllers/Settings/OrganizationProfileController.php:15
+ * @route '/settings/organization'
  */
         editForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: edit.url({
@@ -78,9 +78,9 @@ edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     
     edit.form = editForm
 /**
-* @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:66
- * @route '/settings/payroll'
+* @see \App\Http\Controllers\Settings\OrganizationProfileController::update
+ * @see app/Http/Controllers/Settings/OrganizationProfileController.php:26
+ * @route '/settings/organization'
  */
 export const update = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(options),
@@ -89,22 +89,22 @@ export const update = (options?: RouteQueryOptions): RouteDefinition<'patch'> =>
 
 update.definition = {
     methods: ["patch"],
-    url: '/settings/payroll',
+    url: '/settings/organization',
 } satisfies RouteDefinition<["patch"]>
 
 /**
-* @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:66
- * @route '/settings/payroll'
+* @see \App\Http\Controllers\Settings\OrganizationProfileController::update
+ * @see app/Http/Controllers/Settings/OrganizationProfileController.php:26
+ * @route '/settings/organization'
  */
 update.url = (options?: RouteQueryOptions) => {
     return update.definition.url + queryParams(options)
 }
 
 /**
-* @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:66
- * @route '/settings/payroll'
+* @see \App\Http\Controllers\Settings\OrganizationProfileController::update
+ * @see app/Http/Controllers/Settings/OrganizationProfileController.php:26
+ * @route '/settings/organization'
  */
 update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(options),
@@ -112,9 +112,9 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
 })
 
     /**
-* @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:66
- * @route '/settings/payroll'
+* @see \App\Http\Controllers\Settings\OrganizationProfileController::update
+ * @see app/Http/Controllers/Settings/OrganizationProfileController.php:26
+ * @route '/settings/organization'
  */
     const updateForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: update.url({
@@ -127,9 +127,9 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     })
 
             /**
-* @see \App\Http\Controllers\Settings\PayrollSettingsController::update
- * @see app/Http/Controllers/Settings/PayrollSettingsController.php:66
- * @route '/settings/payroll'
+* @see \App\Http\Controllers\Settings\OrganizationProfileController::update
+ * @see app/Http/Controllers/Settings/OrganizationProfileController.php:26
+ * @route '/settings/organization'
  */
         updateForm.patch = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url({
@@ -142,9 +142,6 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
         })
     
     update.form = updateForm
-const settings = {
-    edit: Object.assign(edit, edit),
-update: Object.assign(update, update),
-}
+const OrganizationProfileController = { edit, update }
 
-export default settings
+export default OrganizationProfileController

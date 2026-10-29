@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-export const __invoke = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const __invoke = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: __invoke.url(args, options),
     method: 'get',
 })
@@ -19,7 +19,7 @@ __invoke.definition = {
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-__invoke.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
+__invoke.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -52,7 +52,7 @@ __invoke.url = (args: { payrollRun: string | { id: string } } | [payrollRun: str
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-__invoke.get = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+__invoke.get = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: __invoke.url(args, options),
     method: 'get',
 })
@@ -61,7 +61,7 @@ __invoke.get = (args: { payrollRun: string | { id: string } } | [payrollRun: str
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-__invoke.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+__invoke.head = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: __invoke.url(args, options),
     method: 'head',
 })
@@ -71,7 +71,7 @@ __invoke.head = (args: { payrollRun: string | { id: string } } | [payrollRun: st
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-    const __invokeForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const __invokeForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: __invoke.url(args, options),
         method: 'get',
     })
@@ -81,7 +81,7 @@ __invoke.head = (args: { payrollRun: string | { id: string } } | [payrollRun: st
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-        __invokeForm.get = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        __invokeForm.get = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: __invoke.url(args, options),
             method: 'get',
         })
@@ -90,7 +90,7 @@ __invoke.head = (args: { payrollRun: string | { id: string } } | [payrollRun: st
  * @see app/Http/Controllers/Employee/PayslipPdfController.php:15
  * @route '/employee/payslips/{payrollRun}/pdf'
  */
-        __invokeForm.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        __invokeForm.head = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: __invoke.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',

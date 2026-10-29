@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
  * @see app/Http/Controllers/Billing/RefundController.php:21
  * @route '/billing/refund/{subscription}/check'
  */
-export const checkEligibility = (args: { subscription: string | { id: string } } | [subscription: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const checkEligibility = (args: { subscription: string | number | { id: string | number } } | [subscription: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: checkEligibility.url(args, options),
     method: 'get',
 })
@@ -19,7 +19,7 @@ checkEligibility.definition = {
  * @see app/Http/Controllers/Billing/RefundController.php:21
  * @route '/billing/refund/{subscription}/check'
  */
-checkEligibility.url = (args: { subscription: string | { id: string } } | [subscription: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
+checkEligibility.url = (args: { subscription: string | number | { id: string | number } } | [subscription: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { subscription: args }
     }
@@ -52,7 +52,7 @@ checkEligibility.url = (args: { subscription: string | { id: string } } | [subsc
  * @see app/Http/Controllers/Billing/RefundController.php:21
  * @route '/billing/refund/{subscription}/check'
  */
-checkEligibility.get = (args: { subscription: string | { id: string } } | [subscription: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+checkEligibility.get = (args: { subscription: string | number | { id: string | number } } | [subscription: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: checkEligibility.url(args, options),
     method: 'get',
 })
@@ -61,7 +61,7 @@ checkEligibility.get = (args: { subscription: string | { id: string } } | [subsc
  * @see app/Http/Controllers/Billing/RefundController.php:21
  * @route '/billing/refund/{subscription}/check'
  */
-checkEligibility.head = (args: { subscription: string | { id: string } } | [subscription: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+checkEligibility.head = (args: { subscription: string | number | { id: string | number } } | [subscription: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: checkEligibility.url(args, options),
     method: 'head',
 })
@@ -71,7 +71,7 @@ checkEligibility.head = (args: { subscription: string | { id: string } } | [subs
  * @see app/Http/Controllers/Billing/RefundController.php:21
  * @route '/billing/refund/{subscription}/check'
  */
-    const checkEligibilityForm = (args: { subscription: string | { id: string } } | [subscription: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const checkEligibilityForm = (args: { subscription: string | number | { id: string | number } } | [subscription: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: checkEligibility.url(args, options),
         method: 'get',
     })
@@ -81,7 +81,7 @@ checkEligibility.head = (args: { subscription: string | { id: string } } | [subs
  * @see app/Http/Controllers/Billing/RefundController.php:21
  * @route '/billing/refund/{subscription}/check'
  */
-        checkEligibilityForm.get = (args: { subscription: string | { id: string } } | [subscription: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        checkEligibilityForm.get = (args: { subscription: string | number | { id: string | number } } | [subscription: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: checkEligibility.url(args, options),
             method: 'get',
         })
@@ -90,7 +90,7 @@ checkEligibility.head = (args: { subscription: string | { id: string } } | [subs
  * @see app/Http/Controllers/Billing/RefundController.php:21
  * @route '/billing/refund/{subscription}/check'
  */
-        checkEligibilityForm.head = (args: { subscription: string | { id: string } } | [subscription: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        checkEligibilityForm.head = (args: { subscription: string | number | { id: string | number } } | [subscription: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: checkEligibility.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
@@ -106,7 +106,7 @@ checkEligibility.head = (args: { subscription: string | { id: string } } | [subs
  * @see app/Http/Controllers/Billing/RefundController.php:49
  * @route '/billing/refund/{subscription}/process'
  */
-export const process = (args: { subscription: string | { id: string } } | [subscription: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const process = (args: { subscription: string | number | { id: string | number } } | [subscription: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: process.url(args, options),
     method: 'post',
 })
@@ -121,7 +121,7 @@ process.definition = {
  * @see app/Http/Controllers/Billing/RefundController.php:49
  * @route '/billing/refund/{subscription}/process'
  */
-process.url = (args: { subscription: string | { id: string } } | [subscription: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
+process.url = (args: { subscription: string | number | { id: string | number } } | [subscription: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { subscription: args }
     }
@@ -154,7 +154,7 @@ process.url = (args: { subscription: string | { id: string } } | [subscription: 
  * @see app/Http/Controllers/Billing/RefundController.php:49
  * @route '/billing/refund/{subscription}/process'
  */
-process.post = (args: { subscription: string | { id: string } } | [subscription: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+process.post = (args: { subscription: string | number | { id: string | number } } | [subscription: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: process.url(args, options),
     method: 'post',
 })
@@ -164,7 +164,7 @@ process.post = (args: { subscription: string | { id: string } } | [subscription:
  * @see app/Http/Controllers/Billing/RefundController.php:49
  * @route '/billing/refund/{subscription}/process'
  */
-    const processForm = (args: { subscription: string | { id: string } } | [subscription: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const processForm = (args: { subscription: string | number | { id: string | number } } | [subscription: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: process.url(args, options),
         method: 'post',
     })
@@ -174,7 +174,7 @@ process.post = (args: { subscription: string | { id: string } } | [subscription:
  * @see app/Http/Controllers/Billing/RefundController.php:49
  * @route '/billing/refund/{subscription}/process'
  */
-        processForm.post = (args: { subscription: string | { id: string } } | [subscription: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        processForm.post = (args: { subscription: string | number | { id: string | number } } | [subscription: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: process.url(args, options),
             method: 'post',
         })

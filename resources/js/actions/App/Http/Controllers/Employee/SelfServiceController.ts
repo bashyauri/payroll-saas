@@ -225,7 +225,7 @@ updateProfile.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> =>
  * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-export const payslip = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const payslip = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: payslip.url(args, options),
     method: 'get',
 })
@@ -240,7 +240,7 @@ payslip.definition = {
  * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-payslip.url = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions) => {
+payslip.url = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { payrollRun: args }
     }
@@ -273,7 +273,7 @@ payslip.url = (args: { payrollRun: string | { id: string } } | [payrollRun: stri
  * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-payslip.get = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+payslip.get = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: payslip.url(args, options),
     method: 'get',
 })
@@ -282,7 +282,7 @@ payslip.get = (args: { payrollRun: string | { id: string } } | [payrollRun: stri
  * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-payslip.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+payslip.head = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: payslip.url(args, options),
     method: 'head',
 })
@@ -292,7 +292,7 @@ payslip.head = (args: { payrollRun: string | { id: string } } | [payrollRun: str
  * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-    const payslipForm = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const payslipForm = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: payslip.url(args, options),
         method: 'get',
     })
@@ -302,7 +302,7 @@ payslip.head = (args: { payrollRun: string | { id: string } } | [payrollRun: str
  * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-        payslipForm.get = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        payslipForm.get = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: payslip.url(args, options),
             method: 'get',
         })
@@ -311,7 +311,7 @@ payslip.head = (args: { payrollRun: string | { id: string } } | [payrollRun: str
  * @see app/Http/Controllers/Employee/SelfServiceController.php:138
  * @route '/employee/payslips/{payrollRun}'
  */
-        payslipForm.head = (args: { payrollRun: string | { id: string } } | [payrollRun: string | { id: string } ] | string | { id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        payslipForm.head = (args: { payrollRun: string | number | { id: string | number } } | [payrollRun: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: payslip.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
